@@ -8,11 +8,11 @@ Grundy County is defined as a Medically Underserved Area (MUA) by the Health Res
 ## DataLab Team Introduction
 As members of the 2022 DataLab Sewanee Internship, we have dedicated our summer to learning data science and performing data analysis for a client in our local community. Each of us are discouraged by the large medical service gaps seen in Grundy County and Sewanee Community, and passionate about providing data analysis to help South Cumberland Health Network in filling those gaps. These are the members of our team:
 
-    Ellie Davis: Rising senior at Sewanee: The University of the South, studying both political science and women’s & gender studies.
+- **Ellie Davis**: Rising senior at Sewanee: The University of the South, studying both political science and women’s & gender studies.
 
-    Kenedi Clinton: Junior student-athlete at Sewanee: The University of The South. Pursuing a Biology major with a Rhetoric minor and a Civic and Global Leadership certificate. Interested in global health, research, data analysis, and graduate school.
+- **Kenedi Clinton**: Student-athlete at Sewanee: The University of The South; Class of 2024. Pursuing a Biology major with a Rhetoric minor and a Civic and Global Leadership certificate. Interested in global health, research, data analysis, and graduate school.
 
-    Jenna Lusk: Sophomore at Purdue University (Class of 2025) studying Computer Information Technology, with minors in Design & Innovation and Organizational Leadership. 
+- **Jenna Lusk**: Sophomore at Purdue University (Class of 2025) studying Computer Information Technology, with minors in Design & Innovation and Organizational Leadership. 
 
 ## Deliverables
 ### Client Perspective Report
