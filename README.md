@@ -2,6 +2,8 @@
 
 DataLab Summer 2022 Project
 
+Ellie Davis, Kenedi Clinton, & Jenna Lusk
+
 ## Problem Statement
 Grundy County is defined as a Medically Underserved Area (MUA) by the Health Resources and Services Administration. This means that the county lacks the health care services required to adequately meet community needs. Research has shown that across the U.S. in rural MUAs, citizens are increasingly seeking primary care at ERs. Due to trends such as these, our partner, the South Cumberland Health Network (SCHN), believes that analyzing ER discharge data may offer helpful insight into _how_ Grundy County is medically underserved. Our team’s objective is to create an interactive dashboard that expresses trends in ER discharge data from the South Cumberland Plateau to aid the SCHN in creating solutions to Grundy’s health service shortage.
 
