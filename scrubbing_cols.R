@@ -48,3 +48,4 @@ df <- select (df,-c(...1,Data_Yr, Bill_Number, Record_Seq_Num, Form_Type, Fed_Ta
               Payer_A, Payer_B, Payer_C))
 
 df <- select(df, -starts_with(c('Ecode', 'E_POA', 'Proc')))
+# kenedi was here
