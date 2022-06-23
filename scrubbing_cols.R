@@ -1,13 +1,25 @@
+################################################################################
+#Data Column Scrub
+
+# This file contains the script needed to reduce file columns. 
+# This is used to narrow the  to the columns we will be using for data
+# analysis. The columns that are mostly N/A, not realivate, or redundant/repeatitive
+# will be removed. Columns we are not sure we want will be kept. 
+################################################################################
+
+#Libraries ----
 library(tidytext)
 library(ggplot2)
 library(readr)
 library(dplyr)
 
-# Code for scrubbing columns on our final data set
+# Scrubbing Script ----
 
+# Read in the file----
 df <- readr::read_csv("")
 View(df)
 
+# Script to remove columns----
 df <- select (df,-c(...1,Data_Yr, Bill_Number, Record_Seq_Num, Form_Type, Fed_Tax_SubID,
                     Fed_Tax_Num, Do_Not_Resuscitate, Accident_St, Rev_Cd1,
                     Rev_Cd2, Rev_Cd3, Rev_Cd4, Rev_Cd5, Rev_Cd6, Rev_Cd7, Rev_Cd8, 
@@ -47,6 +59,7 @@ df <- select (df,-c(...1,Data_Yr, Bill_Number, Record_Seq_Num, Form_Type, Fed_Ta
               MS_DRG_4digit, HAC, CostWt, Admit_From_ED_Flag, Wrong_Claim, ...249, Tot_Charges_Summed, Admit_Diag_Cd,
               Payer_A, Payer_B, Payer_C))
 
+# Remove Columns Cont.
 df <- select(df, -starts_with(c('Ecode', 'E_POA', 'Proc')))
-# kenedi was here
-#Now jenna was here lol
+
+
