@@ -16,11 +16,13 @@ library(dplyr)
 # Scrubbing Script ----
 
 # Read in the file----
-df <- readr::read_csv("")
+df <- readr::read_csv("C:/Users/jplus/OneDrive/Documents/DataLab/ER_Usage/ER/grundy_mask.csv")
 View(df)
 
 # Script to remove columns----
-df <- select (df,-c(...1,Data_Yr, Bill_Number, Record_Seq_Num, Form_Type, Fed_Tax_SubID,
+#Batches seperated for efficency
+#Batch 1
+df <- select (df,-c(Data_Yr, Bill_Number, Record_Seq_Num, Form_Type, Fed_Tax_SubID,
                     Fed_Tax_Num, Do_Not_Resuscitate, Accident_St, Rev_Cd1,
                     Rev_Cd2, Rev_Cd3, Rev_Cd4, Rev_Cd5, Rev_Cd6, Rev_Cd7, Rev_Cd8, 
                     Rev_Cd9, Rev_Cd10, Rev_Cd11, Rev_Cd12, Rev_Cd13, Rev_Cd14, Rev_Cd15, 
@@ -56,10 +58,24 @@ df <- select (df,-c(...1,Data_Yr, Bill_Number, Record_Seq_Num, Form_Type, Fed_Ta
               Megavolt_Rad_Flag, CT_Flag, Fatal_Error_Flag, Bill_End, MUL, Record_Num1, Tot_Charges_Recorded,
               Tot_Charges_Analysis, LOS, Record_Num2, DRG_Rank, Inpat_Record_Flag, ASTC_Record_Flag, Obs_23hr_Record_Flag,
               CON_Flag, Cumulative_Record_Flag, Amount_Counter, Reportable_Flag, Hospital_Id_JAR, MS_DRG,
-              MS_DRG_4digit, HAC, CostWt, Admit_From_ED_Flag, Wrong_Claim, ...249, Tot_Charges_Summed, Admit_Diag_Cd,
+              MS_DRG_4digit, HAC, CostWt, Admit_From_ED_Flag, Wrong_Claim, Tot_Charges_Summed, Admit_Diag_Cd,
               Payer_A, Payer_B, Payer_C))
+#Batch 2
+df <- select (df,-c(Attend_MD, Attend_MD_TN_Lic_Num, Attend_MD_UPIN,
+                           Operate_MD, Other_Prov_MD1, Other_Prov_MD2, Other_Prov_MD_TN_Lic_Num1,
+                           Other_Prov_MD_TN_Lic_Num2, Other_Prov_MD_UPIN1, Other_Prov_MD_UPIN2,
+                           Primary_Insr_Group_Num, Secondary_Insr_Group_Num, Tertiary_Insr_Group_Num,
+                           Admit_Hr, Infant_Age_Months))
+              
+#Batch 3      
+df <- select (df,-c(Accident_Code, Operate_MD_TN_Lic_Num,Operate_MD_UPIN)) 
 
 # Remove Columns Cont.
 df <- select(df, -starts_with(c('Ecode', 'E_POA', 'Proc')))
+
+#Create New CSV File of this Data
+
+write.csv(df, "scp_data", row.names = TRUE)
+
 
 
