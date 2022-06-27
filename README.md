@@ -35,3 +35,8 @@ The Pre-Mortem is a list of issues that could go wrong based on what every membe
 
 [Pre-mortem.pdf](https://github.com/sewaneedata/ER/files/8950679/Pre-mortem.pdf)
 
+### Literature Review
+
+A literature review is carried out with the purpose of understanding what is already known about ER overuse. We explore the definition of ER Overuse, Overuse across the US, and Overuse in the Grundy County and sorrounding areas. This is used as a location of external research to show backrgound on the issue and a refference for people to understand the topic and the scope of the issue we are addressing. 
+
+[Literature Review.pdf](https://github.com/sewaneedata/ER/files/8979025/Literature.Review.pdf)
