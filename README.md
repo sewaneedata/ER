@@ -12,7 +12,7 @@ As members of the 2022 DataLab Sewanee Internship, we have dedicated our summer 
 
 - **Ellie Davis**: Rising senior at Sewanee: The University of the South, studying both political science and women’s & gender studies.
 
-- **Kenedi Clinton**: Student-athlete at Sewanee: The University of The South; Class of 2024. Pursuing a Biology major with a Rhetoric minor and a Civic and Global Leadership certificate. Interested in global health, research, data analysis, and graduate school.
+- **Kenedi Clinton**: Junior student-athlete at Sewanee: The University of The South. Pursuing a Biology major, Rhetoric minor, and a Civic and Global Leadership certificate.
 
 - **Jenna Lusk**: Sophomore at Purdue University (Class of 2025) studying Computer Information Technology, with minors in Design & Innovation and Organizational Leadership. 
 
