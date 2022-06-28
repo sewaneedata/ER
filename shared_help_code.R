@@ -161,6 +161,22 @@ View(dental_visit %>%
        group_by(dental_YN) %>%
        tally)
 ######################################
+# DIAG 1 is is the primary diagnosis, so how many hospital visits had a primary
+  # diagnosis that was an acs condition?
+
+# Create a new variable from 'scp' that only looks at 'Diag1' column and identifies
+  # Whether or not the primary diagnosis was an acs conditon in a new column
+  # named 'acsprim_YN'.
+acs_primdiag <- scp %>%
+  mutate(primary = grepl(acs, Diag1)) %>% 
+  group_by(...1) %>% 
+  summarize(code_sum = sum(primary),
+            acsprim_YN = ifelse(code_sum > 0, "Yes", "No"))
+
+  # Look at the number of primary diagnoses that are acsc.
+View(test %>% 
+       group_by(acsprim_YN) %>%
+       tally)
 
 
 
