@@ -13,6 +13,11 @@ library(gsheet)
 # scp_data data frame
 scp <- readr::read_csv("Dropbox/DATALAB/ER_Project/scp_data")
 
+# NOTE: If we determine that "ER_Record_Flag" indicates that the ER was used, we will add
+# the following code to filter the 'scp' data down further to only ER visits.
+    
+  # scp <- scp %>% filter(ER_Record_Flag == "Y")
+
 ###########################
 # VECTORS of ICD-10 codes:
 
@@ -20,7 +25,6 @@ scp <- readr::read_csv("Dropbox/DATALAB/ER_Project/scp_data")
 # NOTE: dental conditions are included in ACSC code vector, but we also have a separate
   # vector of just dental codes so we can look at those separately.
   
-
   # create an object out of our google sheet with codes
 acs <- gsheet::gsheet2tbl("https://docs.google.com/spreadsheets/d/14fZ-1PFInHdL8OIaLUSHhc7ulFwSf9i9O32SPitCkLU/edit?usp=sharing")  
 
@@ -31,8 +35,7 @@ acs <- as.vector(unlist(acs$'ICD_10_code'))
 acs <- paste0( acs, collapse = "|^" ) 
     # NOTES for why I did this ^ :
       # "collapse" squishes the vector into "___ or ___ or ___.." statement that grepl() can read. 
-      # "^" tells R to search for anything that STARTS WITH the value
-      # the follows. 
+      # "^" tells R to search for anything that IS or STARTS WITH the value that it precedes. 
 
 acs <- paste0("^", acs) # This adds the "^" to the first value, b/c it didn't do it in 
 # the last code for some reason.
@@ -160,9 +163,11 @@ dental_visit <- scp_long %>%
 View(dental_visit %>% 
        group_by(dental_YN) %>%
        tally)
+
 ######################################
-# DIAG 1 is the primary diagnosis, so how many hospital visits had a primary
-  # diagnosis that was an acs condition?
+# SEARCH THROUGH ONLY THE PRIMARY DIAGNOSIS COLUMN (Diag1):
+
+# How many hospital visits were for a primary diagnosis that was an acs condition?
 
 # Create a new variable from 'scp' that only looks at 'Diag1' column and identifies
   # Whether or not the primary diagnosis was an acs conditon in a new column
