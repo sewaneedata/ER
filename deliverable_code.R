@@ -1,9 +1,9 @@
 # CODE FOR OUR DELIVERABLES .... NOT INDIVIDUAL BRAINSTORMING
 ################################
 
-# Making a graph that expresses demographics of our dataset by Sex and Age group:
-  # First, make variable of age groups (by decade) with each age group broken down into sex.
-    # removed unnecessary rows (age = 999 and sex=N/A)
+# Making a graph that expresses demographics of our data set by Sex and Age group:
+  # First, using the cut function, make a new column of "age groups" (by decade).
+    # removed unnecessary rows (filter(age) and drop.na(sex).
 
 df_age <-  df %>%
   filter(Age < 999) %>%
@@ -19,7 +19,7 @@ df_age <-  df %>%
   group_by(Age_Group, Patient_Sex) %>% 
   summarise(perc = n/total*100)
 
-#plot it 
+  # Plot to show percentage on y, age groups on x, and facet wrap by Sex. 
 ggplot(df_age, aes(x = Age_Group, y = perc, fill = Age_Group)) +
   geom_histogram(stat = 'identity')+
   theme(legend.position = 'none')+
@@ -29,4 +29,7 @@ ggplot(df_age, aes(x = Age_Group, y = perc, fill = Age_Group)) +
        x = 'Age Group',
        y = 'Percentage of Dataset')
 
-#33333
+#######################################
+
+
+
