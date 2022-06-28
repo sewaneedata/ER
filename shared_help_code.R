@@ -82,7 +82,8 @@ sub_abuse <- paste0( sub_abuse, collapse = "|^" )
 sub_abuse <- paste0("^", sub_abuse)
 
 # 5. DENTAL codes vector:
-  # same process as ACSC and NON EMERGENT codes
+  # same process as ACSC and NON EMERGENT vectors
+  # these are included in the acsc vector, but this vector allows us to look only at dental services.
 dental <- gsheet::gsheet2tbl("https://docs.google.com/spreadsheets/d/1m2ifrfx9yczoLSTzlOwOuxoqXpEk8LNHa2MbhC6m-AQ/edit?usp=sharing")
 
 dental <- as.vector(unlist(dental$'ICD_10_code'))
@@ -117,7 +118,6 @@ View(acs_visit %>%
   # we want to look at non-emergencies separately. It can be potentially misguiding to
   # look at non emergency codes b/c they could be present in a visit that also involved
   # emergency conditions or ACS conditions.
-
 nonemerg_visit <- scp_long %>% 
        mutate(`nonemerg?` = grepl(non_emerg,value)) %>%
        group_by(visit) %>% 
@@ -160,7 +160,7 @@ dental_visit <- scp_long %>%
 View(dental_visit %>% 
        group_by(dental_YN) %>%
        tally)
-
+######################################
 
 
 
