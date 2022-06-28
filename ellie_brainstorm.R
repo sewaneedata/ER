@@ -18,7 +18,9 @@ url <- "https://docs.google.com/spreadsheets/d/14fZ-1PFInHdL8OIaLUSHhc7ulFwSf9i9
 acs <- gsheet2tbl(url)  
 
   # create a vector out of the object
-acs <- as.vector(unlist(acs$'ICD_10_code'))  
+acs <- acs$'ICD_10_code'
+
+acs
 
 # Investigating percentages by race
 df %>% 
@@ -41,7 +43,7 @@ df %>%
   tally
 
 # Seeing percentage of cases from each zip code
-perc_zip <- df %>%
+df %>%
   group_by(Patient_Zip) %>% 
   tally %>% 
   mutate(total = sum(n)) %>% 
@@ -93,29 +95,14 @@ ggplot(df_age, aes(x = Age_Group, y = perc, fill = Age_Group)) +
        x = 'Age Group',
        y = 'Percentage of Dataset')
 
-
-
 ################################################
-# Trying to search for ACS conditions in the diag columns using a vector fo ACS codes:
-diag <- df %>% 
-  select(c(Diag1, Diag2, Diag3, Diag4, Diag5, Diag6, Diag7, Diag8, Diag9, Diag10, Diag11,
-           Diag12, Diag13, Diag14, Diag15, Diag16, Diag17, Diag18))
-  
+  # can use grepl to search for anything in the data that contains the value in " "
+  # this does not work for a labeled vector. we will potentially 
 diag %>%
   filter(grepl("M17", Diag1))
 
 diag %>%
   filter(Diag1 == 'acs')
-
-acs
-
-for(code in acs){
-  diag %>% 
-    filter(grepl(code, Diag1))
-}
-
-diag %>% 
-  filter(grepl("F11", Diag1))
 
 ######################################## 
 # vector for substance abuse ICD10 codes --- 
@@ -127,15 +114,106 @@ for(code in 11:19){
 }
 sub_abuse
 # vector for mental health ICD10 codes
+mental <- c()
+
+for(code in 01:99){
+  new_value <- paste('F', as.character(code), sep = "")
+  mental_health <- c(mental_health, new_value)
+}
+
+######################################
+# SOLUTION FOR COLUMN READING PROBLEM
+  # vector for non-emergent ICD10 codes
+
+# 1. Read google sheet of ICD-10 codes into R
+non_emerg <- gsheet::gsheet2tbl("https://docs.google.com/spreadsheets/d/14m7RGYPh17lv1EQ5Tv9gbpj1kvzlVmeUQRZs0MkUyUw/edit#gid=0")
+
+# 2. Turn dataframe into vector
+non_emerg <- as.vector(unlist(non_emerg$'ICD-10'))
+
+#3. Read in data
+scp <- readr::read_csv("Dropbox/DATALAB/ER_Project/scp_data")
+
+#4. Make diag into one columns with multiple rows per patient
+scp <- scp %>% pivot_longer(starts_with("Diag"))
+
+#5. Filter by patient ID to see what patients have a ICD 10 code in the vector (OPTIONAL)
+scp %>% group_by(Patient_ID) %>% filter(value %in% non_emerg)
+
+#6. Filter by unique ids (OPTIONAL)
+ids <- pull(scp, Patient_ID) %>% unique(ids)
+
+#7. Make Diag 1-18 cols again, n/a unless diag is in ICD vector
+  # NOTE: if did step #6, rows are of only patients with at least one ICD 10 code in vector, 
+  # so patients with none are removed. Columns with values that are not in 
+  # vector are changed to N/A as a result of the sort and pivot wider.
+  scp <- scp %>% pivot_wider(names_from = name, values_from = value)
+
+# Searching the data frame for all the values in our 'acs' vector:
+  View(scp %>%
+         group_by(value) %>% 
+         filter(value %in% acs) %>% 
+         tally)
+    # NOTE - PROBLEM: This does not search the data frame for all values that START WITH every 
+    # value in our vector, must fix.
+
+# SUCCESS - This code allows us to search the data frame for all values that ARE or START WITH 
+  # any value in our vector.
+acs_combined <- paste0( acs, collapse = "|^" ) # "collapse" squishes the vector into "___ or ___ or ___.." 
+                                                # statement that grepl() can read. 
+                                              # "^" tells R to search for anything that STARTS WITH the value
+                                                # the follows. 
+  
+acs_combined <- paste0("^", acs_combined) # This adds the "^" to the first value, b/c it didnt do it in 
+                                            # the last code for some reason. 
+# View all rows that 
+View(scp %>% 
+  filter(grepl(acs_combined, value)))
 
 
-# vector for non-emergent ICD10 codes
-url <- "https://docs.google.com/spreadsheets/d/14m7RGYPh17lv1EQ5Tv9gbpj1kvzlVmeUQRZs0MkUyUw/edit?usp=sharing"
+##################
+########################################
+# SEARCH THROUGH ALL DIAGNOSES COLUMNS AT ONCE:
 
-non_emergent <- gsheet2tbl(url)
+#1. Squish all Diag columns into one column with multiple rows per patient:
+scp_long <- scp %>% pivot_longer(starts_with("Diag"))
 
-non_emerg <- as.vector(unlist(non_emergent$'ICD-10')) 
+scp_long <- rename(scp_long, visit = ...1)
+#2. Filter by patient ID to see what patients have a ICD 10 code in one of the vectors
+# This helps us avoid counting one visit/patient as multiple visits if they have multiple 
+# ICD 10 codes in one visit.
 
+# ACSC
+View(scp_long %>% 
+       group_by(...1) %>% 
+       filter(grepl(acs, value)))
 
+View( scp_long %>% 
+  mutate( acs_visit = grepl(acs,value)) )
 
+grup by
+filter(any())
+
+# NON EMERGENT
+View(scp_long %>%
+       group_by(...1) %>% 
+       filter(grepl(non_emerg, value)))
+
+# MENTAL
+View(scp_long %>% 
+       group_by(Patient_ID) %>% 
+       filter(grepl(mental, value)))
+
+# SUBSTANCE ABUSE
+View(scp_long %>% 
+       group_by(Patient_ID) %>% 
+       filter(grepl(sub_abuse, value)))
+
+# DENTAL
+View(scp_long %>% 
+       group_by(Patient_ID) %>% 
+       filter(grepl(dental, value)))
+
+#3. Filter by unique ids (OPTIONAL)
+ids <- pull(scp, Patient_ID) %>% unique(ids)
 
