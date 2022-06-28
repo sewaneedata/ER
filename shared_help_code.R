@@ -161,7 +161,7 @@ View(dental_visit %>%
        group_by(dental_YN) %>%
        tally)
 ######################################
-# DIAG 1 is is the primary diagnosis, so how many hospital visits had a primary
+# DIAG 1 is the primary diagnosis, so how many hospital visits had a primary
   # diagnosis that was an acs condition?
 
 # Create a new variable from 'scp' that only looks at 'Diag1' column and identifies
