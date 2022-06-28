@@ -40,3 +40,8 @@ The Pre-Mortem is a list of issues that could go wrong based on what every membe
 A literature review is carried out with the purpose of understanding what is already known about ER overuse. We explore the definition of ER Overuse, Overuse across the US, and Overuse in the Grundy County and sorrounding areas. This is used as a location of external research to show backrgound on the issue and a refference for people to understand the topic and the scope of the issue we are addressing. 
 
 [Literature Review.pdf](https://github.com/sewaneedata/ER/files/8979025/Literature.Review.pdf)
+
+### Data Description
+The Data Description is a summary of the datasets available for analysis. It is a description of what is contained in each data set, their use, and necessary information to orient someone who has never looked at the data before. Additionally, there is a data dictionary describing every column in the main dataset (SCP_Data) and a vocabulary list explaining main vocabulary used regularly regarding our project. 
+
+[Data Description.pdf](https://github.com/sewaneedata/ER/files/8995240/Data.Description.pdf)
