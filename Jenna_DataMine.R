@@ -10,10 +10,10 @@ library(ggplot2)
 # SOLUTION FOR COLUMN READING PROBLEM
 
 # 1. Read google sheet of ICD-10 codes into R
-icd <- gsheet::gsheet2tbl("https://docs.google.com/spreadsheets/d/14m7RGYPh17lv1EQ5Tv9gbpj1kvzlVmeUQRZs0MkUyUw/edit#gid=0")
+non_emergent <- gsheet::gsheet2tbl("https://docs.google.com/spreadsheets/d/14m7RGYPh17lv1EQ5Tv9gbpj1kvzlVmeUQRZs0MkUyUw/edit#gid=0")
 
 # 2. Turn dataframe into vector
-icd <- as.vector(unlist(icd$'ICD-10'))
+non_emergent <- as.vector(unlist(icd$'ICD-10'))
 
 #3. Read in data
 scp <- read.csv("C:/Users/jplus/Downloads/scp_data")
@@ -22,7 +22,7 @@ scp <- read.csv("C:/Users/jplus/Downloads/scp_data")
 scp <- scp %>% pivot_longer(starts_with("Diag"))
 
 #5. Filter by patient ID to see what patients have a ICD 10 code in the vector
-scp <- scp %>% group_by(Patient_ID) %>% filter(value %in% icd)
+scp <- scp %>% group_by(Patient_ID) %>% filter(value %in% non_emergent)
 
 #Filter by unique ids (OPTIONAL)
 #ids <- pull(scp, Patient_ID) %>% unique(ids)
