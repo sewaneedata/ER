@@ -5,7 +5,6 @@
   # First, make a new variable that can later be plotted
     
 age_sex_ER <- scp %>%
-  filter(ER_Record_Flag == 'Y') %>% # filter for ER visits
   filter(Age < 999) %>% # remove 2 random ppl with 999 as age
   drop_na(Patient_Sex) %>% #drop the N/As from Patient_Sex
   mutate(Age_Group = cut(Age, 
@@ -28,7 +27,7 @@ ggplot(age_sex_ER, aes(x = Age_Group, y = perc, fill = Age_Group)) +
   labs(title = 'Demographics of Dataset',
        subtitle = 'By Age Group & Sex',
        x = 'Age Group',
-       y = 'Percentage of ER Visits')
+       y = 'Percentage of dataset')
 #######################################
 
 
