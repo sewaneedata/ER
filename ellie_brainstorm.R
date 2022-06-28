@@ -96,13 +96,10 @@ ggplot(df_age, aes(x = Age_Group, y = perc, fill = Age_Group)) +
        y = 'Percentage of Dataset')
 
 ################################################
-  # can use grepl to search for anything in the data that contains the value in " "
+# you can use grepl() to search for anything in the data that contains the value in " "
   # this does not work for a labeled vector. we will potentially 
-diag %>%
-  filter(grepl("M17", Diag1))
-
-diag %>%
-  filter(Diag1 == 'acs')
+View(scp %>%
+  filter(grepl("M17", Diag1)))
 
 ######################################## 
 # vector for substance abuse ICD10 codes --- 
@@ -166,54 +163,34 @@ acs_combined <- paste0( acs, collapse = "|^" ) # "collapse" squishes the vector 
   
 acs_combined <- paste0("^", acs_combined) # This adds the "^" to the first value, b/c it didnt do it in 
                                             # the last code for some reason. 
-# View all rows that 
+
+# View all rows of data that show an acs icd 10 code,not very helpful
+  # just practice.
+View(scp_long %>% 
+  filter(grepl(acs, value)))
+
+#######################################
+# DIAG 1 is is the primary diagnosis, so how many hospital visits had a primary
+  # diagnosis that was an acs condition?
+
+acs_primdiag <- scp %>%
+  mutate(primary = grepl(acs, Diag1)) %>% 
+  group_by(...1) %>% 
+  summarize(code_sum = sum(primary),
+            acsprim_YN = ifelse(code_sum > 0, "Yes", "No"))
+
+View(test %>% 
+  group_by(acsprim_YN) %>%
+  tally)
+################
+# How many visits had an 'ER_Record_Flag'?
 View(scp %>% 
-  filter(grepl(acs_combined, value)))
+  group_by(ER_Record_Flag) %>% 
+  tally)
 
 
-##################
-########################################
-# SEARCH THROUGH ALL DIAGNOSES COLUMNS AT ONCE:
 
-#1. Squish all Diag columns into one column with multiple rows per patient:
-scp_long <- scp %>% pivot_longer(starts_with("Diag"))
 
-scp_long <- rename(scp_long, visit = ...1)
-#2. Filter by patient ID to see what patients have a ICD 10 code in one of the vectors
-# This helps us avoid counting one visit/patient as multiple visits if they have multiple 
-# ICD 10 codes in one visit.
 
-# ACSC
-View(scp_long %>% 
-       group_by(...1) %>% 
-       filter(grepl(acs, value)))
 
-View( scp_long %>% 
-  mutate( acs_visit = grepl(acs,value)) )
-
-grup by
-filter(any())
-
-# NON EMERGENT
-View(scp_long %>%
-       group_by(...1) %>% 
-       filter(grepl(non_emerg, value)))
-
-# MENTAL
-View(scp_long %>% 
-       group_by(Patient_ID) %>% 
-       filter(grepl(mental, value)))
-
-# SUBSTANCE ABUSE
-View(scp_long %>% 
-       group_by(Patient_ID) %>% 
-       filter(grepl(sub_abuse, value)))
-
-# DENTAL
-View(scp_long %>% 
-       group_by(Patient_ID) %>% 
-       filter(grepl(dental, value)))
-
-#3. Filter by unique ids (OPTIONAL)
-ids <- pull(scp, Patient_ID) %>% unique(ids)
 
