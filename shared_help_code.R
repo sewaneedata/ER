@@ -3,7 +3,7 @@
 # THIS IS NOT OUR DELIVERABLE CODE
 ################
 
-# RUN LINES 10 THRU 108 EVERYDAY BEFORE DATA MINING...
+# RUN LINES 10 THRU 100 EVERYDAY BEFORE DATA MINING...
 # THE OTHER LINES ARE OPTIONAL, HELPFUL CODE
 ################
 # libraries:
@@ -21,7 +21,27 @@ scp <- rename(scp, visit = ...1)
 # NOTE: If we determine that "ER_Record_Flag" indicates that the ER was used, we will add
 # the following code to filter the 'scp' data down further to only ER visits.
     
-  # scp <- scp %>% filter(ER_Record_Flag == "Y")
+  scp2 <- scp %>% filter(ER_Record_Flag == "Y")
+  
+# FOR NOW, naming the above varible scp2 instead of overriding the original scp so 
+  # that we can work with the filtered down data but return to the original 'scp' if needed (if we
+  # find out that ER_Record_Flag doesn't indicate ER use.)
+  
+# Run the following for an updated 'scp2' data frame that has:
+  # 1. new columns that indicate whether or not the primary diagnosis was ACSC, mental, dental, etc.,
+  # 2. a new column called 'Age_Group' that sorts patients into groups by decade,
+  # 3. removes N/As for Patient_Sex.
+  
+scp2 <- scp2 %>%
+  drop_na(Patient_Sex) %>% 
+  mutate(acs_primary = grepl(acs, Diag1), 
+         mental_primary = grepl(mental, Diag1),
+         subabuse_primary = grepl(sub_abuse, Diag1),
+         dental_primary = grepl(dental, Diag1),
+         age_group = cut(Age,
+                         breaks = 10,
+                         labels = c('0-9', '10-19', '20-29', '30-39', '40-49',
+                                      '50-59', '60-69', '70-79', '80-89', '90-99')))
 
 ###########################
 # VECTORS of ICD-10 codes:
@@ -99,91 +119,57 @@ dental <- as.vector(unlist(dental$'ICD_10_code'))
 dental <- paste0( dental, collapse = "|^" )
 dental <- paste0("^", dental)
 
-################################################
-# SEARCH THROUGH ALL DIAGNOSES COLUMNS AT ONCE:
-
-#1. Squish all Diag columns into one column with multiple rows per patient:
-scp_long <- scp %>% pivot_longer(starts_with("Diag"))
-  # rename new column so it's easier to understand it's purpose
-scp_long <- rename(scp_long, visit = ...1)
-
-#2.To avoid counting one visit/patient as multiple visits if they have multiple 
-  # ICD 10 codes in one visit, do the following...
-
-# ACSC VISITS
-acs_visit <- scp_long %>% 
-        mutate(`acs?` = grepl(acs,value)) %>% # create T/F column to show if acs code is present.
-        group_by(visit) %>% # group by visit so the next step can work.
-        summarize(code_sum = sum(`acs?`), # create column to show total acs codes from each visit.
-                  acs_YN = ifelse(code_sum > 0, "Yes", "No")) # create column to show if each visit had an acs code or not.
-
-View(acs_visit %>% 
-  group_by(acs_YN) %>%
-  tally) # Look at how many visits were for acs conditions vs non acs conditions.
-       
-# NON-EMERGENGY VISITS
-  # NOTE: we will primarily be looking at ACS visits, but this is good code to have if
-  # we want to look at non-emergencies separately. It can be potentially misguiding to
-  # look at non emergency codes b/c they could be present in a visit that also involved
-  # emergency conditions or ACS conditions.
-nonemerg_visit <- scp_long %>% 
-       mutate(`nonemerg?` = grepl(non_emerg,value)) %>%
-       group_by(visit) %>% 
-       summarize(code_sum = sum(`nonemerg?`),
-                  nonemerg_YN = ifelse(code_sum > 0, "Yes", "No")) 
-
-View(nonemerg_visit %>% 
-       group_by(nonemerg_YN) %>% 
-       tally)
-
-# MENTAL HEALTH VISITS
-mental_visit <- scp_long %>% 
-  mutate(`mental?` = grepl(mental,value)) %>%
-  group_by(visit) %>% 
-  summarize(code_sum = sum(`mental?`),
-            mental_YN = ifelse(code_sum > 0, "Yes", "No")) 
-
-View(mental_visit %>% 
-       group_by(mental_YN) %>%
-       tally)
-
-# SUBSTANCE ABUSE VISITS
-subabuse_visit <- scp_long %>% 
-  mutate(`sub abuse?` = grepl(sub_abuse,value)) %>%
-  group_by(visit) %>% 
-  summarize(code_sum = sum(`sub abuse?`),
-            subabuse_YN = ifelse(code_sum > 0, "Yes", "No")) 
-
-View(subabuse_visit %>% 
-       group_by(subabuse_YN) %>%
-       tally)
-
-# DENTAL VISITS
-dental_visit <- scp_long %>% 
-  mutate(`dental?` = grepl(dental,value)) %>%
-  group_by(visit) %>% 
-  summarize(code_sum = sum(`dental?`),
-            dental_YN = ifelse(code_sum > 0, "Yes", "No"))
-
-View(dental_visit %>% 
-       group_by(dental_YN) %>%
-       tally)
-
 ######################################
 # SEARCH THROUGH ONLY THE PRIMARY DIAGNOSIS COLUMN (Diag1):
+######################################
+# Will use the  'scp2' data frame for this (it has all diag columns separated).
+
+# What percentage of all visits to the ER had a primary diagnosis of ACSC?
+scp2 %>% 
+  group_by(acs_primary) %>%
+  tally %>% 
+  mutate(total = sum(n)) %>%
+  group_by(acs_primary, n, total) %>% 
+  summarise(perc = n/total*100)
+    # The column name in group_by() can be replaced to see trends for other conditions
+      # (mental, dental, substance abuse, etc.)
+
+# NON EMERG (excludes any ACS conditions) trends:
+# What percentage of all visits to the ER had a primary diagnosis that was non-emergent?
+
+
+
+# MENTAL HEALTH trends:
+# What percentage of all visits to the ER had a primary diagnosis that was mental
+  # health related?
+View(scp %>% 
+       mutate(primary_diag = grepl(mental, Diag1)) %>% 
+       group_by(visit, primary_diag) %>% 
+       summarize(code_sum = sum(primary_diag),
+                 mental_YN = ifelse(code_sum > 0, "Yes", "No")) %>% 
+       group_by(mental_YN) %>% 
+       tally)
+
+# SUBSTANCE ABUSE Visits
+View(scp %>% 
+       mutate(primary_diag = grepl()))
+
+# DENTAL Visits
+
+
 
 # How many hospital visits were for a primary diagnosis that was an acs condition?
 
 # Create a new variable from 'scp' that only looks at 'Diag1' column and identifies
-  # Whether or not the primary diagnosis was an acs conditon in a new column
-  # named 'acsprim_YN'.
+# Whether or not the primary diagnosis was an acs conditon in a new column
+# named 'acsprim_YN'.
 acs_primdiag <- scp %>%
   mutate(primary = grepl(acs, Diag1)) %>% 
   group_by(...1) %>% 
   summarize(code_sum = sum(primary),
             acsprim_YN = ifelse(code_sum > 0, "Yes", "No"))
 
-  # Look at the number of primary diagnoses that are acsc.
+# Look at the number of primary diagnoses that are acsc.
 View(test %>% 
        group_by(acsprim_YN) %>%
        tally)
@@ -196,3 +182,73 @@ View(test %>%
 
 
 
+################################################
+# IF NEEDED, the following allows you to search thru all diag columns at once:
+  # Code has been commented out
+################################################
+#1. Squish all Diag columns into one column with multiple rows per patient:
+  # scp_long <- scp %>% pivot_longer(starts_with("Diag"))
+
+# rename new column so it's easier to understand it's purpose
+  # scp_long <- rename(scp_long, visit = ...1)
+
+#2.To avoid counting one visit/patient as multiple visits if they have multiple 
+# ICD 10 codes in one visit, do the following...
+
+# ACSC VISITS:
+# acs_visit <- scp_long %>% 
+        # mutate(`acs?` = grepl(acs,value)) %>% # create T/F column to show if acs code is present.
+        # group_by(visit) %>% # group by visit so the next step can work.
+        # summarize(code_sum = sum(`acs?`), # create column to show total acs codes from each visit.
+                  # acs_YN = ifelse(code_sum > 0, "Yes", "No")) # create column to show if each visit had an acs code or not.
+
+# View(acs_visit %>% group_by(acs_YN) %>% tally) # Look at how many visits were for acs conditions vs non acs conditions.
+       
+# NON-EMERGENGY VISITS
+  # NOTE: we will primarily be looking at ACS visits, but this is good code to have if
+  # we want to look at non-emergencies separately. It can be potentially misguiding to
+  # look at non emergency codes b/c they could be present in a visit that also involved
+  # emergency conditions or ACS conditions.
+
+# nonemerg_visit <- scp_long %>% 
+       # mutate(`nonemerg?` = grepl(non_emerg,value)) %>%
+       # group_by(visit) %>% 
+       # summarize(code_sum = sum(`nonemerg?`),
+                  # nonemerg_YN = ifelse(code_sum > 0, "Yes", "No")) 
+
+# View(nonemerg_visit %>% 
+       # group_by(nonemerg_YN) %>% 
+       # tally)
+
+# MENTAL HEALTH VISITS
+
+# mental_visit <- scp_long %>% 
+  # mutate(`mental?` = grepl(mental,value)) %>%
+  # group_by(visit) %>% 
+  # summarize(code_sum = sum(`mental?`),
+            # mental_YN = ifelse(code_sum > 0, "Yes", "No")) 
+# View(mental_visit %>% 
+       # group_by(mental_YN) %>%
+       # tally)
+
+# SUBSTANCE ABUSE VISITS
+# subabuse_visit <- scp_long %>% 
+  # mutate(`sub abuse?` = grepl(sub_abuse,value)) %>%
+  # group_by(visit) %>% 
+  # summarize(code_sum = sum(`sub abuse?`),
+            # subabuse_YN = ifelse(code_sum > 0, "Yes", "No")) 
+
+# View(subabuse_visit %>% 
+       # group_by(subabuse_YN) %>%
+       # tally)
+
+# DENTAL VISITS
+# dental_visit <- scp_long %>% 
+  # mutate(`dental?` = grepl(dental,value)) %>%
+  # group_by(visit) %>% 
+  # summarize(code_sum = sum(`dental?`),
+            # dental_YN = ifelse(code_sum > 0, "Yes", "No"))
+
+# View(dental_visit %>% 
+       # group_by(dental_YN) %>%
+       # tally)
