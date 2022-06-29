@@ -65,7 +65,7 @@ df <- select (df,-c(Attend_MD, Attend_MD_TN_Lic_Num, Attend_MD_UPIN,
                            Operate_MD, Other_Prov_MD1, Other_Prov_MD2, Other_Prov_MD_TN_Lic_Num1,
                            Other_Prov_MD_TN_Lic_Num2, Other_Prov_MD_UPIN1, Other_Prov_MD_UPIN2,
                            Primary_Insr_Group_Num, Secondary_Insr_Group_Num, Tertiary_Insr_Group_Num,
-                           Admit_Hr, Infant_Age_Months))
+                          Infant_Age_Months))
               
 #Batch 3      
 df <- select (df,-c(Accident_Code, Operate_MD_TN_Lic_Num,Operate_MD_UPIN)) 
@@ -75,7 +75,11 @@ df <- select(df, -starts_with(c('Ecode', 'E_POA', 'Proc')))
 
 #Create New CSV File of this Data
 
-write.csv(df, "scp_data", row.names = TRUE)
+# Inital CSV FILE (included removal of admit_hr col)
+#write.csv(df, "scp_data", row.names = TRUE)
+
+#Current Data set (reintroduced admit_hr col to primary dataset)
+write.csv(df, "scp_data_1", row.names = TRUE)
 
 
 
