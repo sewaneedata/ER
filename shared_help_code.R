@@ -1,8 +1,11 @@
 # THIS IS OUR SHARED SCRIPT THAT INCLUDES ALL HELPFUL CODE NEEDED TO SET UP DATA-MINING
 ################
 # THIS IS NOT OUR DELIVERABLE CODE
-##############################################################
+################
 
+# RUN LINES 10 THRU 108 EVERYDAY BEFORE DATA MINING...
+# THE OTHER LINES ARE OPTIONAL, HELPFUL CODE
+################
 # libraries:
 library(dplyr)
 library(readr)
@@ -12,6 +15,8 @@ library(gsheet)
 
 # scp_data data frame
 scp <- readr::read_csv("Dropbox/DATALAB/ER_Project/scp_data")
+
+scp <- rename(scp, visit = ...1)
 
 # NOTE: If we determine that "ER_Record_Flag" indicates that the ER was used, we will add
 # the following code to filter the 'scp' data down further to only ER visits.
