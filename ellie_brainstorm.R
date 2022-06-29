@@ -7,7 +7,7 @@ library(ggplot2)
 library(gsheet)
 
 # scp_data set
-df <- readr::read_csv("Dropbox/DATALAB/ER_Project/scp_data")
+scp <- readr::read_csv("Dropbox/DATALAB/ER_Project/scp_data")
 
 # See "shared_help_code.R" for vectors and necessary code to set up data mining.
 
@@ -91,6 +91,8 @@ ggplot(data = perc_by_race_zip, aes(x = Race_Chr, y = percentage, fill = Race_Ch
         axis.ticks.x=element_blank(),
         legend.position = 'bottom')
 
+#  
+
 #####################################################
 
 # How many visits had an 'ER_Record_Flag'?
@@ -101,7 +103,10 @@ View(scp %>%
 # This variable shows only visits that have a "Y" (yes) response under the 
 # "ER_Record_Flag" column, indicating which visits from the "scp" data were
 # to the ER.
-ER <- scp %>%
+scp %>%
+  filter(ER_Record_Flag == "Y")
+
+scp_long %>%
   filter(ER_Record_Flag == "Y")
 # NOTE: if we determine that ER_Record_Flag means ER visit, as we suspect, then
   # I will add the above code to line 19 of "shared_help_code.R" to filter the data 
@@ -109,9 +114,10 @@ ER <- scp %>%
 
 # Looking at how many visits to the ER had a primary diagnosis of an acsc.
 # Also calculating the percentage out of total ER visits
-ER %>% 
+ER_acs_prim <- scp %>% 
+  filter(ER_Record_Flag == "Y") %>%
   mutate(primary = grepl(acs, Diag1)) %>% 
-  group_by(...1) %>%
+  group_by(visit) %>%
   summarize(code_sum = sum(primary),
             acsprim_YN = ifelse(code_sum > 0, "Yes", "No")) %>% 
   group_by(acsprim_YN) %>% 
@@ -119,7 +125,35 @@ ER %>%
   mutate(total = sum(n)) %>% 
   group_by(acsprim_YN, n) %>% 
   summarise(percentage = n/total*100)
-    
+  
+# How many visits to the ER had any acsc diagnosis & calculating percentage out of
+# total ER visits.
+ER_acs_diag <- scp_long %>% 
+  filter(ER_Record_Flag == 'Y') %>% 
+  mutate(`acs?` = grepl(acs, value)) %>% 
+  group_by(visit) %>%
+  summarize(code_sum = sum(`acs?`),
+            acs_YN = ifelse(code_sum > 0, "Yes", "No")) %>% 
+  group_by(acs_YN) %>% 
+  tally %>%
+  mutate(total = sum(n)) %>% 
+  group_by(acs_YN, n) %>% 
+  summarise(percentage = n/total*100)
+
+# plot the above two findings:
+
+# Visits to the ER for acsc vs non-acsc PRIMARY diagnosis
+
+
+# Visits to the ER for acsc vs non-acsc
+ggplot(data = ER_acs_diag, aes(x = acs_YN, y = percentage, fill = acs_YN)) +
+  geom_bar(stat = 'identity')+
+  labs(x = 'ACSC Diagnosis',
+       y = 'Percentage of ER Visits') +
+  theme(legend.position = 'none')
+
+
+
 
 
 
