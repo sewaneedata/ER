@@ -163,8 +163,14 @@ test <- scp %>% filter(select(scp, contains("Diag")) %in% icd) %>% tally()
         title = "Number of Patients from SCP",
         subtitle = "By Sex",
         caption = "DataLab 2022") + theme(legend.position = 'NONE')
+ scp %>% filter(ER_Record_Flag == "Y") %>% group_by(File_Type) %>% tally()
  
  
+ #What day of week is ER most frequented?
+ #What hour is ER most frequesnted
+ #Adults vs. Kids?
+ #Age Range selection
+
  ###############################################################################
  # Data mining -----
  ###############################################################################
@@ -245,8 +251,25 @@ test <- scp %>% filter(select(scp, contains("Diag")) %in% icd) %>% tally()
  acs_visit <- scp_long %>% 
    mutate(`acs?` = grepl(acs,value)) %>% # create T/F column to show if acs code is present.
    group_by(visit) %>% # group by visit so the next step can work.
-   summarize(code_sum = sum(`acs?`), # create column to show total acs codes from each visit.
+   summarize(code_sum = sum(`acs?`),# create column to show total acs codes from each visit.
              acs_YN = ifelse(code_sum > 0, "Yes", "No")) # create column to show if each visit had an acs code or not.
+ acs_visit <- scp_long %>% 
+   mutate(`noner?` = grepl(non_emerg,value)) %>% # create T/F column to show if acs code is present.
+   group_by(visit) %>% # group by visit so the next step can work.
+   summarize(code_sum = sum(`noner?`), # create column to show total acs codes from each visit.
+             acs_YN = ifelse(code_sum > 0, "Yes", "No"))
+ 
+ 
+ acs_visit <- scp_long %>% 
+   mutate(`acs?` = grepl(acs,value), `noner?` = grepl(non_emerg,value)) %>% # create T/F column to show if acs code is present.
+   group_by(visit) %>% # group by visit so the next step can work.
+   summarize(code_sum = sum(`acs?`), code_sum2 = sum(`noner?`),# create column to show total acs codes from each visit.
+             acs_YN = ifelse(code_sum > 0, "Yes", "No"), non_yn = ifelse(code_sum2 > 0, "Yes", "No"))
+ 
+ emergency_visits <- acs_visit %>% filter(acs_YN != "Yes", non_yn != "Yes")
+ 
+ #How many distinct Hospitals did Grundy people visit?
+ scp %>% distinct(JARID) %>% tally()
  
  View(acs_visit %>% 
         group_by(acs_YN) %>%
@@ -297,6 +320,98 @@ avg_acsc_visit <- scp_long %>%
             acs_prec = (code_sum/total)*100) %>%
   summarize(avg_prec = mean(acs_prec))
 #FOUND: Mean % of diags that were acsc among all patients is 16% 
+
+################################################################################
+# Exploring Weekday Info
+
+library(lubridate)
+
+#Make new DF that translates date into a readable format
+date_scp <- scp %>% 
+  mutate(datetime = mdy(creation_dt), 
+         week_day = weekdays(datetime), #make a weekday value for each row
+         month = month(datetime)) #make a month value for each row
+
+#Inpatient and OUtpatient visits over the course of the whole year
+date_scp1 <- date_scp %>% group_by(month, File_Type) %>% tally()
+
+#Make Plot
+require(scales)
+ggplot(data = date_scp1, aes(x = month, y = n, color = File_Type)) + 
+  geom_point() + 
+  geom_line() +
+  scale_x_continuous(breaks = 1:12)
+
+# Make a new graph looking into how ACSC correlates by month
+date_scp2 <- scp_long %>% 
+  mutate(`acs?` = grepl(acs,value), 
+         datetime = mdy(creation_dt), 
+         week_day = weekdays(datetime),
+         month = month(datetime)) %>% 
+  group_by(visit, month, File_Type) %>% 
+  summarize(code_sum = sum(`acs?`),# create column to show total acs codes from each visit.
+         acs_YN = ifelse(code_sum > 0, "Yes", "No")) %>% 
+  group_by( month, File_Type, acs_YN) %>% 
+  tally()
+
+#Inpatient and Outpatient showing total visits by month showing what num of visits ACSC
+ggplot( data = date_scp2, aes( x = month, y = n, color = acs_YN)) +
+  geom_point() + 
+  geom_line() +
+  facet_wrap(~File_Type) +
+  scale_x_continuous(breaks = 1:12)
+
+#FILKTER BY ER FLAG TO SEE HOW THAT CHANGES ^^^^^
+
+################################################################################
+#ACSC Monthly ER Admissions ----
+# How how does ER I/O Admissions look by month and by ACSC indicator
+date_scp3 <- scp_long %>% 
+  mutate(`acs?` = grepl(acs,value), 
+         datetime = mdy(creation_dt), 
+         week_day = weekdays(datetime),
+         month = month(datetime)) %>% 
+  filter(ER_Record_Flag == "Y") %>% 
+  group_by(visit, month, File_Type) %>% 
+  summarize(code_sum = sum(`acs?`),# create column to show total acs codes from each visit.
+            acs_YN = ifelse(code_sum > 0, "Yes", "No")) %>% 
+  group_by( month, File_Type, acs_YN) %>% 
+  tally()
+
+#Inpatient and Outpatient showing total visits by month showing what num of visits ACSC
+ggplot( data = date_scp3, aes( x = month, y = n, color = acs_YN)) +
+  geom_point() + 
+  geom_line() +
+  facet_wrap(~File_Type) +
+  scale_x_continuous(breaks = 1:12)
+#FOUND: more Outpatient visits and large fluctuation in ER ACSC vs. Emergency Visits
+
+################################################################################
+
+# ACSC Primary Diag I/O ER Admission by month ------
+
+month_acsc <- scp_long %>% 
+  filter(name == "Diag1") %>% 
+  mutate(`acs?` = grepl(acs,value), 
+         datetime = mdy(creation_dt), 
+         week_day = weekdays(datetime),
+         month = month(datetime)) %>% 
+  filter(ER_Record_Flag == "Y") %>% 
+  group_by(visit, month, File_Type) %>% 
+  summarize(code_sum = sum(`acs?`),# create column to show total acs codes from each visit.
+            acs_YN = ifelse(code_sum > 0, "Yes", "No")) %>% 
+  group_by( month, File_Type, acs_YN) %>% 
+  tally()
+
+#Inpatient and Outpatient showing total visits by month showing what num of visits ACSC
+ggplot( data = month_acsc, aes( x = month, y = n, color = acs_YN)) +
+  geom_point() + 
+  geom_line() +
+  facet_wrap(~File_Type) +
+  scale_x_continuous(breaks = 1:12)
+
+################################################################################
+
 
 
 
