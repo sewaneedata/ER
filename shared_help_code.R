@@ -21,27 +21,7 @@ scp <- rename(scp, visit = ...1)
 # NOTE: If we determine that "ER_Record_Flag" indicates that the ER was used, we will add
 # the following code to filter the 'scp' data down further to only ER visits.
     
-  scp2 <- scp %>% filter(ER_Record_Flag == "Y")
-  
-# FOR NOW, naming the above varible scp2 instead of overriding the original scp so 
-  # that we can work with the filtered down data but return to the original 'scp' if needed (if we
-  # find out that ER_Record_Flag doesn't indicate ER use.)
-  
-# Run the following for an updated 'scp2' data frame that has:
-  # 1. new columns that indicate whether or not the primary diagnosis was ACSC, mental, dental, etc.,
-  # 2. a new column called 'Age_Group' that sorts patients into groups by decade,
-  # 3. removes N/As for Patient_Sex.
-  
-scp2 <- scp2 %>%
-  drop_na(Patient_Sex) %>% 
-  mutate(acs_primary = grepl(acs, Diag1), 
-         mental_primary = grepl(mental, Diag1),
-         subabuse_primary = grepl(sub_abuse, Diag1),
-         dental_primary = grepl(dental, Diag1),
-         age_group = cut(Age,
-                         breaks = 10,
-                         labels = c('0-9', '10-19', '20-29', '30-39', '40-49',
-                                      '50-59', '60-69', '70-79', '80-89', '90-99')))
+  scp <- scp %>% filter(ER_Record_Flag == "Y")
 
 ###########################
 # VECTORS of ICD-10 codes:
@@ -119,68 +99,45 @@ dental <- as.vector(unlist(dental$'ICD_10_code'))
 dental <- paste0( dental, collapse = "|^" )
 dental <- paste0("^", dental)
 
+#################################################
+# Run the following for an updated 'scp' data frame that has:
+# 1. new columns that indicate whether or not the primary diagnosis was ACSC, mental, dental, etc.,
+# 2. a new column called 'Age_Group' that sorts patients into groups by decade,
+# 3. removes N/As for Patient_Sex.
+scp <- scp %>%
+  drop_na(Patient_Sex) %>% 
+  mutate(acs_primary = grepl(acs, Diag1),
+         nonemerg_primary = grepl(non_emerg, Diag1),
+         mental_primary = grepl(mental, Diag1),
+         subabuse_primary = grepl(sub_abuse, Diag1),
+         dental_primary = grepl(dental, Diag1),
+         age_group = cut(Age,
+                         breaks = 10,
+                         labels = c('0-9', '10-19', '20-29', '30-39', '40-49',
+                                    '50-59', '60-69', '70-79', '80-89', '90-99')))
+
 ######################################
 # SEARCH THROUGH ONLY THE PRIMARY DIAGNOSIS COLUMN (Diag1):
 ######################################
-# Will use the  'scp2' data frame for this (it has all diag columns separated).
+# Will use the  'scp' data frame for this (it has all diag columns separated).
 
 # What percentage of all visits to the ER had a primary diagnosis of ACSC?
-scp2 %>% 
+perc_acsc <- scp %>% 
   group_by(acs_primary) %>%
   tally %>% 
   mutate(total = sum(n)) %>%
   group_by(acs_primary, n, total) %>% 
   summarise(perc = n/total*100)
     # The column name in group_by() can be replaced to see trends for other conditions
-      # (mental, dental, substance abuse, etc.)
+      # (non emergent, mental, dental, substance abuse, etc.)
+      # example below shows non emergent trends
 
-# NON EMERG (excludes any ACS conditions) trends:
-# What percentage of all visits to the ER had a primary diagnosis that was non-emergent?
-
-
-
-# MENTAL HEALTH trends:
-# What percentage of all visits to the ER had a primary diagnosis that was mental
-  # health related?
-View(scp %>% 
-       mutate(primary_diag = grepl(mental, Diag1)) %>% 
-       group_by(visit, primary_diag) %>% 
-       summarize(code_sum = sum(primary_diag),
-                 mental_YN = ifelse(code_sum > 0, "Yes", "No")) %>% 
-       group_by(mental_YN) %>% 
-       tally)
-
-# SUBSTANCE ABUSE Visits
-View(scp %>% 
-       mutate(primary_diag = grepl()))
-
-# DENTAL Visits
-
-
-
-# How many hospital visits were for a primary diagnosis that was an acs condition?
-
-# Create a new variable from 'scp' that only looks at 'Diag1' column and identifies
-# Whether or not the primary diagnosis was an acs conditon in a new column
-# named 'acsprim_YN'.
-acs_primdiag <- scp %>%
-  mutate(primary = grepl(acs, Diag1)) %>% 
-  group_by(...1) %>% 
-  summarize(code_sum = sum(primary),
-            acsprim_YN = ifelse(code_sum > 0, "Yes", "No"))
-
-# Look at the number of primary diagnoses that are acsc.
-View(test %>% 
-       group_by(acsprim_YN) %>%
-       tally)
-
-
-
-
-
-
-
-
+perc_nonemerg <- scp %>% 
+  group_by(nonemerg_primary) %>%
+  tally %>% 
+  mutate(total = sum(n)) %>%
+  group_by(nonemerg_primary, n, total) %>% 
+  summarise(perc = n/total*100)
 
 ################################################
 # IF NEEDED, the following allows you to search thru all diag columns at once:
