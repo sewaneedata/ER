@@ -7,20 +7,20 @@
 age_sex_ER <- scp %>%
   filter(Age < 999) %>% # remove 2 random ppl with 999 as age
   drop_na(Patient_Sex) %>% #drop the N/As from Patient_Sex
-  mutate(Age_Group = cut(Age, 
+  mutate(age_group = cut(Age, 
                          breaks = 10, 
                          labels = c('0-9', '10-19', '20-29', '30-39', '40-49',
                                     '50-59', '60-69', '70-79', '80-89', '90-99'))) %>%
   # use cut function to make a new column of "age groups" (by decade).
-  group_by(Age_Group, Patient_Sex) %>% 
+  group_by(age_group, Patient_Sex) %>% 
   tally %>%
   ungroup() %>% 
   mutate(total = sum(n)) %>% 
-  group_by(Age_Group, Patient_Sex) %>% 
+  group_by(age_group, Patient_Sex) %>% 
   summarise(perc = n/total*100)
 
   # Then, plot to show percentage on y, age groups on x, and facet wrap by Sex. 
-ggplot(age_sex_ER, aes(x = Age_Group, y = perc, fill = Age_Group)) +
+ggplot(age_sex_ER, aes(x = age_group, y = perc, fill = age_group)) +
   geom_histogram(stat = 'identity')+
   theme(legend.position = 'none')+
   facet_wrap(~Patient_Sex, ncol = TRUE)+

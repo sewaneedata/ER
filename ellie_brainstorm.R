@@ -103,10 +103,10 @@ View(scp %>%
 # This variable shows only visits that have a "Y" (yes) response under the 
 # "ER_Record_Flag" column, indicating which visits from the "scp" data were
 # to the ER.
-scp %>%
+scp2 <- scp %>%
   filter(ER_Record_Flag == "Y")
 
-scp_long %>%
+scp_long2 <- scp_long %>%
   filter(ER_Record_Flag == "Y")
 # NOTE: if we determine that ER_Record_Flag means ER visit, as we suspect, then
   # I will add the above code to line 19 of "shared_help_code.R" to filter the data 
@@ -114,8 +114,7 @@ scp_long %>%
 
 # Looking at how many visits to the ER had a primary diagnosis of an acsc.
 # Also calculating the percentage out of total ER visits
-ER_acs_prim <- scp %>% 
-  filter(ER_Record_Flag == "Y") %>%
+ER_acs_prim <- scp2 %>%
   mutate(primary = grepl(acs, Diag1)) %>% 
   group_by(visit) %>%
   summarize(code_sum = sum(primary),
@@ -125,11 +124,17 @@ ER_acs_prim <- scp %>%
   mutate(total = sum(n)) %>% 
   group_by(acsprim_YN, n) %>% 
   summarise(percentage = n/total*100)
-  
+
+# PLOT
+ggplot(data = ER_acs_prim, aes(x = acsprim_YN, y = percentage, fill = acsprim_YN)) +
+  geom_bar(stat = 'identity')+
+  labs(x = 'ACSC as Primary Diagnosis',
+       y = 'Percentage of ER Visits') +
+  theme(legend.position = 'none')  
+
 # How many visits to the ER had any acsc diagnosis & calculating percentage out of
 # total ER visits.
-ER_acs_diag <- scp_long %>% 
-  filter(ER_Record_Flag == 'Y') %>% 
+ER_acs_diag <- scp_long2 %>%
   mutate(`acs?` = grepl(acs, value)) %>% 
   group_by(visit) %>%
   summarize(code_sum = sum(`acs?`),
@@ -140,21 +145,67 @@ ER_acs_diag <- scp_long %>%
   group_by(acs_YN, n) %>% 
   summarise(percentage = n/total*100)
 
-# plot the above two findings:
-
-# Visits to the ER for acsc vs non-acsc PRIMARY diagnosis
-
-
-# Visits to the ER for acsc vs non-acsc
+# PLOT
 ggplot(data = ER_acs_diag, aes(x = acs_YN, y = percentage, fill = acs_YN)) +
   geom_bar(stat = 'identity')+
   labs(x = 'ACSC Diagnosis',
        y = 'Percentage of ER Visits') +
   theme(legend.position = 'none')
 
+#########
+# Demographics of patients who were diagnosed with an ACS condition at the ER:
+  # Sex and Age group
+
+
+
+# How many unique hospitals in the scp data?  
+View(scp %>% 
+       group_by(JARID) %>% 
+       tally %>% 
+       arrange(desc(n)))
+
+# How many unique hospitals in the scp2 data? (filtered for ER use by ER_Record_Flag)
+View(scp2 %>% 
+  group_by(JARID) %>% 
+  tally %>% 
+    arrange(desc(n)))
 
 
 
 
 
+summarize(code_sum = sum(acs_primary),
+          acs_primary_YN = ifelse(code_sum > 0, "Yes", "No")) %>%
+  group_by(Patient_Sex, age_group, acs_primary_YN) 
 
+
+# VECTOR for rev codes 0450-0459
+
+rev <- c()
+
+for(code in 0:9){
+  new_value <- paste('045', as.character(code), sep = "")
+  rev <- c(rev, new_value)
+}
+
+rev <- paste0(rev, collapse = "|")
+
+# does type ER visit 
+scp %>% 
+  group_by(Type_ER_Visit) %>% 
+  tally
+
+
+
+scp %>% 
+  filter(ER_Record_Flag == 'Y') %>% 
+  tally
+
+scp %>% 
+  filter(ER_Record_Flag == 'N') %>% 
+  tally
+
+View(scp %>% 
+  filter(Type_ER_Visit == '3') %>%
+  group_by(ER_Record_Flag) %>% 
+  tally)
