@@ -94,7 +94,6 @@ ggplot(data = perc_by_race_zip, aes(x = Race_Chr, y = percentage, fill = Race_Ch
 #  
 
 #####################################################
-
 # How many visits had an 'ER_Record_Flag'?
 View(scp %>% 
   group_by(ER_Record_Flag) %>% 
@@ -103,34 +102,8 @@ View(scp %>%
 # This variable shows only visits that have a "Y" (yes) response under the 
 # "ER_Record_Flag" column, indicating which visits from the "scp" data were
 # to the ER.
-scp2 <- scp %>%
+scp <- scp %>%
   filter(ER_Record_Flag == "Y")
-
-scp_long2 <- scp_long %>%
-  filter(ER_Record_Flag == "Y")
-# NOTE: if we determine that ER_Record_Flag means ER visit, as we suspect, then
-  # I will add the above code to line 19 of "shared_help_code.R" to filter the data 
-  # down to only ER visits. 
-
-# Looking at how many visits to the ER had a primary diagnosis of an acsc.
-# Also calculating the percentage out of total ER visits
-ER_acs_prim <- scp2 %>%
-  mutate(primary = grepl(acs, Diag1)) %>% 
-  group_by(visit) %>%
-  summarize(code_sum = sum(primary),
-            acsprim_YN = ifelse(code_sum > 0, "Yes", "No")) %>% 
-  group_by(acsprim_YN) %>% 
-  tally %>%
-  mutate(total = sum(n)) %>% 
-  group_by(acsprim_YN, n) %>% 
-  summarise(percentage = n/total*100)
-
-# PLOT
-ggplot(data = ER_acs_prim, aes(x = acsprim_YN, y = percentage, fill = acsprim_YN)) +
-  geom_bar(stat = 'identity')+
-  labs(x = 'ACSC as Primary Diagnosis',
-       y = 'Percentage of ER Visits') +
-  theme(legend.position = 'none')  
 
 # How many visits to the ER had any acsc diagnosis & calculating percentage out of
 # total ER visits.
@@ -152,60 +125,88 @@ ggplot(data = ER_acs_diag, aes(x = acs_YN, y = percentage, fill = acs_YN)) +
        y = 'Percentage of ER Visits') +
   theme(legend.position = 'none')
 
-#########
-# Demographics of patients who were diagnosed with an ACS condition at the ER:
-  # Sex and Age group
-
-
 
 # How many unique hospitals in the scp data?  
-View(scp %>% 
-       group_by(JARID) %>% 
-       tally %>% 
-       arrange(desc(n)))
-
-# How many unique hospitals in the scp2 data? (filtered for ER use by ER_Record_Flag)
-View(scp2 %>% 
+scp %>% 
   group_by(JARID) %>% 
   tally %>% 
-    arrange(desc(n)))
+  arrange(desc(n))
+########################################
+# LOOKING INTO HOW TO EXPRESS ER OVERUSE (VISUALLY & WITH TABLES)
 
+# Primary diagnosis investigation:
 
+# 1. ACS conditions
+  # table
+perc_acsc <- scp %>% 
+  group_by(acs_primary) %>%
+  tally %>% 
+  mutate(total = sum(n)) %>%
+  group_by(acs_primary, n, total) %>% 
+  summarise(perc = n/total*100)
 
+  # pie chart
+x <- c(78.1, 21.9)
 
+pie(x,
+    labels = paste0(x, "%"), 
+    col = c('light blue', 'red'),
+    radius = .9,
+    main = "Primary Diagnoses at the ER")
+legend("bottomleft", legend = c('Other', 'ACSC'),
+       fill =  c("light blue", "red"), title = "Condition")
 
-summarize(code_sum = sum(acs_primary),
-          acs_primary_YN = ifelse(code_sum > 0, "Yes", "No")) %>%
-  group_by(Patient_Sex, age_group, acs_primary_YN) 
+# 2. non emergent
+  # table
+perc_nonemerg <- scp %>% 
+  group_by(nonemerg_primary) %>%
+  tally %>% 
+  mutate(total = sum(n)) %>%
+  group_by(nonemerg_primary, n, total) %>% 
+  summarise(perc = n/total*100)
 
+  # pie chart
+x <- c(82.7, 17.3)
 
-# VECTOR for rev codes 0450-0459
+pie(x, 
+    labels = paste0(x, "%"), 
+    col = c('light blue', 'red'),
+    radius = .7,
+    main = "Primary Diagnoses at the ER")
+legend("bottomleft", legend = c('Other', 'Non Emergent'),
+       fill =  c("light blue", "red"), title = "Condition")
 
-rev <- c()
+#########
+# Investigating comparisons between acsc, non emerg, mental health etc.
+  # table
+acs_nonemerg_other <- scp %>% 
+  group_by(acs_primary, nonemerg_primary) %>% 
+  tally %>% 
+  ungroup() %>% 
+  mutate(total = sum(n)) %>% 
+  summarise(percentage = n/total*100, across(everything())) %>%
+  mutate( type = case_when( !acs_primary & !nonemerg_primary ~ "Other",
+                                 acs_primary ~ "ACS", 
+                                 nonemerg_primary ~ "Non emergent" )) %>% 
+  mutate(Condition = ifelse(type == 'Other', "Other", "ACS/Non emergent"))
 
-for(code in 0:9){
-  new_value <- paste('045', as.character(code), sep = "")
-  rev <- c(rev, new_value)
-}
+  # Bar chart
+ggplot(data = acs_nonemerg_other, aes(x = Condition, 
+                                      y = percentage, 
+                                      fill = type)) +
+  geom_col()+
+  labs(title = "Comparison of Primary Diagnosis Conditions",
+       y = "Percentage of Visits") +
+  scale_fill_discrete(name = "Type of Condition")
+  # Can I put percentages on the bars?
+# try ..... this
+# geom_col(position = 'dodge') + 
+# geom_text(position = position_dodge(width = .9),    # move to center of bars
+          # vjust = -0.5,    # nudge above top of bar
+          # size = 3) + 
+  # scale_y_continuous(labels = scales::percent)
 
-rev <- paste0(rev, collapse = "|")
+#############
+# compare percent of mental health visits that were for substance abuse related issues
 
-# does type ER visit 
-scp %>% 
-  group_by(Type_ER_Visit) %>% 
-  tally
-
-
-
-scp %>% 
-  filter(ER_Record_Flag == 'Y') %>% 
-  tally
-
-scp %>% 
-  filter(ER_Record_Flag == 'N') %>% 
-  tally
-
-View(scp %>% 
-  filter(Type_ER_Visit == '3') %>%
-  group_by(ER_Record_Flag) %>% 
-  tally)
+# graphs showing zipcodes and acs conditions
