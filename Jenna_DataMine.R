@@ -16,7 +16,7 @@ non_emergent <- gsheet::gsheet2tbl("https://docs.google.com/spreadsheets/d/14m7R
 non_emergent <- as.vector(unlist(non_emergent$'ICD-10'))
 
 #3. Read in data
-scp <- read.csv("C:/Users/jplus/Downloads/scp_data")
+scp <- read.csv("C:/Users/jplus/OneDrive/Documents/DataLab/ER_Usage/Transform_Data/scp_data_1")
 
 #4. Make diag into one columns with multiple rows per patient
 scp <- scp %>% pivot_longer(starts_with("Diag"))
@@ -411,8 +411,37 @@ ggplot( data = month_acsc, aes( x = month, y = n, color = acs_YN)) +
   scale_x_continuous(breaks = 1:12)
 
 ################################################################################
+# Hour Data Analysis -----
+
+# ER Admission overall by hour (by inpatient and outpatient)
+hour_df <- scp %>% 
+  drop_na(Admit_Hr) %>% 
+  filter(ER_Record_Flag == "Y") %>% 
+  group_by(File_Type, Admit_Hr) %>% 
+  tally()
+
+#To Make that graph ^
+ggplot( data = hour_df, aes (x = Admit_Hr, y = n, color = File_Type)) + 
+  geom_point() +
+  geom_line() +
+  scale_x_continuous(breaks = 0:23) #to get hours into integers 
 
 
+################################################################################
+# Data mining with new ACSC ------
+
+#Test how many primary diags are ACSC with new ACSC 
+test_graph <-  scp_long %>% 
+  filter(name == "Diag1", ER_Record_Flag == "Y") %>% 
+  mutate(`acs?` = grepl(acs,value)) %>% # create T/F column to show if acs code is present.
+  group_by(visit) %>% # group by visit so the next step can work.
+  summarize(code_sum = sum(`acs?`),# create column to show total acs codes from each visit.
+            acs_YN = ifelse(code_sum > 0, "Yes", "No")) %>% 
+  group_by(acs_YN) %>% 
+  tally() #get count
+
+ggplot( data = test_graph, aes(x = acs_YN, y = n)) + geom_col()
+#FOUND: ~22% of all er VISITS HAVE A PRIMARY ACSC DIAG
 
 
  
