@@ -1,34 +1,27 @@
+################################
 # CODE FOR OUR DELIVERABLES .... NOT INDIVIDUAL BRAINSTORMING
 ################################
 
-# Making a graph that expresses demographics (sex and age) of who used the ER:
-  # First, make a new variable that can later be plotted
-    
-age_sex_ER <- scp %>%
-  filter(Age < 999) %>% # remove 2 random ppl with 999 as age
-  drop_na(Patient_Sex) %>% #drop the N/As from Patient_Sex
-  mutate(age_group = cut(Age, 
-                         breaks = 10, 
-                         labels = c('0-9', '10-19', '20-29', '30-39', '40-49',
-                                    '50-59', '60-69', '70-79', '80-89', '90-99'))) %>%
-  # use cut function to make a new column of "age groups" (by decade).
-  group_by(age_group, Patient_Sex) %>% 
-  tally %>%
+# Code for basic ER overuse table & plot:
+# table & variable
+acs_nonemerg_other <- scp %>% 
+  group_by(acs_primary, nonemerg_primary) %>% 
+  tally %>% 
   ungroup() %>% 
   mutate(total = sum(n)) %>% 
-  group_by(age_group, Patient_Sex) %>% 
-  summarise(perc = n/total*100)
+  summarise(percentage = n/total*100, across(everything())) %>%
+  mutate( type = case_when( !acs_primary & !nonemerg_primary ~ "Other",
+                            acs_primary ~ "ACS", 
+                            nonemerg_primary ~ "Non emergent" )) %>% 
+  mutate(Condition = ifelse(type == 'Other', "Other", "ACS/Non emergent"))
 
-  # Then, plot to show percentage on y, age groups on x, and facet wrap by Sex. 
-ggplot(age_sex_ER, aes(x = age_group, y = perc, fill = age_group)) +
-  geom_histogram(stat = 'identity')+
-  theme(legend.position = 'none')+
-  facet_wrap(~Patient_Sex, ncol = TRUE)+
-  labs(title = 'Demographics of Dataset',
-       subtitle = 'By Age Group & Sex',
-       x = 'Age Group',
-       y = 'Percentage of dataset')
-#######################################
+# bar chart
+ggplot(data = acs_nonemerg_other, aes(x = Condition, 
+                                      y = percentage, 
+                                      fill = type)) +
+  geom_col()+
+  labs(title = "Comparison of Primary Diagnosis Conditions",
+       y = "Percentage of Visits") +
+  scale_fill_discrete(name = "Type of Condition")
 
-
-
+######
