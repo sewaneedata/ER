@@ -131,8 +131,6 @@ scp <- scp %>%
                                         "NULL")
                          )))
 
-
-
 ######################################
 # SEARCH THROUGH ONLY THE PRIMARY DIAGNOSIS COLUMN (Diag1):
 ######################################
