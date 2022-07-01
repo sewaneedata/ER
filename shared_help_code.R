@@ -14,7 +14,8 @@ library(ggplot2)
 library(gsheet)
 
 # scp_data data frame
-scp <- readr::read_csv("Dropbox/DATALAB/ER_Project/scp_data")
+# scp <- readr::read_csv("Dropbox/DATALAB/ER_Project/scp_data")
+scp <- readr::read_csv("C:/Users/jplus/OneDrive/Documents/DataLab/ER_Usage/Transform_Data/scp_data_1")
 
 scp <- rename(scp, visit = ...1)
 
@@ -104,6 +105,12 @@ dental <- paste0("^", dental)
 # 1. new columns that indicate whether or not the primary diagnosis was ACSC, mental, dental, etc.,
 # 2. a new column called 'Age_Group' that sorts patients into groups by decade,
 # 3. removes N/As for Patient_Sex.
+
+#UPDATE WHEN GET G and H Zips Reassigned!!!!!
+grundy_zip <- c("A", "B", "C", "D", "K", "F", "L", "N")
+frank_zip <- c("E", "J", "M")
+marion_zip <- c("I", "G", "H")
+
 scp <- scp %>%
   drop_na(Patient_Sex) %>% 
   mutate(acs_primary = grepl(acs, Diag1),
@@ -114,7 +121,17 @@ scp <- scp %>%
          age_group = cut(Age,
                          breaks = 10,
                          labels = c('0-9', '10-19', '20-29', '30-39', '40-49',
-                                    '50-59', '60-69', '70-79', '80-89', '90-99')))
+                                    '50-59', '60-69', '70-79', '80-89', '90-99')),
+         county = ifelse(Patient_Zip %in% grundy_zip, 
+                         "Grundy", 
+                         ifelse( Patient_Zip %in% frank_zip,
+                                 "Franklin",
+                                 ifelse(Patient_Zip %in% marion_zip,
+                                        "Marion",
+                                        "NULL")
+                         )))
+
+
 
 ######################################
 # SEARCH THROUGH ONLY THE PRIMARY DIAGNOSIS COLUMN (Diag1):
