@@ -1,7 +1,6 @@
 ################################################################################
 # INTERACIVE DASHBOARD ------
-# Description:
-
+# Description: 
 
 ################################################################################
 # Libraries ------
@@ -16,24 +15,25 @@ library(shinydashboard)
 ################################################################################
 
   
-  # Header
+  # Header ----
   header <- dashboardHeader(
     title = "Investigating ER Overuse", 
     titleWidth = 300
     )
   
-  #Side Navigation Bar
+  #Side Navigation Bar ----
   sidebar <- dashboardSidebar(
     sidebarMenu(
       HTML(paste0(
         "<br>"
       )),
+      #Add Image in Menu
       HTML(paste0(
         "<a href='datalab_logo.jpg' target='_blank'><img style = 'display: block; margin-left: auto; margin-right: auto;' src='datalab_logo.jpg' width = '186'></a>",
         "<br>"
         )),
       
-    # Tabs
+    # Add Tabs
     menuItem("Overview", tabName = "Overview", icon = icon("home")),
     menuItem("ER Overuse", tabName = "ER_Overuse", icon = icon("bar-chart-o")),
     menuItem("Map", tabName = "Map", icon = icon("map")),
@@ -41,7 +41,7 @@ library(shinydashboard)
     menuItem("Conclusion", tabName = "con", icon = icon("tasks"))
     ))
   
-  # Body
+  # Body ----
   body <- dashboardBody(
     tabItems(
       #Adding Rmarkdown welcome page
@@ -51,21 +51,16 @@ library(shinydashboard)
                 includeMarkdown("www/er_overuse.Rmd"))
         )
   )
-    #Testing to see if using HTML would be good or if we should just use RMARK
      
   
-  # Compile UI
+  # Compile UI ----
 ui <- dashboardPage(header, sidebar, body, 
                     skin = "red")
-      
-    
-
-
-
 
 ################################################################################
 #SERVER ------
 ################################################################################
+
 # Define server logic required to draw a histogram
 server <- function(input, output) {
 
