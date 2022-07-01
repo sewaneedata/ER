@@ -107,8 +107,8 @@ scp <- scp %>%
 
 # How many visits to the ER had any acsc diagnosis & calculating percentage out of
 # total ER visits.
-ER_acs_diag <- scp_long2 %>%
-  mutate(`acs?` = grepl(acs, value)) %>% 
+ER_acs_diag <- scp %>%
+  mutate(`acs?` = grepl(acs, Diag1)) %>% 
   group_by(visit) %>%
   summarize(code_sum = sum(`acs?`),
             acs_YN = ifelse(code_sum > 0, "Yes", "No")) %>% 
@@ -177,7 +177,7 @@ legend("bottomleft", legend = c('Other', 'Non Emergent'),
        fill =  c("light blue", "red"), title = "Condition")
 
 #########
-# Investigating comparisons between acsc, non emerg, mental health etc.
+# Investigating comparisons between acsc, non emerg, and other conditions.
   # table
 acs_nonemerg_other <- scp %>% 
   group_by(acs_primary, nonemerg_primary) %>% 
@@ -191,22 +191,138 @@ acs_nonemerg_other <- scp %>%
   mutate(Condition = ifelse(type == 'Other', "Other", "ACS/Non emergent"))
 
   # Bar chart
-ggplot(data = acs_nonemerg_other, aes(x = Condition, 
-                                      y = percentage, 
-                                      fill = type)) +
-  geom_col()+
+ggplot(data = acs_nonemerg_other, 
+       aes(x = Condition,
+           y = percentage/100,
+           fill = type)) +
+  geom_col() +
+  scale_y_continuous(labels = scales::percent) + 
   labs(title = "Comparison of Primary Diagnosis Conditions",
        y = "Percentage of Visits") +
   scale_fill_discrete(name = "Type of Condition")
-  # Can I put percentages on the bars?
-# try ..... this
-# geom_col(position = 'dodge') + 
-# geom_text(position = position_dodge(width = .9),    # move to center of bars
-          # vjust = -0.5,    # nudge above top of bar
-          # size = 3) + 
-  # scale_y_continuous(labels = scales::percent)
 
 #############
-# compare percent of mental health visits that were for substance abuse related issues
+# Look into specific zip codes at different conditions
+zipcode_primary <- scp %>% 
+  group_by(Patient_Zip, acs_primary, nonemerg_primary) %>%
+  tally %>%
+  ungroup() %>% 
+  group_by(Patient_Zip) %>% 
+  summarise(percentage = (n/sum(n))*100, across(everything())) %>%
+  mutate( type = case_when( !acs_primary & !nonemerg_primary ~ "Other",
+                            acs_primary ~ "ACS", 
+                            nonemerg_primary ~ "Non emergent" )) %>% 
+  mutate(Condition = ifelse(type == 'Other', "Other", "ACS/Non emergent"))
+  
+# graph of the above variable
+ggplot(data = zipcode_primary, 
+       aes(x = percentage/100,
+           y = Patient_Zip,
+           fill = type)) +
+  geom_col() +
+  scale_x_continuous(labels = scales::percent) + 
+  labs(title = "Comparison of Primary Diagnosis Conditions",
+       x = "Percent",
+       y = "Zip Code") +
+  scale_fill_discrete(name = "Type of Condition") +
+  theme(legend.position = 'bottom')
 
-# graphs showing zipcodes and acs conditions
+# same data, different graph
+ggplot(data = zipcode_primary, 
+       aes(x = Patient_Zip,
+           y = percentage/100,
+           fill = type)) +
+  geom_col(position = 'dodge') +
+  scale_y_continuous(labels = scales::percent) + 
+  labs(title = "Primary Diagnoses Across Different Zipcodes",
+       x = "Percent",
+       y = "Zip Code") +
+  scale_fill_discrete(name = "Type of Condition") +
+  theme(legend.position = 'bottom')
+
+# Trends in specific zip codes
+  # Zip A:
+zipA <- scp %>% 
+  filter(Patient_Zip == 'A') %>% 
+  group_by(acs_primary, nonemerg_primary, mental_primary, subabuse_primary, dental_primary) %>%
+  tally %>%
+  ungroup() %>%
+  summarise(percentage = (n/sum(n))*100, across(everything())) %>%
+  mutate( type = case_when( !acs_primary & !nonemerg_primary & !mental_primary & !subabuse_primary &!dental_primary~ "Other",
+                            dental_primary ~ "Dental",
+                            acs_primary ~ "ACS",
+                            subabuse_primary ~ "Substance Abuse",
+                            mental_primary ~ "Mental Health",
+                            nonemerg_primary ~ "Non emergent"))
+
+zipB <- scp %>% 
+  filter(Patient_Zip == 'B') %>% 
+  group_by(acs_primary, nonemerg_primary, mental_primary, subabuse_primary, dental_primary) %>%
+  tally %>%
+  ungroup() %>%
+  summarise(percentage = (n/sum(n))*100, across(everything())) %>%
+  mutate( type = case_when( !acs_primary & !nonemerg_primary & !mental_primary & !subabuse_primary &!dental_primary~ "Other",
+                            dental_primary ~ "Dental",
+                            acs_primary ~ "ACS",
+                            subabuse_primary ~ "Substance Abuse",
+                            mental_primary ~ "Mental Health",
+                            nonemerg_primary ~ "Non emergent"))
+
+zipC <- scp %>% 
+  filter(Patient_Zip == 'C') %>% 
+  group_by(acs_primary, nonemerg_primary, mental_primary, subabuse_primary, dental_primary) %>%
+  tally %>%
+  ungroup() %>%
+  summarise(percentage = (n/sum(n))*100, across(everything())) %>%
+  mutate( type = case_when( !acs_primary & !nonemerg_primary & !mental_primary & !subabuse_primary &!dental_primary~ "Other",
+                            dental_primary ~ "Dental",
+                            acs_primary ~ "ACS",
+                            subabuse_primary ~ "Substance Abuse",
+                            mental_primary ~ "Mental Health",
+                            nonemerg_primary ~ "Non emergent"))
+
+
+zipE <- scp %>% 
+  filter(Patient_Zip == 'E') %>% 
+  group_by(acs_primary, nonemerg_primary, mental_primary, subabuse_primary, dental_primary) %>%
+  tally %>%
+  ungroup() %>%
+  summarise(percentage = (n/sum(n))*100, across(everything())) %>%
+  mutate( type = case_when( !acs_primary & !nonemerg_primary & !mental_primary & !subabuse_primary &!dental_primary~ "Other",
+                            dental_primary ~ "Dental",
+                            acs_primary ~ "ACS",
+                            subabuse_primary ~ "Substance Abuse",
+                            mental_primary ~ "Mental Health",
+                            nonemerg_primary ~ "Non emergent"))
+#######################################
+# trends in Race
+# make vector of names so that 1,2,3 etc don't show up on the graph
+races_vec <- c("White", "Black", "Native American") 
+
+# create a new column that has race in characters rather than values
+scp <- scp %>% 
+  mutate(Race_Chr = ifelse(Race == 9, "Unkown", races_vec[Race]))
+
+# table
+race <- scp %>%
+  filter(Race_Chr == c("White", "Black", "Native American")) %>% 
+  group_by(Race_Chr, acs_primary, nonemerg_primary, mental_primary) %>%
+  tally %>%
+  ungroup()%>%
+  group_by(Race_Chr) %>% 
+  summarise(percentage = (n/sum(n))*100, across(everything())) %>%
+  mutate( type = case_when( !acs_primary & !nonemerg_primary & !mental_primary ~ "Other",
+                            acs_primary ~ "ACS",
+                            mental_primary ~ "Mental Health",
+                            nonemerg_primary ~ "Non emergent")) %>%
+  mutate(condition = ifelse(type == "Other", "Other", "ACS/Mental health/Non emergent"))
+
+ggplot(data = race, aes(x = condition, y = percentage, fill = type)) +
+  geom_col() +
+  labs(title = "Trends")+
+  theme(legend.position = 'bottom') +
+  scale_fill_discrete(name = "Condition") +
+  facet_wrap(~Race_Chr) +
+  x.axis.ticks = element_blank()
+
+
