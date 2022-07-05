@@ -13,9 +13,9 @@ library(tidyverse)
 library(ggplot2)
 library(gsheet)
 
-# scp_data data frame
-# scp <- readr::read_csv("Dropbox/DATALAB/ER_Project/scp_data")
-scp <- readr::read_csv("C:/Users/jplus/OneDrive/Documents/DataLab/ER_Usage/Transform_Data/scp_data_1")
+# Read in: scp_data data frame
+# ELLIE: scp <- readr::read_csv("Dropbox/DATALAB/ER_Project/scp_data_1")
+# JENNA: scp <- readr::read_csv("C:/Users/jplus/OneDrive/Documents/DataLab/ER_Usage/Transform_Data/scp_data_1")
 
 scp <- rename(scp, visit = ...1)
 
