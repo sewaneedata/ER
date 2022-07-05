@@ -13,7 +13,6 @@ library(shinydashboard)
 ################################################################################
 # UI ------
 ################################################################################
-
   
   # Header ----
   header <- dashboardHeader(
@@ -34,28 +33,34 @@ library(shinydashboard)
         )),
       
     # Add Tabs
-    menuItem("Overview", tabName = "Overview", icon = icon("home")),
-    menuItem("ER Overuse", tabName = "ER_Overuse", icon = icon("bar-chart-o")),
-    menuItem("Map", tabName = "Map", icon = icon("map")),
-    menuItem("Explore", tabName = "explore", icon = icon("table")),
-    menuItem("Conclusion", tabName = "con", icon = icon("tasks"))
+    menuItem("Home", tabName = "home", icon = icon("home")),
+    menuItem("Overview", tabName = "overview", icon = icon("home")),
+    menuItem("Explore ER Overuse", tabName = "ER_Overuse", icon = icon("bar-chart-o"),
+             menuSubItem("Map", tabName = "map"),
+             menuSubItem("Demographics", tabName = "demo"),
+             menuSubItem("Medical Services", tabName = "med_service"),
+             menuSubItem("Conditions", tabName = "med_condition")),
+    menuItem("Findings", tabName = "findings", icon = icon("tasks"))
     ))
   
   # Body ----
   body <- dashboardBody(
     tabItems(
-      #Adding Rmarkdown welcome page
-        tabItem(tabName = "Overview",
-                includeMarkdown("www/overview.Rmd")),
-        tabItem(tabName = "ER_Overuse",
+      #Adding Markdowns to each tab (to edit text, go to file mentioned in includeMarkdown)
+        tabItem(tabName = "home",
+                includeMarkdown("www/home.Rmd")),
+        tabItem(tabName = "overview",
+                  includeMarkdown("www/overview.Rmd")),
+        tabItem(tabName = "demo",
+                includeMarkdown("www/demographics.Rmd")),
+        tabItem(tabName = "map",
                 includeMarkdown("www/er_overuse.Rmd"))
-        )
-  )
+        ))
      
   
   # Compile UI ----
 ui <- dashboardPage(header, sidebar, body, 
-                    skin = "red")
+                    skin = "black")
 
 ################################################################################
 #SERVER ------
