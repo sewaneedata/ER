@@ -5,4 +5,21 @@ date: '2022-07-05'
 output: html_document
 ---
 
-## Home Tab
+# **Welcome**
+During the Summer of 2022, DataLab fellows created this dashboard for the South Cumberland Health Network to provide them with the data analysis needed to fill the large primary care health service gaps that are prevelant on the South Cumberland Plateau.
+
+## **What is DataLab?**
+Sewanee Datalab is a data science for social good program hosted at Sewanee: The University of The South. This program trains aspiring data scientists that work exclusively on social impact projects partnered with clients and organizations.
+
+## **Our Community Partner**
+The South Cumberland Health Network (SCHN) is a non-profit organization that works to remediate barriers to health care access among residents of Grundy county and parts of  Franklin and Marion counties on the South Cumberland Plateau of Tennessee. The SCHN serves medically underserved, low-income, and minority populations. 
+
+## **The Fellows**
+
+**Ellie Davis**: Senior at Sewanee: The University of the South, studying both political science and women’s & gender studies.
+
+**Kenedi Clinton**: Student-athlete at Sewanee: The University of The South; Class of 2024. Pursuing a Biology major with a Rhetoric minor and a Civic and Global Leadership certificate. Interested in global health, research, data analysis, and graduate school.
+
+**Jenna Lusk**: Sophomore at Purdue University (Class of 2025) studying Computer Information Technology, with minors in Design & Innovation and Organizational Leadership. 
+
+
