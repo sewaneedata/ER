@@ -17,11 +17,17 @@ acs_nonemerg_other <- scp %>%
 
 # bar chart
 ggplot(data = acs_nonemerg_other, aes(x = Condition, 
-                                      y = percentage, 
+                                      y = percentage/100, 
                                       fill = type)) +
   geom_col()+
   labs(title = "Comparison of Primary Diagnosis Conditions",
-       y = "Percentage of Visits") +
-  scale_fill_discrete(name = "Type of Condition")
-
+       y = "Percentage of Visits",
+       x = '') +
+  scale_fill_manual(values=c("#c6dbef",
+                               "#74a9cf",
+                               "#08306b"),
+                      name = "Type of Condition") +
+  scale_y_continuous(labels = scales::percent) + 
+  labs(title = "Comparison of Primary Diagnosis Conditions",
+       y = "Percentage of Visits to the ER")
 ######
