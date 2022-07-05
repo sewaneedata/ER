@@ -7,7 +7,7 @@ library(ggplot2)
 library(gsheet)
 
 # scp_data set
-scp <- readr::read_csv("Dropbox/DATALAB/ER_Project/scp_data")
+scp <- readr::read_csv("scp_data_1")
 
 # See "shared_help_code.R" for vectors and necessary code to set up data mining.
 
@@ -179,6 +179,8 @@ legend("bottomleft", legend = c('Other', 'Non Emergent'),
 #########
 # Investigating comparisons between acsc, non emerg, and other conditions.
   # table
+library(ggthemes)
+
 acs_nonemerg_other <- scp %>% 
   group_by(acs_primary, nonemerg_primary) %>% 
   tally %>% 
@@ -196,10 +198,13 @@ ggplot(data = acs_nonemerg_other,
            y = percentage/100,
            fill = type)) +
   geom_col() +
+  scale_fill_manual(values=c("#c6dbef",
+                             "#74a9cf",
+                             "#08306b"),
+                    name = "Type of Condition") +
   scale_y_continuous(labels = scales::percent) + 
   labs(title = "Comparison of Primary Diagnosis Conditions",
-       y = "Percentage of Visits") +
-  scale_fill_discrete(name = "Type of Condition")
+       y = "Percentage of Visits") 
 
 #############
 # Look into specific zip codes at different conditions
@@ -325,4 +330,31 @@ ggplot(data = race, aes(x = condition, y = percentage, fill = type)) +
   facet_wrap(~Race_Chr) +
   x.axis.ticks = element_blank()
 
+###############
+# Code for Map
 
+#libraries
+library(sf)
+library(leaflet)
+library(raster)
+
+zipcodes <- st_read("~/Downloads/tl_2019_us_zcta510/tl_2019_us_zcta510.shp")
+
+zipcodes <- zipcodes %>% 
+  filter(ZCTA5CE10 == c("37301",
+                        "37305", 
+                        "37313", 
+                        "37324", 
+                        "37339", 
+                        "37356", 
+                        "37365", 
+                        "37366",
+                        "37375",
+                        "37383",
+                        "37387",
+                        "37397",
+                        "37405",
+                        "37419"))
+
+View(zipcodes %>% 
+  filter(GEOID10 == "37383"))
