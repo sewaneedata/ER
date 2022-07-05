@@ -443,8 +443,35 @@ test_graph <-  scp_long %>%
 ggplot( data = test_graph, aes(x = acs_YN, y = n)) + geom_col()
 #FOUND: ~22% of all er VISITS HAVE A PRIMARY ACSC DIAG
 
+################################################################################
+
+# % of ACS and Non-Emerg Primary Diag by County
+county_df <- scp %>% group_by(county, acs_primary, nonemerg_primary) %>% 
+  tally() %>%
+  ungroup() %>% 
+  group_by(county) %>% 
+  summarize(across(everything()), precent = (n/sum(n))*100) %>% 
+  mutate( type = case_when( !acs_primary & !nonemerg_primary ~ "Other",
+                            acs_primary ~ "ACS", 
+                            nonemerg_primary ~ "Non emergent" )) %>% 
+  mutate(Condition = ifelse(type == 'Other', "Other", "ACS/Non emergent"))
+
+ggplot(data = county_df, aes(x = type, y = precent, fill = county)) + 
+  geom_bar(stat='identity', position='dodge') + 
+  labs(x = "Condition",
+       y = "% of Visits",
+       )
+
+
+# % of ACS Primary Diag by County 
+county_df <- scp %>% group_by(county, acs_primary) %>% tally() %>% 
+  summarize(across(everything()), precent = (n/sum(n))*100) 
+
+ggplot(data = county_df, aes(x = county, y = precent, fill = acs_primary)) + 
+  geom_bar(stat='identity', position='dodge')
 
  
+
  
 
 
