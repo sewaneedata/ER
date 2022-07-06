@@ -140,9 +140,7 @@ scp <- scp %>%
                                  "Franklin",
                                  ifelse(Patient_Zip %in% marion_zip,
                                         "Marion",
-                                        "NULL")
-
-                                                          )))
+                                        "NULL"))))
 
 # Run the following to add a new column that says Race in characters rather than values:
 # 1. Make a vector of names (in order, 1 = white, 2 = Black, etcd)
