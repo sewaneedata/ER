@@ -132,7 +132,7 @@ scp <- scp %>%
 
                                                           )))
 # Run the following to add a new column that says Race in characters rather than values:
-# 1. Make a vector of names (in order, 1 = white, 2 = Black, etc)
+# 1. Make a vector of names (in order, 1 = white, 2 = Black, etcd)
 races_vec <- c("White", "Black", "Native American") 
 
 # Create the new column
