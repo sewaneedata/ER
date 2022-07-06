@@ -67,10 +67,38 @@ library(leaflet)
       #DEMOGRAPHICS TAB
         tabItem(tabName = "demo",
                 includeMarkdown("www/demographics.Rmd"),
-                #Demo Widgets 
-                selectInput("race", label = h3("Select Race"), 
-                            choices = c("Test1", "Test2"), 
-                            selected = 1), hr()),
+                #Demo Filter Widgets
+                fluidRow(
+                  column(3,
+                         radioButtons( inputId = "sex",
+                                       label = h3("Select Sex"),
+                                       choices = unique(scp$Patient_Sex),
+                                       selected = 1)),
+                  column(3,
+                         radioButtons("race", label = h3("Select Race"),
+                                     choices = unique(scp$Race_Chr), #Remove unknown
+                                     selected = 1)),
+                  column(3,
+                         selectInput( inputId = "age",
+                                       label = h3("Select Age Group"),
+                                       choices = unique(scp$age_group),
+                                       selected = 1))),
+                         selectInput( inputId = "county",
+                                      label = h3("Select County"),
+                                      choices = unique(scp$county),
+                                      selected = 1,
+                                      multiple = TRUE),
+                         selectInput( inputId = "zip",
+                                      label = h3("Select ZipCodes"),
+                                      choices = unique(scp$Patient_Zip),
+                                      selected = 1,
+                                      multiple = TRUE),
+                         selectInput( inputId = "insurance",
+                                      label = h3("Select Insurance Type"),
+                                      choices = unique(scp$Primary_Payer_Class_Cd),
+                                      selected = 1,
+                                      multiple = TRUE),
+               plotOutput("county_plot")),
       #MAP TAB
         tabItem(tabName = "map",
                 includeMarkdown("www/er_overuse.Rmd"),
@@ -120,6 +148,22 @@ server <- function(input, output) {
                                 nonemerg_primary ~ "Non emergent" )) %>% 
       mutate(Condition = ifelse(type == 'Other', "Other", "ACS/Non emergent"))
     
+    # rv$county_demo <- scp %>% 
+    #   filter( Patient_Sex %in% input$sex,
+    #           Race_Chr %in% input$race, 
+    #           age_group %in% input$age,
+    #           county %in% input$county) %>% 
+    #   group_by(acs_primary, nonemerg_primary) %>% 
+    #   tally %>% 
+    #   ungroup() %>% 
+    #   group_by(county) %>% 
+    #   mutate(total = sum(n)) %>% 
+    #   summarise(percentage = n/total*100, across(everything())) %>%
+    #   mutate( type = case_when( !acs_primary & !nonemerg_primary ~ "Other",
+    #                             acs_primary ~ "ACS", 
+    #                             nonemerg_primary ~ "Non emergent" )) %>% 
+    #   mutate(Condition = ifelse(type == 'Other', "Other", "ACS/Non emergent"))
+    
   })
   
   #OUTPUTS ------
@@ -152,6 +196,13 @@ server <- function(input, output) {
   output$zipMap <- renderLeaflet({
     leaflet(data = scp) %>% addProviderTiles(providers$CartoDB.Voyager)
   })
+  
+  # DEMOGRAPHICS TAB
+  #################################
+  # output$county_plot <- renderPlot({
+  #   ggplot(data = rv$county_demo, aes(x = Condition, y = percentage, color = type)) + geom_col()
+  #   
+  # })
 
   
   
