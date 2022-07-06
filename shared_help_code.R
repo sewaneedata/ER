@@ -129,7 +129,15 @@ scp <- scp %>%
                                  ifelse(Patient_Zip %in% marion_zip,
                                         "Marion",
                                         "NULL")
-                         )))
+
+                                                          )))
+# Run the following to add a new column that says Race in characters rather than values:
+# 1. Make a vector of names (in order, 1 = white, 2 = Black, etc)
+races_vec <- c("White", "Black", "Native American") 
+
+# Create the new column
+scp <- scp %>% 
+  mutate(Race_Chr = ifelse(Race == 9, "Unkown", races_vec[Race]))
 
 ######################################
 # SEARCH THROUGH ONLY THE PRIMARY DIAGNOSIS COLUMN (Diag1):
