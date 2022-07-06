@@ -14,7 +14,7 @@ library(ggplot2)
 library(gsheet)
 
 # Read in: scp_data data frame
-# ELLIE: scp <- readr::read_csv("Dropbox/DATALAB/ER_Project/scp_data_1")
+# ELLIE: scp <- readr::read_csv("Dropbox/DATALAB/ER_Project/scp_data2")
 # JENNA: scp <- readr::read_csv("C:/Users/jplus/OneDrive/Documents/DataLab/ER_Usage/Transform_Data/scp_data_1")
 
 scp <- rename(scp, visit = ...1)
@@ -22,8 +22,9 @@ scp <- rename(scp, visit = ...1)
 # NOTE: If we determine that "ER_Record_Flag" indicates that the ER was used, we will add
 # the following code to filter the 'scp' data down further to only ER visits.
     
-  scp <- scp %>% filter(ER_Record_Flag == "Y")
-
+scp <- scp %>%
+  filter(ER_Record_Flag == "Y")
+  
 ###########################
 # VECTORS of ICD-10 codes:
 
@@ -105,11 +106,22 @@ dental <- paste0("^", dental)
 # 1. new columns that indicate whether or not the primary diagnosis was ACSC, mental, dental, etc.,
 # 2. a new column called 'Age_Group' that sorts patients into groups by decade,
 # 3. removes N/As for Patient_Sex.
+# 4. a new column "county" for county names.
 
-#UPDATE WHEN GET G and H Zips Reassigned!!!!!
-grundy_zip <- c("A", "B", "C", "D", "K", "F", "L", "N")
-frank_zip <- c("E", "J", "M")
-marion_zip <- c("I", "G", "H")
+
+# vectors for each county
+grundy_zip <- c("37301",
+                "37305",
+                "37313",
+                "37339",
+                "37356",
+                "37365",
+                "37366",
+                "37387")
+franklin_zip <- c("37375",
+                  "37383")
+marion_zip <- c("37397",
+                "37374")
 
 scp <- scp %>%
   drop_na(Patient_Sex) %>% 
@@ -124,13 +136,14 @@ scp <- scp %>%
                                     '50-59', '60-69', '70-79', '80-89', '90-99')),
          county = ifelse(Patient_Zip %in% grundy_zip, 
                          "Grundy", 
-                         ifelse( Patient_Zip %in% frank_zip,
+                         ifelse( Patient_Zip %in% franklin_zip,
                                  "Franklin",
                                  ifelse(Patient_Zip %in% marion_zip,
                                         "Marion",
                                         "NULL")
 
                                                           )))
+
 # Run the following to add a new column that says Race in characters rather than values:
 # 1. Make a vector of names (in order, 1 = white, 2 = Black, etcd)
 races_vec <- c("White", "Black", "Native American") 
