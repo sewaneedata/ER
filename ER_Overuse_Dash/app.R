@@ -46,7 +46,7 @@ library(leaflet)
     menuItem("Explore ER Overuse", tabName = "ER_Overuse", icon = icon("hospital"),
              menuSubItem("Map", tabName = "map"),
              menuSubItem("Demographics", tabName = "demo"),
-             menuSubItem("Medical Services", tabName = "med_service"),
+             menuSubItem("Primary Care Services", tabName = "care_service"),
              menuSubItem("Conditions", tabName = "med_condition"))
     ))
   
@@ -104,8 +104,24 @@ library(leaflet)
                 includeMarkdown("www/er_overuse.Rmd"),
                 leafletOutput("zipMap")), #MAYBE ADD SPINNER WHILE LOADING
       
-      #MEDICAL SERVICE TAB
-      
+      #PRIMARY CARE SERVICE TAB
+        tabItem(tabName = "care_service",
+                
+                fluidRow(
+                  column(6,
+                         selectInput(inputId = "county1",
+                                     label= h3("Select County"),
+                                     choices = unique(scp$county),
+                                     selected = "Grundy")),
+                  column(6,
+                         selectInput(inputId = "zip1",
+                                     label = h3("Select Zip Code"),
+                                     choices = unique(scp$Patient_Zip),
+                                     selected = "A"))),
+                br(),
+                br(),
+                fluidRow(column(6,  plotOutput("all_cond_county")),
+                         column(6,  plotOutput("all_cond_zip")))),
       
       #CONDITIONS TAB
       
@@ -147,7 +163,7 @@ server <- function(input, output) {
                                 acs_primary ~ "ACS", 
                                 nonemerg_primary ~ "Non emergent" )) %>% 
       mutate(Condition = ifelse(type == 'Other', "Other", "ACS/Non emergent"))
-    
+  })  
     # rv$county_demo <- scp %>% 
     #   filter( Patient_Sex %in% input$sex,
     #           Race_Chr %in% input$race, 
@@ -163,8 +179,51 @@ server <- function(input, output) {
     #                             acs_primary ~ "ACS", 
     #                             nonemerg_primary ~ "Non emergent" )) %>% 
     #   mutate(Condition = ifelse(type == 'Other', "Other", "ACS/Non emergent"))
+  observe({
+    rv$county <- scp %>%
+      filter(county %in% input$county1) %>% 
+      group_by(county, 
+               acs_primary, 
+               nonemerg_primary, 
+               dental_primary, 
+               mental_primary, 
+               subabuse_primary) %>% 
+      tally %>%
+      ungroup() %>%
+      group_by(county) %>% 
+      summarise(percentage = (n/sum(n))*100, across(everything())) %>% 
+      mutate(type = case_when(!dental_primary & !acs_primary & !subabuse_primary & !mental_primary & !nonemerg_primary ~ "Other",
+                              dental_primary ~ "Dental",
+                              acs_primary ~ "ACS",
+                              subabuse_primary ~ "Substance Abuse",
+                              mental_primary ~ "Mental Health",
+                              nonemerg_primary ~ "Non emergent")) %>% 
+      filter(type != "Other")
+  })  
     
-  })
+  observe({
+    rv$zip <- scp %>%
+      filter(Patient_Zip %in% input$zip1) %>% 
+      group_by(Patient_Zip, 
+               acs_primary, 
+               nonemerg_primary, 
+               dental_primary, 
+               mental_primary, 
+               subabuse_primary) %>% 
+      tally %>%
+      ungroup() %>%
+      group_by(Patient_Zip) %>% 
+      summarise(percentage = (n/sum(n))*100, across(everything())) %>% 
+      mutate(type = case_when(!dental_primary & !acs_primary & !subabuse_primary & !mental_primary & !nonemerg_primary ~ "Other",
+                              dental_primary ~ "Dental",
+                              acs_primary ~ "ACS",
+                              subabuse_primary ~ "Substance Abuse",
+                              mental_primary ~ "Mental Health",
+                              nonemerg_primary ~ "Non emergent")) %>% 
+      filter(type != "Other")
+  })  
+    
+
   
   #OUTPUTS ------
 ##############################################################################
@@ -204,9 +263,35 @@ server <- function(input, output) {
   #   
   # })
 
-  
-  
-  
+  # PRIMARY CARE SERVICES TAB
+  # county plot
+  output$all_cond_county <- renderPlot({
+    ggplot(data = rv$county, 
+           aes(x = reorder(type, -percentage),
+               y = percentage/100,
+               fill = type)) +
+      geom_col() +
+      scale_y_continuous(labels = scales::percent) + 
+      labs(x = " ",
+           y = "Percentage of Patient Visits") +
+      scale_fill_discrete(name = "Type of Condition") +
+      theme(axis.ticks.x = element_blank(),
+            axis.text.x = element_blank())
+  })
+  # zip code plot
+  output$all_cond_zip <- renderPlot({
+    ggplot(data = rv$zip, 
+           aes(x = reorder(type, -percentage),
+               y = percentage/100,
+               fill = type)) +
+      geom_col() +
+      scale_y_continuous(labels = scales::percent) + 
+      labs(x = " ",
+           y = "Percentage of Patient Visits") +
+      scale_fill_discrete(name = "Type of Condition") +
+      theme(axis.ticks.x = element_blank(),
+            axis.text.x = element_blank())
+  })
 }
 
 # Run the application 
