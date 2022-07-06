@@ -470,6 +470,9 @@ county_df <- scp %>% group_by(county, acs_primary) %>% tally() %>%
 ggplot(data = county_df, aes(x = county, y = precent, fill = acs_primary)) + 
   geom_bar(stat='identity', position='dodge')
 
+
+test <- scp %>% filter(Diag1 == "O80")
+
  
 
  
