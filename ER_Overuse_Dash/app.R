@@ -93,17 +93,18 @@ library(leaflet)
                                       choices = unique(scp$county),
                                       selected = 1,
                                       multiple = TRUE),
+                plotOutput("county_plot"),
                          selectInput( inputId = "zip",
                                       label = h3("Select ZipCodes"),
                                       choices = unique(scp$Patient_Zip),
                                       selected = 1,
                                       multiple = TRUE),
+                plotOutput("zip_plot"),
                          selectInput( inputId = "insurance",
                                       label = h3("Select Insurance Type"),
                                       choices = unique(scp$Primary_Payer_Class_Cd),
                                       selected = 1,
-                                      multiple = TRUE),
-               plotOutput("county_plot")),
+                                      multiple = TRUE)),
       
       #PRIMARY CARE SERVICE TAB
         tabItem(tabName = "care_service",
@@ -165,21 +166,44 @@ server <- function(input, output) {
                                 nonemerg_primary ~ "Non emergent" )) %>% 
       mutate(Condition = ifelse(type == 'Other', "Other", "ACS/Non emergent"))
   })  
-    # rv$county_demo <- scp %>% 
-    #   filter( Patient_Sex %in% input$sex,
-    #           Race_Chr %in% input$race, 
-    #           age_group %in% input$age,
-    #           county %in% input$county) %>% 
-    #   group_by(acs_primary, nonemerg_primary) %>% 
-    #   tally %>% 
-    #   ungroup() %>% 
-    #   group_by(county) %>% 
-    #   mutate(total = sum(n)) %>% 
-    #   summarise(percentage = n/total*100, across(everything())) %>%
-    #   mutate( type = case_when( !acs_primary & !nonemerg_primary ~ "Other",
-    #                             acs_primary ~ "ACS", 
-    #                             nonemerg_primary ~ "Non emergent" )) %>% 
-    #   mutate(Condition = ifelse(type == 'Other', "Other", "ACS/Non emergent"))
+  
+  #DEMOGRAPHICS OBSERVE------
+  
+  observe({ #County
+    rv$county_demo <- scp %>%
+      filter( Patient_Sex %in% input$sex,
+              Race_Chr %in% input$race,
+              age_group %in% input$age,
+              county %in% input$county) %>%
+      group_by(county, acs_primary, nonemerg_primary) %>%
+      tally %>%
+      ungroup() %>%
+      group_by(county) %>%
+      mutate(total = sum(n)) %>%
+      summarise(percentage = (n/sum(n))*100, across(everything())) %>%
+      mutate( type = case_when( !acs_primary & !nonemerg_primary ~ "Other",
+                                acs_primary ~ "ACS",
+                                nonemerg_primary ~ "Non emergent" )) %>%
+      mutate(Condition = ifelse(type == 'Other', "Other", "ACS/Non emergent"))
+    
+    rv$zip_demo <- scp %>%
+      filter( Patient_Sex %in% input$sex,
+              Race_Chr %in% input$race,
+              age_group %in% input$age,
+              Patient_Zip %in% input$zip) %>%
+      group_by(Patient_Zip, acs_primary, nonemerg_primary) %>%
+      tally %>%
+      ungroup() %>%
+      group_by(Patient_Zip) %>%
+      mutate(total = sum(n)) %>%
+      summarise(percentage = (n/sum(n))*100, across(everything())) %>%
+      mutate( type = case_when( !acs_primary & !nonemerg_primary ~ "Other",
+                                acs_primary ~ "ACS",
+                                nonemerg_primary ~ "Non emergent" )) %>%
+      mutate(Condition = ifelse(type == 'Other', "Other", "ACS/Non emergent"))
+  })
+  
+  #MEDICAL SERVICES OBSERVE----
   observe({
     rv$county <- scp %>%
       filter(county %in% input$county1) %>% 
@@ -272,12 +296,49 @@ server <- function(input, output) {
   
   # DEMOGRAPHICS TAB
   #################################
-  # output$county_plot <- renderPlot({
-  #   ggplot(data = rv$county_demo, aes(x = Condition, y = percentage, color = type)) + geom_col()
-  #   
-  # })
+  
+  #COUNTY PLOT
+  output$county_plot <- renderPlot({
+     ggplot(data = rv$county_demo, aes(x = type, y = percentage/100, fill = county)) + 
+      geom_col(position = "dodge") +
+      labs(title = "ER Overuse of Demographic",
+         subtitle = "In County",
+         y = "Percentage of Visits",
+         x = '') +
+      scale_fill_manual(values=c("#74a9cf",
+                                 "#08306b",
+                                 "#c6dbef"), #CAN ONLY SELECT 3 SINCE ONLY 3 COLORS
+                        name = "Type of Condition") +
+      scale_y_continuous(labels = scales::percent) + 
+      labs(title = "Comparison of Primary Diagnosis Conditions",
+           y = "Percentage of Visits to the ER") +
+      geom_text(aes(label = scales::percent(percentage/100)),
+                position = position_dodge(width = 0.9), 
+                vjust = -.5)
+   })
+  
+  #ZIPCODE PLOT
+  output$zip_plot <- renderPlot({
+    ggplot(data = rv$zip_demo, aes(x = type, y = percentage/100, fill = factor(Patient_Zip))) + 
+      geom_col(position = "dodge") +
+      labs(title = "ER Overuse of Demographic",
+           subtitle = "In Zipcodes",
+           y = "Percentage of Visits",
+           x = '') +
+      scale_fill_manual(values=c("#74a9cf",
+                                 "#08306b",
+                                 "#c6dbef"),
+                        name = "Type of Condition") +
+      scale_y_continuous(labels = scales::percent) + 
+      labs(title = "Comparison of Primary Diagnosis Conditions",
+           y = "Percentage of Visits to the ER") +
+      geom_text(aes(label = scales::percent(percentage/100)),
+                position = position_dodge(width = 0.9), 
+                vjust = -.5)
+  })
 
   # PRIMARY CARE SERVICES TAB
+  #################################
   # county plot
   output$all_cond_county <- renderPlot({
     ggplot(data = rv$county, 
