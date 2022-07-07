@@ -14,14 +14,13 @@ library(ggplot2)
 library(gsheet)
 
 # Read in: scp_data data frame
-# ELLIE: scp <- readr::read_csv("Dropbox/DATALAB/ER_Project/scp_data2")
-# JENNA: scp <- readr::read_csv("C:/Users/jplus/OneDrive/Documents/DataLab/ER_Usage/Transform_Data/scp_data_1")
+#ELLIE: scp <- readr::read_csv("Dropbox/DATALAB/ER_Project/scp_data2")
+#JENNA: scp <- readr::read_csv("C:/Users/jplus/OneDrive/Documents/DataLab/ER_Usage/Transform_Data/scp_data_1")
 
+# rename weird column
 scp <- rename(scp, visit = ...1)
-
-# NOTE: If we determine that "ER_Record_Flag" indicates that the ER was used, we will add
-# the following code to filter the 'scp' data down further to only ER visits.
-    
+  
+# filter down to ER visits  
 scp <- scp %>%
   filter(ER_Record_Flag == "Y")
   
@@ -108,8 +107,7 @@ dental <- paste0("^", dental)
 # 3. removes N/As for Patient_Sex.
 # 4. a new column "county" for county names.
 
-
-# vectors for each county
+# Vectors for each county
 grundy_zip <- c("37301",
                 "37305",
                 "37313",
@@ -142,36 +140,50 @@ scp <- scp %>%
                                         "Marion",
                                         "NULL"))))
 
-# Run the following to add a new column that says Race in characters rather than values:
-# 1. Make a vector of names (in order, 1 = white, 2 = Black, etcd)
+# Then, run the following to create a new column "county_total" that will track
+  # the total number of ER visits in each county.
+  # Useful for calculating percentages etc.; makes code more easily reproducible.
+
+# Variable showing total # of ER visits for each county.
+county_visits <- scp %>%
+  filter(ER_Record_Flag == 'Y') %>%
+  group_by(county) %>%
+  tally()
+
+# Join 'county_visits' with 'scp' to make a new column
+scp <- inner_join(scp, county_visits, by = 'county') %>%
+  dplyr::rename(county_total= 'n')
+
+# Next, run the following to add a new column that says Race in characters rather
+  # than in values:
+
+# Make a vector of names (in order, 1 = white, 2 = Black, etc.)
 races_vec <- c("White", "Black", "Native American") 
 
-# Create the new column
+# Create the new column called 'Race_Chr'
 scp <- scp %>% 
   mutate(Race_Chr = ifelse(Race == 9, "Unkown", races_vec[Race]))
 
+######################################
+######################################
+######################################
+# The following has been commented out because it's not necessary code
+# but may potentially be useful in the future.
 ######################################
 # SEARCH THROUGH ONLY THE PRIMARY DIAGNOSIS COLUMN (Diag1):
 ######################################
 # Will use the  'scp' data frame for this (it has all diag columns separated).
 
 # What percentage of all visits to the ER had a primary diagnosis of ACSC?
-perc_acsc <- scp %>% 
-  group_by(acs_primary) %>%
-  tally %>% 
-  mutate(total = sum(n)) %>%
-  group_by(acs_primary, n, total) %>% 
-  summarise(perc = n/total*100)
+#perc_acsc <- scp %>% 
+  #group_by(acs_primary) %>%
+  #tally %>% 
+  #mutate(total = sum(n)) %>%
+  #group_by(acs_primary, n, total) %>% 
+  #summarise(perc = n/total*100)
     # The column name in group_by() can be replaced to see trends for other conditions
       # (non emergent, mental, dental, substance abuse, etc.)
       # example below shows non emergent trends
-
-perc_nonemerg <- scp %>% 
-  group_by(nonemerg_primary) %>%
-  tally %>% 
-  mutate(total = sum(n)) %>%
-  group_by(nonemerg_primary, n, total) %>% 
-  summarise(perc = n/total*100)
 
 ################################################
 # IF NEEDED, the following allows you to search thru all diag columns at once:
