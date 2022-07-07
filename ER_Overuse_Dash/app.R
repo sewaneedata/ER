@@ -290,7 +290,7 @@ server <- function(input, output) {
                   highlightOptions = highlightOptions(color = "#b2182b", 
                                                       weight = 1.5,
                                                       bringToFront = TRUE),
-                  label = ~paste0(ZCTA5CE10)) %>% 
+                  label = ~paste0(Patient_Zip)) %>% 
       addTiles()
   })
   
@@ -349,7 +349,12 @@ server <- function(input, output) {
       scale_y_continuous(labels = scales::percent) + 
       labs(x = " ",
            y = "Percentage of Patient Visits") +
-      scale_fill_discrete(name = "Type of Condition") +
+      scale_fill_manual(values=c("#d7191c",
+                                 "#fdae61",
+                                 "#ffffbf",
+                                 "#abd9e9",
+                                 "#2c7bb6"),
+                        name = "Type of Condition") +
       theme(axis.ticks.x = element_blank(),
             axis.text.x = element_blank())
   })
@@ -363,7 +368,12 @@ server <- function(input, output) {
       scale_y_continuous(labels = scales::percent) + 
       labs(x = " ",
            y = "Percentage of Patient Visits") +
-      scale_fill_discrete(name = "Type of Condition") +
+      scale_fill_manual(values=c("#d7191c",
+                                 "#fdae61",
+                                 "#ffffbf",
+                                 "#abd9e9",
+                                 "#2c7bb6"),
+                        name = "Type of Condition") +
       theme(axis.ticks.x = element_blank(),
             axis.text.x = element_blank())
   })
