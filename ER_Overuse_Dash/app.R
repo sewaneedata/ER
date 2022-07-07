@@ -62,8 +62,13 @@ library(leaflet)
       #OVERVIEW TAB
         tabItem(tabName = "overview", 
                 includeMarkdown("www/overview.Rmd")),
-      #ER OVERUSE TAB
-        
+      
+      # EXPLORE ER OVERUSE DROPDOWN
+      # MAP TAB
+        tabItem(tabName = "map",
+              includeMarkdown("www/er_overuse.Rmd"),
+              leafletOutput("zipMap")), #MAYBE ADD SPINNER WHILE LOADING
+       
       #DEMOGRAPHICS TAB
         tabItem(tabName = "demo",
                 includeMarkdown("www/demographics.Rmd"),
@@ -99,10 +104,6 @@ library(leaflet)
                                       selected = 1,
                                       multiple = TRUE),
                plotOutput("county_plot")),
-      #MAP TAB
-        tabItem(tabName = "map",
-                includeMarkdown("www/er_overuse.Rmd"),
-                leafletOutput("zipMap")), #MAYBE ADD SPINNER WHILE LOADING
       
       #PRIMARY CARE SERVICE TAB
         tabItem(tabName = "care_service",
@@ -231,12 +232,14 @@ server <- function(input, output) {
   #OVERVIEW GRAPHS ------
   ##########################################
   #Main Overview Graph
+  
   output$er_overuse <- renderPlot({
     ggplot(data = rv$acs_nonemerg_other, aes(x = Condition, 
                                           y = percentage/100, 
                                           fill = type)) +
       geom_col()+
       labs(title = "Comparison of Primary Diagnosis Conditions",
+           subtitle = "At the ER",
            y = "Percentage of Visits",
            x = '') +
       scale_fill_manual(values=c("#c6dbef",
@@ -252,8 +255,19 @@ server <- function(input, output) {
   
   # MAPS TAB
   #################################
+
   output$zipMap <- renderLeaflet({
-    leaflet(data = scp) %>% addProviderTiles(providers$CartoDB.Voyager)
+    leaflet(zipcodes) %>% 
+      addPolygons(color = '#2166ac',
+                  weight = 1,
+                  smoothFactor = 0.25,
+                  opacity = 1.0,
+                  fillOpacity = 0.5,
+                  highlightOptions = highlightOptions(color = "#b2182b", 
+                                                      weight = 1.5,
+                                                      bringToFront = TRUE),
+                  label = ~paste0(ZCTA5CE10)) %>% 
+      addTiles()
   })
   
   # DEMOGRAPHICS TAB
