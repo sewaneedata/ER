@@ -3,7 +3,7 @@
 # THIS IS NOT OUR DELIVERABLE CODE
 ################
 
-# RUN LINES 10 THRU 100 EVERYDAY BEFORE DATA MINING...
+# RUN LINES 9 THRU 169 EVERYDAY BEFORE DATA MINING...
 # THE OTHER LINES ARE OPTIONAL, HELPFUL CODE
 ################
 # libraries:
@@ -12,6 +12,9 @@ library(readr)
 library(tidyverse)
 library(ggplot2)
 library(gsheet)
+library(sf)
+library(leaflet)
+library(raster)
 
 # Read in: scp_data data frame
 #ELLIE: scp <- readr::read_csv("Dropbox/DATALAB/ER_Project/scp_data2")
@@ -144,25 +147,47 @@ scp <- scp %>%
   # the total number of ER visits in each county.
   # Useful for calculating percentages etc.; makes code more easily reproducible.
 
-# Variable showing total # of ER visits for each county.
+  # Variable showing total # of ER visits for each county.
 county_visits <- scp %>%
   filter(ER_Record_Flag == 'Y') %>%
   group_by(county) %>%
   tally()
 
-# Join 'county_visits' with 'scp' to make a new column
+  # Join 'county_visits' with 'scp' to make a new column
 scp <- inner_join(scp, county_visits, by = 'county') %>%
   dplyr::rename(county_total= 'n')
+
 
 # Next, run the following to add a new column that says Race in characters rather
   # than in values:
 
-# Make a vector of names (in order, 1 = white, 2 = Black, etc.)
+  # Make a vector of names (in order, 1 = white, 2 = Black, etc.)
 races_vec <- c("White", "Black", "Native American") 
 
-# Create the new column called 'Race_Chr'
+  # Create the new column called 'Race_Chr'
 scp <- scp %>% 
   mutate(Race_Chr = ifelse(Race == 9, "Unkown", races_vec[Race]))
+
+
+
+
+
+
+
+#####################
+# Code for Map
+#####################
+# Read in the shape file (remember to run ALL libraries at top of page)
+# zipcodes <- st_read("Dropbox/DATALAB/er_project/tl_2019_us_zcta510/tl_2019_us_zcta510.shp")
+
+# NOTE: the name of your file will change depending on where the shape file is 
+  # on your computer. So the "___" will change, but keep the name of the variable as
+  # "zipcodes" so that it matches the 
+
+# filter down to only include SCP zip codes
+# zipcodes <- zipcodes %>% 
+  # filter(ZCTA5CE10 %in% c("37301","37305","37313","37339","37356","37365", 
+                          # "37366","37374","37375","37383","37387","37397"))
 
 ######################################
 ######################################
