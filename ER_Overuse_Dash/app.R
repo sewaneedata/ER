@@ -105,7 +105,8 @@ library(leaflet)
                                       label = h3("Select Insurance Type"),
                                       choices = unique(scp$Primary_Payer_Class_Cd),
                                       selected = 1,
-                                      multiple = TRUE)),
+                                      multiple = TRUE),
+                plotOutput("insurance_plot")),
       
       #PRIMARY CARE SERVICE TAB
         tabItem(tabName = "care_service",
@@ -132,7 +133,9 @@ library(leaflet)
       #FINDINGS TAB
         tabItem(tabName = "findings",
                 includeMarkdown("www/findings.Rmd"),
-                plotOutput("er_overuse"))
+                plotOutput("er_overuse"),
+                plotOutput("county_graph"),
+                plotOutput("admit_hr_graph"))
         ))
      
   
@@ -199,6 +202,22 @@ server <- function(input, output) {
       tally %>%
       ungroup() %>%
       group_by(Patient_Zip) %>%
+      mutate(total = sum(n)) %>%
+      summarise(percentage = (n/sum(n))*100, across(everything())) %>%
+      mutate( type = case_when( !acs_primary & !nonemerg_primary ~ "Other",
+                                acs_primary ~ "ACS",
+                                nonemerg_primary ~ "Non emergent" )) %>%
+      mutate(Condition = ifelse(type == 'Other', "Other", "ACS/Non emergent"))
+    
+    rv$insurance_demo <- scp %>%
+      filter( Patient_Sex %in% input$sex,
+              Race_Chr %in% input$race,
+              age_group %in% input$age,
+              Primary_Payer_Class_Cd %in% input$insurance) %>%
+      group_by(Primary_Payer_Class_Cd, acs_primary, nonemerg_primary) %>%
+      tally %>%
+      ungroup() %>%
+      group_by(Primary_Payer_Class_Cd) %>%
       mutate(total = sum(n)) %>%
       summarise(percentage = (n/sum(n))*100, across(everything())) %>%
       mutate( type = case_when( !acs_primary & !nonemerg_primary ~ "Other",
@@ -278,6 +297,49 @@ server <- function(input, output) {
       labs(title = "Comparison of Primary Diagnosis Conditions",
            y = "Percentage of Visits to the ER")
   })
+  
+  output$county_graph <- renderPlot({
+    #Read in TN ER Records
+    tn_diags <- readr::read_csv("C:/Users/jplus/OneDrive/Documents/DataLab/ER_Usage/tn_conditions.csv")
+    
+    #Filter out "other" conditions
+    tn_diags <- tn_diags %>% filter(county != "Other", Condition != "Other")
+    
+    #Graph
+    ggplot(data = tn_diags, aes(x = county,y = precent/100, fill = type)) +
+      geom_col(position = "dodge")+
+      labs(title = "Comparison of Primary Diagnosis Conditions",
+           y = "Percentage of Visits",
+           x = '') +
+      scale_fill_manual(values=c("#74A9CF",
+                                 "#08306B"),
+                        name = "Type of Condition") +
+      scale_y_continuous(labels = scales::percent) +
+      labs(title = "Comparison of Primary Diagnosis Conditions",
+           subtitle = "SCP Counties vs Williamson County",
+           y = "% Visits to the ER") + 
+      geom_text(aes(label = scales::percent(precent/100)),
+                position = position_dodge(width = .9), 
+                vjust = -.4)
+  })
+  
+  output$admit_hr_graph <- renderPlot({
+    #Admit Hour Graph Code
+    admit_hour <- scp %>% group_by(Admit_Hr) %>% 
+      drop_na(Admit_Hr) %>% 
+      tally()
+    
+    #Admit Hour Graph
+    ggplot(data = admit_hour, aes(x = Admit_Hr,y = n)) +
+      geom_line(aes(group=1), color = "#74a9cf", size = 2) +
+      geom_point(color = "#08306b", size = 3) +
+      labs( x = "Patient Admit Hour",
+            y = "Number of Visits",
+            title = "Number of Visits by Hour")
+    
+  })
+  
+  
   ##############################################################################
   # EXPLORE ER TAB GRAPHS ------
   
@@ -323,7 +385,29 @@ server <- function(input, output) {
   
   #ZIPCODE PLOT
   output$zip_plot <- renderPlot({
-    ggplot(data = rv$zip_demo, aes(x = type, y = percentage/100, fill = factor(Patient_Zip))) + 
+    ggplot(data = rv$zip_demo, aes(x = factor(Patient_Zip), y = percentage/100, fill = type)) + 
+      geom_col(position = "dodge") +
+      labs(title = "ER Overuse of Demographic",
+           subtitle = "In Zipcodes",
+           y = "Percentage of Visits",
+           x = '') +
+      scale_fill_manual(values=c("#74a9cf",
+                                 "#08306b",
+                                 "#c6dbef"),
+                        name = "Type of Condition") +
+      scale_y_continuous(labels = scales::percent) + 
+      labs(title = "Comparison of Primary Diagnosis Conditions",
+           y = "Percentage of Visits to the ER") +
+      geom_text(aes(label = scales::percent(percentage/100)),
+                position = position_dodge(width = 0.9), 
+                vjust = -.5)
+  })
+  
+  #INSURANCE PLOT
+  output$insurance_plot <- renderPlot({
+    ggplot(data = rv$insurance_demo, aes(x = factor(Primary_Payer_Class_Cd), 
+                                         y = percentage/100, 
+                                         fill = type)) + 
       geom_col(position = "dodge") +
       labs(title = "ER Overuse of Demographic",
            subtitle = "In Zipcodes",
