@@ -4,16 +4,19 @@ author: "Jenna Lusk"
 date: '2022-06-30'
 output: html_document
 ---
-# Overview
+# Background
 ## **Emergency Room Overuse in the United States**
 Concern has grown in recent years regarding the overuse of emergency departments in the U.S., especially in rural parts of the country where severe ER overuse has been linked to inadequate primary care health service. Investigating trends in ER use can provide helpful insight into the status of the primary care health services of different communities by highlighting who is being underserved and how.
 
-### What is Emergency Room Overuse?
+**What is Emergency Room Overuse?**
+
 ER overuse can be characterized as using the ER to treat non-emergent conditions or ambulatory care sensitive (ACS) conditions. By investigating how frequently patients are going to the ER with a primary diagnosis of an ACS or non-emergent condition, we can quantify ER overuse. ACS and non-emergent conditions can be identified using ICD-10 codes. 
 
-## **Our Problem**
+## **The Problem**
 All three counties that make up the South Cumberland Plateau as defined by the SCHN, (Grundy, Franklin, and Marion) are considered medically underserved by the Health Resources and Services Administration (HRSA). Among other things, this means that the HRSA has designated these counties as having too few primary care providers and services to adequately meet community needs. 
-## Our Project
+
+**Our Project**
+
 Our focus this summer is on investigating trends in ER use from the South Cumberland Plateau so as to better understand *how* the region is medically underserved. More specifically, our analysis provides insight into the demographics of who is primarily “overusing” the ER, and for what specific non-emergent and ACS conditions they are using the ER. By understanding the “who?” and “for what?” of ER overuse, we can better understand the “why?” — why are ERs on the South Cumberland Plateau being overused? What gaps are there between health care services and the needs of the community in this region?
 
 ## **Vocabulary**
