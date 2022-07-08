@@ -55,7 +55,7 @@ library(leaflet)
   body <- dashboardBody(
     tabItems(
       #Adds content to each tab
-        
+      
       #ABOUT TAB
         tabItem(tabName = "about",
                 includeMarkdown("www/home.Rmd")),
@@ -110,23 +110,24 @@ library(leaflet)
       
       #PRIMARY CARE SERVICE TAB
         tabItem(tabName = "care_service",
+                # the below makes the "hr()" line black.
+                tags$head(tags$style(HTML("hr {border-top: 1px solid #000000;}"))),
                 
                 fluidRow(column(6, 
                                 selectInput(inputId = "cond",
                                             label = h3("Select Condition Type"),
-                                            choices = c("ACS visits" = "acs_perc",
-                                                        "Non emergent visits" = "non_perc",
-                                                        "Mental health visits" = "mental_perc",
-                                                        "Dental visits" = "dental_perc",
-                                                        "Substance abuse visits" = "sub_perc",
+                                            choices = c("ACS" = "acs_perc",
+                                                        "Non emergent" = "non_perc",
+                                                        "Mental health" = "mental_perc",
+                                                        "Dental" = "dental_perc",
+                                                        "Substance abuse" = "sub_perc",
                                                         "Total ER visits" = "n"),
-                                            selected = "Dental visits"))),
-                fluidRow(column(6, 
-                                leafletOutput("cond_map")),
-                         br(),
-                         hr(),
-                         br()),
-               
+                                            selected = "acs_perc")),
+                         column(6, 
+                                leafletOutput("cond_map"))),
+                br(),
+                hr(),
+                br(),
                 fluidRow(
                   column(6,
                          selectInput(inputId = "county1",
@@ -513,8 +514,21 @@ server <- function(input, output) {
   ################################
   # condition map leaflet
   output$cond_map <- renderLeaflet({
-    if(input$cond == "acs_perc"){
-      legend_title <- "ACS"}
+    # if(input$cond == "acs_perc"){
+    #   legend_title <- "ACS Conditions"}
+    # 
+    # if(input$cond == "non_perc"){
+    #   legend_title <- "Non Emergent"}
+    # 
+    # if(input$cond == "mental_perc"){
+    #   legend_title <- "Mental Health"}
+    # 
+    # if(input$cond == "dental_perc"){
+    #   legend_title <- "Dental Conditions"}
+    # 
+    # if(input$cond == "sub_perc"){
+    #   legend_title <- "Substance Abuse"}
+    
     leaflet(combine) %>%
       addTiles() %>%
       addPolygons(color = ~pal(get(input$cond)),
@@ -531,7 +545,7 @@ server <- function(input, output) {
       addLegend("bottomright",
                 pal = pal,
                 values = (combine %>% pull(!!input$cond) %>% range), #creates range of values within column selected
-                title = legend_title,
+                title = "% of Visits",
                 opacity = 1)
   })
   
@@ -545,11 +559,11 @@ server <- function(input, output) {
       scale_y_continuous(labels = scales::percent) + 
       labs(x = " ",
            y = "Percentage of Patient Visits") +
-      scale_fill_manual(values=c("#d7191c",
-                                 "#fdae61",
-                                 "#ffffbf",
-                                 "#abd9e9",
-                                 "#2c7bb6"),
+      scale_fill_manual(values=c('#fdcc8a',
+                                 '#a1dab4',
+                                 '#41b6c4',
+                                 '#2c7fb8',
+                                 '#253494'),
                         name = "Type of Condition") +
       theme(axis.ticks.x = element_blank(),
             axis.text.x = element_blank())
@@ -564,11 +578,11 @@ server <- function(input, output) {
       scale_y_continuous(labels = scales::percent) + 
       labs(x = " ",
            y = "Percentage of Patient Visits") +
-      scale_fill_manual(values=c("#d7191c",
-                                 "#fdae61",
-                                 "#ffffbf",
-                                 "#abd9e9",
-                                 "#2c7bb6"),
+      scale_fill_manual(values=c('#fdcc8a',
+                                 '#a1dab4',
+                                 '#41b6c4',
+                                 '#2c7fb8',
+                                 '#253494'),
                         name = "Type of Condition") +
       theme(axis.ticks.x = element_blank(),
             axis.text.x = element_blank())
