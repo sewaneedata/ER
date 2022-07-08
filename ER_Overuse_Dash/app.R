@@ -40,9 +40,9 @@ library(leaflet)
         "<br>"
         )),
     # Where tabs and subtabs are created, named, and given icons
-    menuItem("Home", tabName = "home", icon = icon("home")),
-    menuItem("Overview", tabName = "overview", icon = icon("file")),
-    menuItem("Findings", tabName = "findings", icon = icon("book-medical")),
+    menuItem("About", tabName = "about", icon = icon("home")),
+    menuItem("Background", tabName = "background", icon = icon("file")),
+    menuItem("Overview", tabName = "overview", icon = icon("book-medical")),
     menuItem("Explore ER Overuse", tabName = "ER_Overuse", icon = icon("hospital"),
              menuSubItem("Map", tabName = "map"),
              menuSubItem("Demographics", tabName = "demo"),
@@ -56,11 +56,11 @@ library(leaflet)
     tabItems(
       #Adds content to each tab
         
-      #HOME TAB
-        tabItem(tabName = "home",
+      #ABOUT TAB
+        tabItem(tabName = "about",
                 includeMarkdown("www/home.Rmd")),
-      #OVERVIEW TAB
-        tabItem(tabName = "overview", 
+      #BACKGROUND TAB
+        tabItem(tabName = "background", 
                 includeMarkdown("www/overview.Rmd")),
       
       # EXPLORE ER OVERUSE DROPDOWN
@@ -111,6 +111,22 @@ library(leaflet)
       #PRIMARY CARE SERVICE TAB
         tabItem(tabName = "care_service",
                 
+                fluidRow(column(6, 
+                                selectInput(inputId = "cond",
+                                            label = h3("Select Condition Type"),
+                                            choices = c("ACS visits" = "acs_perc",
+                                                        "Non emergent visits" = "non_perc",
+                                                        "Mental health visits" = "mental_perc",
+                                                        "Dental visits" = "dental_perc",
+                                                        "Substance abuse visits" = "sub_perc",
+                                                        "Total ER visits" = "n"),
+                                            selected = "Dental visits"))),
+                fluidRow(column(6, 
+                                leafletOutput("cond_map")),
+                         br(),
+                         hr(),
+                         br()),
+               
                 fluidRow(
                   column(6,
                          selectInput(inputId = "county1",
@@ -131,7 +147,7 @@ library(leaflet)
       
       
       #FINDINGS TAB
-        tabItem(tabName = "findings",
+        tabItem(tabName = "overview",
                 includeMarkdown("www/findings.Rmd"),
                 plotOutput("er_overuse"),
                 plotOutput("county_graph"),
@@ -227,6 +243,13 @@ server <- function(input, output) {
   })
   
   #MEDICAL SERVICES OBSERVE----
+  observe({
+    
+    combine <- left_join(zipcodes, scp_map, by = "Patient_Zip")
+    pal <- colorNumeric(palette = c('#0571b0','#92c5de', '#f7f7f7', '#f4a582', '#ca0020'),
+                        domain = combine$input$cond)
+  })
+  
   observe({
     rv$county <- scp %>%
       filter(county %in% input$county1) %>% 
@@ -365,7 +388,10 @@ server <- function(input, output) {
   
   #COUNTY PLOT
   output$county_plot <- renderPlot({
-     ggplot(data = rv$county_demo, aes(x = type, y = percentage/100, fill = county)) + 
+     ggplot(data = rv$county_demo, 
+            aes(x = reorder(type, -percentage), 
+                y = percentage/100, 
+                fill = type)) + 
       geom_col(position = "dodge") +
       labs(title = "ER Overuse of Demographic",
          subtitle = "In County",
@@ -385,7 +411,10 @@ server <- function(input, output) {
   
   #ZIPCODE PLOT
   output$zip_plot <- renderPlot({
-    ggplot(data = rv$zip_demo, aes(x = factor(Patient_Zip), y = percentage/100, fill = type)) + 
+    ggplot(data = rv$zip_demo, 
+           aes(x = factor(Patient_Zip),
+              y = percentage/100,
+              fill = type)) + 
       geom_col(position = "dodge") +
       labs(title = "ER Overuse of Demographic",
            subtitle = "In Zipcodes",
@@ -427,6 +456,28 @@ server <- function(input, output) {
 
   # PRIMARY CARE SERVICES TAB
   #################################
+  # condition map leaflet
+  output$cond_map <- renderLeaflet({
+    leaflet(combine) %>%
+      addTiles() %>%
+      addPolygons(color = ~pal(get(input$cond)),
+                  weight = 1,
+                  smoothFactor = 0.25,
+                  opacity = 1.0,
+                  fillOpacity = 0.5,
+                  highlightOptions = highlightOptions(color = "white",
+                                                      weight = 1.0,
+                                                      bringToFront = TRUE),
+                  label = ~lapply(paste0("Zip code: ", combine$Patient_Zip, ",",
+                                         "<br/>",
+                                         paste(round(get(input$cond), 2)), "%"), HTML)) %>%
+      addLegend("bottomright",
+                pal = pal,
+                values = c(1, 2, 3),
+                title = " ",
+                opacity = 1)
+  })
+  
   # county plot
   output$all_cond_county <- renderPlot({
     ggplot(data = rv$county, 
