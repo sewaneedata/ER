@@ -144,6 +144,40 @@ library(leaflet)
                          column(6,  plotOutput("all_cond_zip")))),
       
       #CONDITIONS TAB
+      tabItem(tabName= 'med_condition',
+      fluidRow(
+        column(4, 
+               selectInput(inputId = 'county2',
+                           label= h3 ('Select County'),
+                           choices= unique(scp$county),
+                           selected = 1,
+               )),
+        column(4,
+               
+               # So that zip codes are dependent on county
+               selectInput( inputId = 'zip2',
+                            label= h3 ('Select Zip Code'),
+                            choices= NULL
+               )),
+        
+        column(4,
+               
+               selectInput( inputId = 'insurance',
+                            label= h3('Select Insurance Type'),
+                            choices= unique(scp$Primary_Payer_Class_Cd),
+                            selected=1))),
+      
+      # Putting the graph on its own row below
+      fluidRow(
+        column(6,
+               
+               #Displays the plot to the user
+               #uiOutput('title')
+               plotOutput('conditions_plot')))
+      
+    ),
+    
+    
       
       
       #FINDINGS TAB
@@ -244,55 +278,83 @@ server <- function(input, output) {
   
   #MEDICAL SERVICES OBSERVE----
   observe({
-    
+
     combine <- left_join(zipcodes, scp_map, by = "Patient_Zip")
     pal <- colorNumeric(palette = c('#0571b0','#92c5de', '#f7f7f7', '#f4a582', '#ca0020'),
                         domain = combine$input$cond)
   })
-  
+
   observe({
     rv$county <- scp %>%
-      filter(county %in% input$county1) %>% 
-      group_by(county, 
-               acs_primary, 
-               nonemerg_primary, 
-               dental_primary, 
-               mental_primary, 
-               subabuse_primary) %>% 
+      filter(county %in% input$county1) %>%
+      group_by(county,
+               acs_primary,
+               nonemerg_primary,
+               dental_primary,
+               mental_primary,
+               subabuse_primary) %>%
       tally %>%
       ungroup() %>%
-      group_by(county) %>% 
-      summarise(percentage = (n/sum(n))*100, across(everything())) %>% 
+      group_by(county) %>%
+      summarise(percentage = (n/sum(n))*100, across(everything())) %>%
       mutate(type = case_when(!dental_primary & !acs_primary & !subabuse_primary & !mental_primary & !nonemerg_primary ~ "Other",
                               dental_primary ~ "Dental",
                               acs_primary ~ "ACS",
                               subabuse_primary ~ "Substance Abuse",
                               mental_primary ~ "Mental Health",
-                              nonemerg_primary ~ "Non emergent")) %>% 
+                              nonemerg_primary ~ "Non emergent")) %>%
       filter(type != "Other")
-  })  
-    
+  })
+
   observe({
     rv$zip <- scp %>%
-      filter(Patient_Zip %in% input$zip1) %>% 
-      group_by(Patient_Zip, 
-               acs_primary, 
-               nonemerg_primary, 
-               dental_primary, 
-               mental_primary, 
-               subabuse_primary) %>% 
+      filter(Patient_Zip %in% input$zip1) %>%
+      group_by(Patient_Zip,
+               acs_primary,
+               nonemerg_primary,
+               dental_primary,
+               mental_primary,
+               subabuse_primary) %>%
       tally %>%
       ungroup() %>%
-      group_by(Patient_Zip) %>% 
-      summarise(percentage = (n/sum(n))*100, across(everything())) %>% 
+      group_by(Patient_Zip) %>%
+      summarise(percentage = (n/sum(n))*100, across(everything())) %>%
       mutate(type = case_when(!dental_primary & !acs_primary & !subabuse_primary & !mental_primary & !nonemerg_primary ~ "Other",
                               dental_primary ~ "Dental",
                               acs_primary ~ "ACS",
                               subabuse_primary ~ "Substance Abuse",
                               mental_primary ~ "Mental Health",
-                              nonemerg_primary ~ "Non emergent")) %>% 
+                              nonemerg_primary ~ "Non emergent")) %>%
       filter(type != "Other")
-  })  
+  })
+  
+  #ER Conditions 
+  # This makes zip code options dependent on county selected 
+  county2 <- reactive({
+    filter(scp, county == input$county2)
+  })
+  observeEvent(county2(), {
+    choices <- unique(county2()$Patient_Zip)
+    updateSelectInput(inputId = "zip2", choices = choices)
+  })
+  
+  ## Create reactive values
+  # ^ Let us control which parts of your app update when, which prevents unnecessary computation that can slow down your app
+  rv <- reactiveValues() 
+  observe({
+    rv$conditions <- scp %>% 
+      filter(county %in% input$county2,
+             Primary_Payer_Class_Cd %in% input$insurance,
+             Patient_Zip %in% input$zip2) %>% 
+      group_by(Diag1, county_total) %>% 
+      tally() %>% 
+      arrange(desc(n))%>% 
+      summarise(perc = n/county_total*100) %>% 
+      arrange(desc(perc)) %>% 
+      head(5)
+    
+    
+  })
     
 
   
@@ -454,9 +516,9 @@ server <- function(input, output) {
                 vjust = -.5)
   })
 
-  # PRIMARY CARE SERVICES TAB
-  #################################
-  # condition map leaflet
+  PRIMARY CARE SERVICES TAB
+  ################################
+  condition map leaflet
   output$cond_map <- renderLeaflet({
     leaflet(combine) %>%
       addTiles() %>%
@@ -516,6 +578,27 @@ server <- function(input, output) {
       theme(axis.ticks.x = element_blank(),
             axis.text.x = element_blank())
   })
+
+
+# ER Conditions Tab
+#################################
+output$conditions_plot <- renderPlot({
+  ggplot(data = rv$conditions, aes(x= Diag1,
+                                   y= perc, fill= Diag1)) +
+    geom_col()+
+    # This puts percent sign on y-axis
+    scale_y_continuous(labels = scales::percent)+
+    labs(title= 'Top 5 Primary Diagnoses', x= 'Specific Diagnosis', y= 'Percentage of Patients')+
+    # Gives a minimalistic theme to the graph and changes the text size on the graph
+    theme_light(base_size = 18)+
+    scale_fill_manual(values= c('#fdcc8a',
+                                '#a1dab4',
+                                '#41b6c4',
+                                '#2c7fb8',
+                                '#253494'))
+  
+})
+
 }
 
 # Run the application 
