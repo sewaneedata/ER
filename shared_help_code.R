@@ -15,6 +15,7 @@ library(gsheet)
 library(sf)
 library(leaflet)
 library(raster)
+library(htmltools)
 
 # Read in: scp_data data frame
 #ELLIE: scp <- readr::read_csv("Dropbox/DATALAB/ER_Project/scp_data2")
@@ -173,7 +174,8 @@ scp <- scp %>%
 #####################
 # Code for "Conditions map"
 #####################
-# Read in the shape file (remember to run ALL libraries at top of page)
+# Make sure ALL libraries at top of the page have been loaded in.
+# Read in the shape file.
 # Download the folder "tl_2019_us_zcta_510" from google drive. Put in your "ER" folder on
   # your computer. Read the file with '.shp' at the end of it into st_read below.
 
@@ -232,14 +234,18 @@ zipcodes <- zipcodes %>%
 # b. Join 'zipcodes' and 'scp_map' to make a new varible called 'map'!
 combine <- left_join(zipcodes, scp_map, by = "Patient_Zip")
 
+# c. Create color palette that will be used in the shiny code to color code the "conditions" map.
+pal <- colorNumeric(palette = c('#0571b0','#92c5de',  '#f7f7f7', '#f4a582', '#ca0020'), 
+                    domain = combine$input$cond)
 
-
-
+######################################
+######################################
+######################################
 ######################################
 ######################################
 ######################################
 # The following has been commented out because it's not necessary code
-# but may potentially be useful in the future.
+
 ######################################
 # SEARCH THROUGH ONLY THE PRIMARY DIAGNOSIS COLUMN (Diag1):
 ######################################
