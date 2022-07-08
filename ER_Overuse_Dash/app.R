@@ -150,8 +150,7 @@ library(leaflet)
                selectInput(inputId = 'county2',
                            label= h3 ('Select County'),
                            choices= unique(scp$county),
-                           selected = 1,
-               )),
+                           selected = 1)),
         column(4,
                
                # So that zip codes are dependent on county
@@ -162,7 +161,7 @@ library(leaflet)
         
         column(4,
                
-               selectInput( inputId = 'insurance',
+               selectInput( inputId = 'insurance2',
                             label= h3('Select Insurance Type'),
                             choices= unique(scp$Primary_Payer_Class_Cd),
                             selected=1))),
@@ -186,7 +185,8 @@ library(leaflet)
                 plotOutput("er_overuse"),
                 plotOutput("county_graph"),
                 plotOutput("admit_hr_graph"))
-        ))
+        )
+    )
      
   
   # Compile UI ----
@@ -277,12 +277,6 @@ server <- function(input, output) {
   })
   
   #MEDICAL SERVICES OBSERVE----
-  observe({
-
-    combine <- left_join(zipcodes, scp_map, by = "Patient_Zip")
-    pal <- colorNumeric(palette = c('#0571b0','#92c5de', '#f7f7f7', '#f4a582', '#ca0020'),
-                        domain = combine$input$cond)
-  })
 
   observe({
     rv$county <- scp %>%
@@ -333,6 +327,7 @@ server <- function(input, output) {
   county2 <- reactive({
     filter(scp, county == input$county2)
   })
+  
   observeEvent(county2(), {
     choices <- unique(county2()$Patient_Zip)
     updateSelectInput(inputId = "zip2", choices = choices)
@@ -340,11 +335,11 @@ server <- function(input, output) {
   
   ## Create reactive values
   # ^ Let us control which parts of your app update when, which prevents unnecessary computation that can slow down your app
-  rv <- reactiveValues() 
+
   observe({
     rv$conditions <- scp %>% 
       filter(county %in% input$county2,
-             Primary_Payer_Class_Cd %in% input$insurance,
+             Primary_Payer_Class_Cd %in% input$insurance2,
              Patient_Zip %in% input$zip2) %>% 
       group_by(Diag1, county_total) %>% 
       tally() %>% 
@@ -352,8 +347,6 @@ server <- function(input, output) {
       summarise(perc = n/county_total*100) %>% 
       arrange(desc(perc)) %>% 
       head(5)
-    
-    
   })
     
 
@@ -516,10 +509,12 @@ server <- function(input, output) {
                 vjust = -.5)
   })
 
-  PRIMARY CARE SERVICES TAB
+  # PRIMARY CARE SERVICES TAB
   ################################
-  condition map leaflet
+  # condition map leaflet
   output$cond_map <- renderLeaflet({
+    if(input$cond == "acs_perc"){
+      legend_title <- "ACS"}
     leaflet(combine) %>%
       addTiles() %>%
       addPolygons(color = ~pal(get(input$cond)),
@@ -535,8 +530,8 @@ server <- function(input, output) {
                                          paste(round(get(input$cond), 2)), "%"), HTML)) %>%
       addLegend("bottomright",
                 pal = pal,
-                values = c(1, 2, 3),
-                title = " ",
+                values = (combine %>% pull(!!input$cond) %>% range), #creates range of values within column selected
+                title = legend_title,
                 opacity = 1)
   })
   
