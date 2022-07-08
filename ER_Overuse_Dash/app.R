@@ -77,7 +77,8 @@ library(leaflet)
                   column(3,
                          radioButtons( inputId = "sex",
                                        label = h3("Select Sex"),
-                                       choices = c("M", "F", "Both"),
+                                       choices = c("M", "F"),
+                                       #choices = c("M", "F", "Both"),
                                        selected = 1)),
                   column(3,
                          radioButtons("race", label = h3("Select Race"),
@@ -171,11 +172,12 @@ server <- function(input, output) {
   
   observe({ #County
     rv$county_demo <- scp %>%
-      filter( Patient_Sex %in% input$sex,
-              Race_Chr %in% input$race,
+      filter(Race_Chr %in% input$race,
               age_group %in% input$age,
-              county %in% input$county) %>%
-      group_by(county, acs_primary, nonemerg_primary) %>%
+              county %in% input$county) %>% 
+      # ifelse(input$sex !='Both', 
+             #rv$county_demo <- rv$county_demo %>% filter(Patient_Sex == input$sex),  %>% 
+      group_by( county, acs_primary, nonemerg_primary) %>%
       tally %>%
       ungroup() %>%
       group_by(county) %>%
@@ -185,6 +187,8 @@ server <- function(input, output) {
                                 acs_primary ~ "ACS",
                                 nonemerg_primary ~ "Non emergent" )) %>%
       mutate(Condition = ifelse(type == 'Other', "Other", "ACS/Non emergent"))
+    
+    
     
     rv$zip_demo <- scp %>%
       filter( Patient_Sex %in% input$sex,
