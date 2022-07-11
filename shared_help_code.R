@@ -104,6 +104,40 @@ dental <- as.vector(unlist(dental$'ICD_10_code'))
 dental <- paste0( dental, collapse = "|^" )
 dental <- paste0("^", dental)
 
+###########################
+
+## Making vectors for insurance
+# When those characters are read they will be under a new name
+Tenn_care <- c('8', '10', 'J', 'Q', 'T' )
+Tri_care <- ('C')
+Medi_care <- c('K','M')
+Commerical_care <- c('14', '15', '16', '17', 'B', 'L')
+Medi_caid <- ('D')
+Unknown_insurance <- c('O','H','13') # 'H' & '13' is in here because there is no code 
+Self_Paid_insurance <- ('P')
+Uninsured <- ('Z')
+Work_Comp <- ('W')
+Self_Insured <- ('S')
+Prisoner <- ('N')
+Cover_Kids <- ('12')
+Cover_TN <- ('11')
+
+# When the patient insurance is read from the new vector it will be called the new insurance in a different column
+scp <- scp %>% 
+  mutate(insurance= case_when(Primary_Payer_Class_Cd %in% Tenn_care ~ 'TennCare',
+                              Primary_Payer_Class_Cd %in% Tri_care ~ 'TriCare',
+                              Primary_Payer_Class_Cd %in% Medi_care ~ 'MediCare',
+                              Primary_Payer_Class_Cd %in% Commerical_care ~ 'Commerical',
+                              Primary_Payer_Class_Cd %in% Medi_caid ~ 'MediCaid',
+                              Primary_Payer_Class_Cd %in% Unknown_insurance ~ 'Unknown',
+                              Primary_Payer_Class_Cd %in% Self_Paid_insurance ~ 'Self Paid',
+                              Primary_Payer_Class_Cd %in% Uninsured ~ 'Uninsured',
+                              Primary_Payer_Class_Cd %in% Work_Comp ~ 'Work Comp',
+                              Primary_Payer_Class_Cd %in% Self_Insured ~ 'Self Insured',
+                              Primary_Payer_Class_Cd %in% Prisoner ~ 'Prisoner',
+                              Primary_Payer_Class_Cd %in% Cover_Kids ~ 'CoverKids',
+                              Primary_Payer_Class_Cd %in% Cover_TN ~ 'CoverTenn' ))
+
 #################################################
 # Run the following for an updated 'scp' data frame that has:
 # 1. new columns that indicate whether or not the primary diagnosis was ACSC, mental, dental, etc.,
