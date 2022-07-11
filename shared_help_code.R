@@ -185,15 +185,16 @@ zipcodes <- st_read("Dropbox/DATALAB/er_project/tl_2019_us_zcta510/tl_2019_us_zc
   # on your computer. So the "___" will change, but keep the name of the variable as
   # "zipcodes" so that it matches the 
 
-# filter down to only include SCP zip codes
+# "zipcodes" so that it matches the rest of the code/shiny app.
+
+# Filter down to only include SCP zip codes
 zipcodes <- zipcodes %>% 
   filter(ZCTA5CE10 %in% c("37301","37305","37313","37339","37356","37365", 
                           "37366","37374","37375","37383","37387","37397"))
 
-
-# Want to join zipcodes with scp data so I can display scp data on the map:
+# Want to join 'zipcodes' with 'scp' data so I can display scp data on the map:
 #
-# 1. Create a new variable with Patient_Zip and the number of cases for each condition 
+# 1. Create a new variable with "Patient_Zip" and the number of cases for each condition 
 # in that zip.
 
 # a. Create new column in 'scp' called 'zip_total' that counts up total # of ER visits
@@ -218,23 +219,13 @@ scp_map <- scp %>%
   group_by(Patient_Zip, acs_perc, non_perc, mental_perc, dental_perc,sub_perc) %>% 
   tally
 
-###
 # 2. Rename the column in "zipcodes" that holds zip codes so I can join "zipcodes" 
 # with "scp_map" by "Patient_Zip".
 zipcodes <- rename(zipcodes, Patient_Zip = ZCTA5CE10)
-###
-# 3. In 'scp_map', combine rows with "37375" and "37383" zip codes because there needs to be the
-# same number of rows in "scp_map" and  "zipcodes" in order to join() them.
 
-# a. Add the two rows together
-# scp_map[9,] <- scp_map[9,] + scp_map[10,] 
-
-# b. Delete the row "[10]" that I just added to "[9]"
+# 3. In 'scp_map', delete the row "[10]"  (it's zip should be 37383)
 scp_map <- scp_map[-10,]
 
-# c. Rename the row "[9]" because it named it by adding up the zip codes.
-# scp_map$Patient_Zip[scp_map$Patient_Zip == 74758] <- 37375
-###
 # 4. Join 'scp_map' and 'zipcodes' now that they have the same # of rows.
 
 # a. Convert 'Patient_Zip' in 'zipcodes' from type character to type double/numeric 
@@ -245,19 +236,9 @@ zipcodes <- zipcodes %>%
 # b. Join 'zipcodes' and 'scp_map' to make a new varible called 'map'!
 combine <- left_join(zipcodes, scp_map, by = "Patient_Zip")
 
-combine <- combine %>% 
-  mutate(acs_perc = as.numeric(acs_perc))
-
-write.csv(combine[,-15], "zips_for_map")
-
-# Now, can create map.
-map <- leaflet(combine)
-
-# Creating a palette to shade in the zip codes
+# 5. Creating a palette to shade in the zip codes
 pal <- colorNumeric(palette = c('#0571b0','#92c5de',  '#f7f7f7', '#f4a582', '#ca0020'), 
-                    domain = map$acs_perc)
-
-
+                    domain = combine$input$cond)
 
 
 ######################################
