@@ -105,7 +105,6 @@ dental <- paste0( dental, collapse = "|^" )
 dental <- paste0("^", dental)
 
 ###########################
-
 ## Making vectors for insurance
 # When those characters are read they will be under a new name
 Tenn_care <- c('8', '10', 'J', 'Q', 'T' )
@@ -122,7 +121,7 @@ Prisoner <- ('N')
 Cover_Kids <- ('12')
 Cover_TN <- ('11')
 
-# When the patient insurance is read from the new vector it will be called the new insurance in a different column
+# Create a new column with Insurance names
 scp <- scp %>% 
   mutate(insurance= case_when(Primary_Payer_Class_Cd %in% Tenn_care ~ 'TennCare',
                               Primary_Payer_Class_Cd %in% Tri_care ~ 'TriCare',
