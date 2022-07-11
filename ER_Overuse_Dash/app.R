@@ -92,8 +92,7 @@ library(leaflet)
                          selectInput( inputId = "county",
                                       label = h3("Select County"),
                                       choices = unique(scp$county),
-                                      selected = 1,
-                                      multiple = TRUE),
+                                      selected = 1),
                 plotOutput("county_plot"),
                          selectInput( inputId = "zip",
                                       label = h3("Select ZipCodes"),
@@ -447,7 +446,7 @@ server <- function(input, output) {
      ggplot(data = rv$county_demo, 
             aes(x = reorder(type, -percentage), 
                 y = percentage/100, 
-                fill = county)) + 
+                fill = type)) + 
       geom_col(position = "dodge") +
       labs(title = "ER Overuse of Demographic",
          subtitle = "In County",
