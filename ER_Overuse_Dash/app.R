@@ -81,32 +81,34 @@ library(leaflet)
                 includeMarkdown("www/demographics.Rmd"),
                 #Demo Filter Widgets
                 fluidRow(
-                  column(3,
+                  column(3, #WIDGET -----
                          radioButtons( inputId = "sex",
                                        label = h3("Select Sex"),
-                                       choices = c("M", "F"),
-                                       #choices = c("M", "F", "Both"),
-                                       selected = 1)),
+                                       choices = c("Both", "M", "F"),
+                                       selected = 'Both')),
                   column(3,
                          radioButtons("race", label = h3("Select Race"),
-                                     choices = unique(scp$Race_Chr), #Remove unknown
-                                     selected = 1)),
+                                      choices = c("All", unique(scp$Race_Chr)), 
+                                      selected = "All")),
                   column(3,
                          selectInput( inputId = "age",
-                                       label = h3("Select Age Group"),
-                                       choices = unique(scp$age_group),
-                                       selected = "0-9"))),
-                         selectInput( inputId = "county",
-                                      label = h3("Select County"),
-                                      choices = unique(scp$county),
-                                      selected = 1),
-                plotOutput("county_plot"),
+                                      label = h3("Select Age Group"),
+                                      choices = c('All', sort(unique(scp$age_group))),
+                                      selected = "All"))),
+                fluidRow(
+                  column(6,
+                selectInput( inputId = "county",
+                             label = h3("Select County"),
+                             choices = unique(scp$county),
+                             selected = "Grundy"),
+                plotOutput("county_plot")),
+                column(6,
                          selectInput( inputId = "zip",
                                       label = h3("Select ZipCodes"),
                                       choices = unique(scp$Patient_Zip),
                                       selected = 1,
                                       multiple = TRUE),
-                plotOutput("zip_plot"),
+                plotOutput("zip_plot"))),
                          selectInput( inputId = "insurance",
                                       label = h3("Select Insurance Type"),
                                       choices = unique(scp$Primary_Payer_Class_Cd),
@@ -229,15 +231,29 @@ server <- function(input, output) {
   })  
   
   #DEMOGRAPHICS OBSERVE------
-  
-  observe({ #County
-    rv$county_demo <- scp %>%
-      filter(Race_Chr %in% input$race,
-              age_group %in% input$age,
-              county %in% input$county) %>% 
-      # ifelse(input$sex !='Both', 
-             #rv$county_demo <- rv$county_demo %>% filter(Patient_Sex == input$sex),  %>% 
-      group_by( county, acs_primary, nonemerg_primary) %>%
+  observe({ #County DF
+    #Make age_group column from factor to character
+    scp$age_group <- as.character(scp$age_group)
+    
+    county_demo <- scp %>%
+      filter(county %in% input$county) 
+    
+    # If Statements for all/both buttons
+    if(input$sex != 'Both'){
+      county_demo <- county_demo %>% filter(Patient_Sex == input$sex)
+    }
+    
+    if(input$race != 'All'){
+      county_demo <- county_demo %>% filter(Race_Chr == input$race)
+    }
+    
+    if(input$age != 'All'){
+      county_demo <- county_demo %>% filter(age_group == input$age)
+    }
+    
+    # Continue DF Altering
+    county_demo <- county_demo %>% 
+      group_by(county, acs_primary, nonemerg_primary) %>%
       tally %>%
       ungroup() %>%
       group_by(county) %>%
@@ -248,13 +264,32 @@ server <- function(input, output) {
                                 nonemerg_primary ~ "Non emergent" )) %>%
       mutate(Condition = ifelse(type == 'Other', "Other", "ACS/Non emergent"))
     
+    # Make reactive DF
+    rv$county_demo <- county_demo
+  })
+  observe({ #Zip DF
     
+    #Make age_group column from factor to character
+    scp$age_group <- as.character(scp$age_group)
     
-    rv$zip_demo <- scp %>%
-      filter( Patient_Sex %in% input$sex,
-              Race_Chr %in% input$race,
-              age_group %in% input$age,
-              Patient_Zip %in% input$zip) %>%
+    zip_demo <- scp %>%
+      filter(Patient_Zip %in% input$zip) 
+    
+    # If Statements for all/both buttons
+    if(input$sex != 'Both'){
+      zip_demo <- zip_demo %>% filter(Patient_Sex == input$sex)
+    }
+    
+    if(input$race != 'All'){
+      zip_demo <- zip_demo %>% filter(Race_Chr == input$race)
+    }
+    
+    if(input$age != 'All'){
+      zip_demo <- zip_demo %>% filter(age_group == input$age)
+    }
+    
+    # Continue DF Altering
+    zip_demo <- zip_demo %>% 
       group_by(Patient_Zip, acs_primary, nonemerg_primary) %>%
       tally %>%
       ungroup() %>%
@@ -266,22 +301,50 @@ server <- function(input, output) {
                                 nonemerg_primary ~ "Non emergent" )) %>%
       mutate(Condition = ifelse(type == 'Other', "Other", "ACS/Non emergent"))
     
-    rv$insurance_demo <- scp %>%
-      filter( Patient_Sex %in% input$sex,
-              Race_Chr %in% input$race,
-              age_group %in% input$age,
-              Primary_Payer_Class_Cd %in% input$insurance) %>%
-      group_by(Primary_Payer_Class_Cd, acs_primary, nonemerg_primary) %>%
-      tally %>%
-      ungroup() %>%
-      group_by(Primary_Payer_Class_Cd) %>%
-      mutate(total = sum(n)) %>%
-      summarise(percentage = (n/sum(n))*100, across(everything())) %>%
-      mutate( type = case_when( !acs_primary & !nonemerg_primary ~ "Other",
-                                acs_primary ~ "ACS",
-                                nonemerg_primary ~ "Non emergent" )) %>%
-      mutate(Condition = ifelse(type == 'Other', "Other", "ACS/Non emergent"))
+    # Make reactive DF
+    rv$zip_demo <- zip_demo
+    
   })
+
+    observe({ #Insurance DF
+      
+      #Make age_group column from factor to character
+      scp$age_group <- as.character(scp$age_group)
+      
+      insurance_demo <- scp %>%
+        filter(Primary_Payer_Class_Cd %in% input$insurance) 
+      
+      # If Statements for all/both buttons
+      if(input$sex != 'Both'){
+        insurance_demo <- insurance_demo %>% filter(Patient_Sex == input$sex)
+      }
+      
+      if(input$race != 'All'){
+        insurance_demo <- insurance_demo %>% filter(Race_Chr == input$race)
+      }
+      
+      if(input$age != 'All'){
+        insurance_demo <- insurance_demo %>% filter(age_group == input$age)
+      }
+      
+      # Continue DF Altering
+      insurance_demo <- insurance_demo %>% 
+        group_by(Primary_Payer_Class_Cd, acs_primary, nonemerg_primary) %>%
+        tally %>%
+        ungroup() %>%
+        group_by(Primary_Payer_Class_Cd) %>%
+        mutate(total = sum(n)) %>%
+        summarise(percentage = (n/sum(n))*100, across(everything())) %>%
+        mutate( type = case_when( !acs_primary & !nonemerg_primary ~ "Other",
+                                  acs_primary ~ "ACS",
+                                  nonemerg_primary ~ "Non emergent" )) %>%
+        mutate(Condition = ifelse(type == 'Other', "Other", "ACS/Non emergent"))
+      
+      # Make reactive DF
+      rv$insurance_demo <- insurance_demo
+      
+    })
+    
   
   #MEDICAL SERVICES OBSERVE----
 
@@ -462,9 +525,10 @@ server <- function(input, output) {
          subtitle = "In County",
          y = "Percentage of Visits",
          x = '') +
-      scale_fill_manual(values=c("#74a9cf",
-                                 "#08306b",
-                                 "#c6dbef"), #CAN ONLY SELECT 3 SINCE ONLY 3 COLORS
+      theme_light(base_size = 18) +
+      scale_fill_manual(values=c('#fdcc8a',
+                                 '#a1dab4',
+                                 '#253494'),
                         name = "Type of Condition") +
       scale_y_continuous(labels = scales::percent) + 
       labs(title = "Comparison of Primary Diagnosis Conditions",
@@ -485,9 +549,10 @@ server <- function(input, output) {
            subtitle = "In Zipcodes",
            y = "Percentage of Visits",
            x = '') +
-      scale_fill_manual(values=c("#74a9cf",
-                                 "#08306b",
-                                 "#c6dbef"),
+      theme_light(base_size = 18) +
+      scale_fill_manual(values=c('#fdcc8a',
+                                 '#a1dab4',
+                                 '#253494'),
                         name = "Type of Condition") +
       scale_y_continuous(labels = scales::percent) + 
       labs(title = "Comparison of Primary Diagnosis Conditions",
@@ -507,9 +572,10 @@ server <- function(input, output) {
            subtitle = "In Zipcodes",
            y = "Percentage of Visits",
            x = '') +
-      scale_fill_manual(values=c("#74a9cf",
-                                 "#08306b",
-                                 "#c6dbef"),
+      theme_light(base_size = 18) +
+      scale_fill_manual(values=c('#fdcc8a',
+                                 '#a1dab4',
+                                 '#253494'),
                         name = "Type of Condition") +
       scale_y_continuous(labels = scales::percent) + 
       labs(title = "Comparison of Primary Diagnosis Conditions",
