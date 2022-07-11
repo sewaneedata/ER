@@ -17,7 +17,8 @@ library(leaflet)
 library(raster)
 
 # Read in: scp_data data frame
-#ELLIE: scp <- readr::read_csv("Dropbox/DATALAB/ER_Project/scp_data2")
+#ELLIE: 
+scp <- readr::read_csv("Dropbox/DATALAB/ER_Project/scp_data2")
 #JENNA: scp <- readr::read_csv("C:/Users/jplus/OneDrive/Documents/DataLab/ER_Usage/scp_data2")
 
 # rename weird column
@@ -178,16 +179,86 @@ scp <- scp %>%
 # Code for Map
 #####################
 # Read in the shape file (remember to run ALL libraries at top of page)
-# zipcodes <- st_read("Dropbox/DATALAB/er_project/tl_2019_us_zcta510/tl_2019_us_zcta510.shp")
+zipcodes <- st_read("Dropbox/DATALAB/er_project/tl_2019_us_zcta510/tl_2019_us_zcta510.shp")
 
 # NOTE: the name of your file will change depending on where the shape file is 
   # on your computer. So the "___" will change, but keep the name of the variable as
   # "zipcodes" so that it matches the 
 
 # filter down to only include SCP zip codes
-# zipcodes <- zipcodes %>% 
-  # filter(ZCTA5CE10 %in% c("37301","37305","37313","37339","37356","37365", 
-                          # "37366","37374","37375","37383","37387","37397"))
+zipcodes <- zipcodes %>% 
+  filter(ZCTA5CE10 %in% c("37301","37305","37313","37339","37356","37365", 
+                          "37366","37374","37375","37383","37387","37397"))
+
+
+# Want to join zipcodes with scp data so I can display scp data on the map:
+#
+# 1. Create a new variable with Patient_Zip and the number of cases for each condition 
+# in that zip.
+
+# a. Create new column in 'scp' called 'zip_total' that counts up total # of ER visits
+# in each zip so we can create reproducible percentages.
+zip_visits <- scp %>%
+  group_by(Patient_Zip) %>%
+  tally()
+
+scp <- inner_join(scp, zip_visits, by = 'Patient_Zip') %>%
+  dplyr::rename(zip_total = 'n')
+
+# b. Use new column 'zip_total' to create new variable 'scp_map' with percentages.
+scp_map <- scp %>% 
+  group_by(Patient_Zip) %>%
+  summarise(acs_perc = (sum(acs_primary))/zip_total*100, 
+            non_perc = (sum(nonemerg_primary))/zip_total*100,
+            mental_perc = (sum(mental_primary))/zip_total*100,
+            dental_perc = (sum(dental_primary))/zip_total*100,
+            sub_perc = (sum(subabuse_primary))/zip_total*100,
+            across(everything())) %>% 
+  ungroup() %>% 
+  group_by(Patient_Zip, acs_perc, non_perc, mental_perc, dental_perc,sub_perc) %>% 
+  tally
+
+###
+# 2. Rename the column in "zipcodes" that holds zip codes so I can join "zipcodes" 
+# with "scp_map" by "Patient_Zip".
+zipcodes <- rename(zipcodes, Patient_Zip = ZCTA5CE10)
+###
+# 3. In 'scp_map', combine rows with "37375" and "37383" zip codes because there needs to be the
+# same number of rows in "scp_map" and  "zipcodes" in order to join() them.
+
+# a. Add the two rows together
+# scp_map[9,] <- scp_map[9,] + scp_map[10,] 
+
+# b. Delete the row "[10]" that I just added to "[9]"
+scp_map <- scp_map[-10,]
+
+# c. Rename the row "[9]" because it named it by adding up the zip codes.
+# scp_map$Patient_Zip[scp_map$Patient_Zip == 74758] <- 37375
+###
+# 4. Join 'scp_map' and 'zipcodes' now that they have the same # of rows.
+
+# a. Convert 'Patient_Zip' in 'zipcodes' from type character to type double/numeric 
+# so that it matches 'Patient_Zip' in 'scp_map'.
+zipcodes <- zipcodes %>% 
+  mutate(Patient_Zip = as.numeric(Patient_Zip))
+
+# b. Join 'zipcodes' and 'scp_map' to make a new varible called 'map'!
+combine <- left_join(zipcodes, scp_map, by = "Patient_Zip")
+
+combine <- combine %>% 
+  mutate(acs_perc = as.numeric(acs_perc))
+
+write.csv(combine[,-15], "zips_for_map")
+
+# Now, can create map.
+map <- leaflet(combine)
+
+# Creating a palette to shade in the zip codes
+pal <- colorNumeric(palette = c('#0571b0','#92c5de',  '#f7f7f7', '#f4a582', '#ca0020'), 
+                    domain = map$acs_perc)
+
+
+
 
 ######################################
 ######################################
