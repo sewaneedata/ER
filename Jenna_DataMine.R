@@ -473,10 +473,116 @@ ggplot(data = county_df, aes(x = county, y = precent, fill = acs_primary)) +
 
 test <- scp %>% filter(Diag1 == "O80")
 
- 
+scp <- readr::read_csv("C:/Users/jplus/OneDrive/Documents/DataLab/ER_Usage/scp_data2")
+
+
+###########################################
+# FINDINGS TAB WORK ----
+
+# % of overuse for SCP vs Williamson
+
+#Read in TN ER Records
+tn_diags <- readr::read_csv("C:/Users/jplus/OneDrive/Documents/DataLab/ER_Usage/tn_conditions.csv")
+
+#Filter out "other" conditions
+tn_diags <- tn_diags %>% filter(county != "Other", Condition != "Other")
+
+#Plot of % by county (DODGE BY COUNTY)
+ggplot(data = tn_diags, aes(x = county,y = precent/100, fill = type)) +
+  geom_col(position = "dodge")+
+  labs(title = "Comparison of Primary Diagnosis Conditions",
+       y = "Percentage of Visits",
+       x = '') +
+  scale_fill_manual(values=c("#74A9CF",
+                             "#08306B"),
+                    name = "Type of Condition") +
+  scale_y_continuous(labels = scales::percent) +
+  labs(title = "Comparison of Primary Diagnosis Conditions",
+       subtitle = "SCP Counties vs Williamson County",
+       y = "% Visits to the ER") + 
+  geom_text(aes(label = scales::percent(precent/100)),
+            position = position_dodge(width = .9), 
+            vjust = -.4)
+
+#SCP vs Williamson Code
+tn_diag_scp <- tn_diags %>% mutate(scp = ifelse(county == "Franklin" | county == "Marion" | county == "Grundy", "SCP", 
+                                             ifelse(county == "Williamson", "Williamson", "Other"))) %>% 
+  group_by(scp, type) %>% 
+  summarize(mean_prec = mean(precent))
+
+#Plot of % by SCP or Williamson (DODGE GRAPH)
+ggplot(data = tn_diag_scp, aes(x = scp,y = mean_prec/100, fill = type)) +
+  geom_col(position = "dodge")+
+  labs(title = "Comparison of Primary Diagnosis Conditions",
+       y = "Percentage of Visits",
+       x = '') +
+  scale_fill_manual(values=c("#c6dbef", 
+                             "#74A9CF",
+                             "#08306B"),
+                    name = "Type of Condition") +
+  scale_y_continuous(labels = scales::percent) +
+  labs(title = "Comparison of Primary Diagnosis Conditions",
+       y = "Percentage of Visits to the ER") + 
+  geom_text(aes(label = scales::percent(mean_prec/100)),
+            position = position_dodge(width = 0.9), 
+            vjust = -.5)
+
+
+#Admit Hour Graph Code
+
+admit_hour <- scp %>% group_by(Admit_Hr) %>% 
+  drop_na(Admit_Hr) %>% 
+  tally() %>% ungroup() %>% mutate(total = sum(n))
+  # mutate(percentage = n/total*100, across(everything()))
+
+#Admit Hour Graph
+ggplot(data = admit_hour, aes(x = Admit_Hr,y = n)) +
+  geom_line(aes(group=1), color = "#74a9cf", size = 2) +
+  geom_point(color = "#08306b", size = 3) +
+  labs( x = "Patient Admit Hour",
+        y = "Number of Visits",
+        title = "Number of Visits by Hour")
+
+
+# Zips ER Overuse
+
+zip_test <- scp %>%
+  group_by(Patient_Zip, acs_primary, nonemerg_primary) %>%
+  tally %>%
+  ungroup() %>%
+  group_by(Patient_Zip) %>%
+  mutate(total = sum(n)) %>%
+  summarise(percentage = (n/sum(n))*100, across(everything())) %>%
+  mutate( type = case_when( !acs_primary & !nonemerg_primary ~ "Other",
+                            acs_primary ~ "ACS",
+                            nonemerg_primary ~ "Non emergent" )) %>%
+  mutate(Condition = ifelse(type == 'Other', "Other", "ACS/Non emergent"))
+
+
+ggplot(data = zip_test, aes(x = factor(Patient_Zip), y = percentage/100, fill = type)) + 
+  geom_col(position = "dodge") +
+  labs(title = "ER Overuse of Demographic",
+       subtitle = "In Zipcodes",
+       y = "Percentage of Visits",
+       x = '') +
+  scale_fill_manual(values=c("#74a9cf",
+                             "#08306b",
+                             "#c6dbef"),
+                    name = "Type of Condition") +
+  scale_y_continuous(labels = scales::percent) + 
+  labs(title = "Comparison of Primary Diagnosis Conditions",
+       y = "Percentage of Visits to the ER") +
+  geom_text(aes(label = scales::percent(percentage/100)),
+            position = position_dodge(width = 0.9), 
+            vjust = -.5)
+
+
+
+
 
  
 
+ 
 
 
 
