@@ -67,7 +67,14 @@ library(leaflet)
       # MAP TAB
         tabItem(tabName = "map",
               includeMarkdown("www/er_overuse.Rmd"),
-              leafletOutput("zipMap")), #MAYBE ADD SPINNER WHILE LOADING
+              fluidRow(
+                column(6,
+                       selectInput(inputId = 'zipcode',
+                                   label = h3("Select Zip code"),
+                                   choices = unique(hospitals$Patient_Zip),
+                                   selected = 1)),
+                column(6, 
+                       leafletOutput("zipMap")))),
        
       #DEMOGRAPHICS TAB
         tabItem(tabName = "demo",
@@ -425,17 +432,20 @@ server <- function(input, output) {
   #################################
 
   output$zipMap <- renderLeaflet({
-    leaflet(zipcodes) %>% 
-      addPolygons(color = '#2166ac',
+    leaflet() %>% 
+      addTiles() %>%
+      addPolygons(data = hospitals[hospitals$Patient_Zip %in% input$zipcode,]$geometry,
+                  color = '#253494',
                   weight = 1,
                   smoothFactor = 0.25,
                   opacity = 1.0,
                   fillOpacity = 0.5,
-                  highlightOptions = highlightOptions(color = "#b2182b", 
-                                                      weight = 1.5,
+                  highlightOptions = highlightOptions(color = "white",
+                                                      weight = 1.0,
                                                       bringToFront = TRUE),
-                  label = ~paste0(Patient_Zip)) %>% 
-      addTiles()
+                  label = paste0("Zip code: ", hospitals$Patient_Zip)) %>%
+    addMarkers(lat = hospitals[hospitals$Patient_Zip %in% input$zipcode,]$latitude,
+               lng = hospitals[hospitals$Patient_Zip %in% input$zipcode,]$longitude)
   })
   
   # DEMOGRAPHICS TAB
