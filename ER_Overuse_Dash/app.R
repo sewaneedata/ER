@@ -447,7 +447,7 @@ server <- function(input, output) {
      ggplot(data = rv$county_demo, 
             aes(x = reorder(type, -percentage), 
                 y = percentage/100, 
-                fill = type)) + 
+                fill = county)) + 
       geom_col(position = "dodge") +
       labs(title = "ER Overuse of Demographic",
          subtitle = "In County",
@@ -557,6 +557,7 @@ server <- function(input, output) {
                fill = type)) +
       geom_col() +
       scale_y_continuous(labels = scales::percent) + 
+      theme_light(base_size = 18) +
       labs(x = " ",
            y = "Percentage of Patient Visits") +
       scale_fill_manual(values=c('#fdcc8a',
@@ -576,6 +577,7 @@ server <- function(input, output) {
                fill = type)) +
       geom_col() +
       scale_y_continuous(labels = scales::percent) + 
+      theme_light(base_size = 18)+
       labs(x = " ",
            y = "Percentage of Patient Visits") +
       scale_fill_manual(values=c('#fdcc8a',
