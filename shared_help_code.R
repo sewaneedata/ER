@@ -173,7 +173,8 @@ scp <- scp %>%
 # Code for Conditions Map
 ##########################
 # Read in the shape file (remember to run ALL libraries at top of page)
-zipcodes <- st_read("Dropbox/DATALAB/er_project/tl_2019_us_zcta510/tl_2019_us_zcta510.shp")
+# ELLIE: zipcodes <- st_read("Dropbox/DATALAB/er_project/tl_2019_us_zcta510/tl_2019_us_zcta510.shp")
+# JENNA: zipcodes <- st_read("C:/Users/jplus/OneDrive/Documents/DataLab/ER_Usage/ZipCode_Shapes_File/tl_2019_us_zcta510/tl_2019_us_zcta510.shp")
 
 # NOTE: the name of your file will change depending on where the shape file is 
   # on your computer. So the "___" will change, but keep the name of the variable as
