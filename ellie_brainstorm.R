@@ -165,4 +165,128 @@ map <- leaflet(combine)
 pal <- colorNumeric(palette = c('#0571b0','#92c5de',  '#f7f7f7', '#f4a582', '#ca0020'), 
                     domain = map$acs_perc)
 
+#################################
+# Making hospital map
+
+# 1. Find out top 3 hospitals for each zipcode in order to find lat/long
+  # and create a google sheet of values
+# a. Top 3 hospitals of each zip
+scp %>% 
+  filter(Patient_Zip == '37301') %>% 
+  group_by(JARID) %>% 
+  tally %>% 
+  arrange(desc(n))
+
+scp %>% 
+  filter(Patient_Zip == '37305') %>% 
+  group_by(JARID) %>% 
+  tally %>% 
+  arrange(desc(n))
+
+scp %>% 
+  filter(Patient_Zip == '37313') %>% 
+  group_by(JARID) %>% 
+  tally %>% 
+  arrange(desc(n))
+
+scp %>% 
+  filter(Patient_Zip == '37339') %>% 
+  group_by(JARID) %>% 
+  tally %>% 
+  arrange(desc(n))
+
+scp %>% 
+  filter(Patient_Zip == '37356') %>% 
+  group_by(JARID) %>% 
+  tally %>% 
+  arrange(desc(n))
+
+scp %>% 
+  filter(Patient_Zip == '37365') %>% 
+  group_by(JARID) %>% 
+  tally %>% 
+  arrange(desc(n))
+
+scp %>% 
+  filter(Patient_Zip == '37366') %>% 
+  group_by(JARID) %>% 
+  tally %>% 
+  arrange(desc(n))
+
+scp %>% 
+  filter(Patient_Zip == '37374') %>% 
+  group_by(JARID) %>% 
+  tally %>% 
+  arrange(desc(n))
+
+scp %>% 
+  filter(Patient_Zip == '37375') %>% 
+  group_by(JARID) %>% 
+  tally %>% 
+  arrange(desc(n))
+
+scp %>% 
+  filter(Patient_Zip == '37383') %>% 
+  group_by(JARID) %>% 
+  tally %>% 
+  arrange(desc(n))
+scp %>% 
+  filter(Patient_Zip == '37387') %>% 
+  group_by(JARID) %>% 
+  tally %>% 
+  arrange(desc(n))
+
+scp %>% 
+  filter(Patient_Zip == '37397') %>% 
+  group_by(JARID) %>% 
+  tally %>% 
+  arrange(desc(n))
+
+# b. Read in googlesheet created with the above hospital JARIDs.
+hosp_location <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1EHHze7ABHXTTDUvaxbAIz5efFT67MR1VMXrMSkokMQs/edit?usp=sharing")
+
+###
+# 2. Create new data frame called 'top_hosp' that only has the top three most visited
+  # hospitals from each zipcode.
+# a. Arrange most visited hospitals in descending order and make a new variable.
+test <- scp %>% 
+  group_by(Patient_Zip, JARID) %>%
+  tally %>%
+  arrange(desc(n))
+
+# b. Use the above variable to create a new data frame with top 3 hospitals in each zip.  
+top_hosp <- Reduce(rbind,
+       by(test,
+          test["Patient_Zip"],
+          head,
+          n = 3))
+
+# c. Make JARID in top_hosp type double rather than character.
+top_hosp <- top_hosp %>% 
+  mutate(JARID = as.numeric(JARID))
+
+###
+# 3. Join 'top_hosp' with the google sheet of lat/long for each hospital using the 'JARID' column.
+h <- inner_join(top_hosp, hosp_location, by = "JARID")
+
+hospitals <- inner_join(h, zipcodes, by = "Patient_Zip")
+
+### 
+# 4. code for shiny app map
+leaflet() %>% 
+  addTiles() %>% 
+  addMarkers(data = hospitals) %>% 
+  addPolygons(data = zipcodes,
+              color = '#253494',
+              weight = 1,
+              smoothFactor = 0.25,
+              opacity = 1.0,
+              fillOpacity = 0.5,
+              highlightOptions = highlightOptions(color = "white",
+                                                  weight = 1.0,
+                                                  bringToFront = TRUE),
+              label = paste0("Zip code: ", hospitals$Patient_Zip))
+
+
+zipcodes <- rename(zipcodes, lat = INTPTLAT10, lng = INTPTLON10)
 
