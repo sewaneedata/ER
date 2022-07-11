@@ -169,15 +169,9 @@ races_vec <- c("White", "Black", "Native American")
 scp <- scp %>% 
   mutate(Race_Chr = ifelse(Race == 9, "Unkown", races_vec[Race]))
 
-
-
-
-
-
-
-#####################
-# Code for Map
-#####################
+##########################
+# Code for Conditions Map
+##########################
 # Read in the shape file (remember to run ALL libraries at top of page)
 zipcodes <- st_read("Dropbox/DATALAB/er_project/tl_2019_us_zcta510/tl_2019_us_zcta510.shp")
 
@@ -239,6 +233,39 @@ combine <- left_join(zipcodes, scp_map, by = "Patient_Zip")
 # 5. Creating a palette to shade in the zip codes
 pal <- colorNumeric(palette = c('#0571b0','#92c5de',  '#f7f7f7', '#f4a582', '#ca0020'), 
                     domain = combine$input$cond)
+
+##########################
+# Code for Map in map tab
+##########################
+# 1. Read in Google sheet of hospital lat/long information:
+hosp_location <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1EHHze7ABHXTTDUvaxbAIz5efFT67MR1VMXrMSkokMQs/edit?usp=sharing")
+
+###
+# 2. Create new data frame called 'top_hosp' that only has the top 3 most visited
+# hospitals from each zip code.
+# a. Arrange most visited hospitals in descending order and make a new variable.
+test <- scp %>% 
+  group_by(Patient_Zip, JARID) %>%
+  tally %>%
+  arrange(desc(n))
+
+# b. Use the above variable to create a new data frame with top 3 hospitals in each zip.  
+top_hosp <- Reduce(rbind,
+                   by(test,
+                      test["Patient_Zip"],
+                      head,
+                      n = 3))
+
+# c. Make JARID in 'top_hosp' type double rather than type character.
+top_hosp <- top_hosp %>% 
+  mutate(JARID = as.numeric(JARID))
+
+###
+# 3. Join 'top_hosp' with 'hosp_location' using the 'JARID' column.
+h <- inner_join(top_hosp, hosp_location, by = "JARID")
+
+# 4. Join varible made above (h) with 'zipcodes' variable (from other map code).
+hospitals <- inner_join(h, zipcodes, by = "Patient_Zip")
 
 
 ######################################
