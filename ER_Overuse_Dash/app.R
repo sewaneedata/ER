@@ -437,15 +437,16 @@ server <- function(input, output) {
            subtitle = "At the ER",
            y = "Percentage of Visits",
            x = '') +
-      scale_fill_manual(values=c('#fdcc8a',
-                                 '#a1dab4',
-                                 '#2C7FB8'),
+      scale_fill_manual(values=c('#41b6c4',
+                                 '#253494',
+                                 '#fdcc8a'),
                         name = "Type of Condition") +
       scale_y_continuous(labels = scales::percent) + 
       labs(title = "Comparison of Primary Diagnosis Conditions",
            y = "Percentage of Visits to the ER") + 
       geom_text(aes(label = scales::percent(percentage/100)),
-                position = position_stack(vjust = .5))
+                position = position_stack(vjust = 1.1)) + 
+      theme_light(base_size = 18) 
   })
   
   output$county_graph <- renderPlot({
@@ -461,31 +462,42 @@ server <- function(input, output) {
       labs(title = "Comparison of Primary Diagnosis Conditions",
            y = "Percentage of Visits",
            x = '') +
-      scale_fill_manual(values=c("#74A9CF",
-                                 "#08306B"),
-                        name = "Type of Condition") +
       scale_y_continuous(labels = scales::percent) +
       labs(title = "Comparison of Primary Diagnosis Conditions",
            subtitle = "SCP Counties vs Williamson County",
            y = "% Visits to the ER") + 
       geom_text(aes(label = scales::percent(precent/100)),
                 position = position_dodge(width = .9), 
-                vjust = -.4)
+                vjust = -.4)  + 
+    theme_light(base_size = 18) + 
+      scale_fill_manual(values=c('#41b6c4',
+                                 '#253494'), 
+                         name = "Type of Condition")
   })
   
   output$admit_hr_graph <- renderPlot({
     #Admit Hour Graph Code
-    admit_hour <- scp %>% group_by(Admit_Hr) %>% 
+    scp$Admit_Hr <- as.numeric(scp$Admit_Hr)
+    overuse_hour <- scp %>% 
+      group_by(Admit_Hr, acs_primary, nonemerg_primary) %>% 
       drop_na(Admit_Hr) %>% 
-      tally()
+      mutate( type = case_when( !acs_primary & !nonemerg_primary ~ "Unpreventable",
+                                acs_primary ~ "ACS", 
+                                nonemerg_primary ~ "Non emergent" )) %>% 
+      mutate(Condition = ifelse(type == "Unpreventable", "Unpreventable", "Preventable")) %>% 
+      group_by(Admit_Hr, Condition) %>% tally()
     
     #Admit Hour Graph
-    ggplot(data = admit_hour, aes(x = Admit_Hr,y = n)) +
-      geom_line(aes(group=1), color = "#74a9cf", size = 2) +
-      geom_point(color = "#08306b", size = 3) +
+    ggplot(data = overuse_hour) +
+      geom_point(mapping = aes(x = Admit_Hr, y = n, color = Condition)) + 
+      geom_line(aes(x = Admit_Hr, y = n, color = Condition)) +
+      theme_light(base_size = 18) +
+      scale_color_manual(values=c('#41B6C4',
+                                 '#253494'),
+                        name = "Type of Condition") +
       labs( x = "Patient Admit Hour",
-            y = "Number of Visits",
-            title = "Number of Visits by Hour")
+            y = "# of Visits",
+            title = "ER Visits by Admit Hour")
     
   })
   

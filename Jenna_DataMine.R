@@ -577,8 +577,23 @@ ggplot(data = zip_test, aes(x = factor(Patient_Zip), y = percentage/100, fill = 
             vjust = -.5)
 
 
+#################################################################################
 
 
+library(waffle)
+library(extrafont)
+
+extrafont::font_import (path="C:/Users/jplus/OneDrive/Documents/DataLab/ER_Usage/ER/Test", pattern = "fa-", prompt =  FALSE)
+
+loadfonts(device = "win")
+
+extrafont::fonttable() %>% 
+  dplyr::as_tibble() %>% 
+  dplyr::filter(grepl("Awesom", FamilyName)) %>% 
+  select(FamilyName, FontName, fontfile)
+
+
+waffle(c(50, 30, 15, 5), rows = 5, title = "Your basic waffle chart")
 
  
 
