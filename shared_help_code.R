@@ -17,8 +17,7 @@ library(leaflet)
 library(raster)
 
 # Read in: scp_data data frame
-#ELLIE: 
-scp <- readr::read_csv("Dropbox/DATALAB/ER_Project/scp_data2")
+#ELLIE: scp <- readr::read_csv("Dropbox/DATALAB/ER_Project/scp_data2")
 #JENNA: scp <- readr::read_csv("C:/Users/jplus/OneDrive/Documents/DataLab/ER_Usage/scp_data2")
 
 # rename weird column
@@ -191,7 +190,6 @@ county_visits <- scp %>%
 scp <- inner_join(scp, county_visits, by = 'county') %>%
   dplyr::rename(county_total= 'n')
 
-
 # Next, run the following to add a new column that says Race in characters rather
   # than in values:
 
@@ -203,6 +201,18 @@ scp <- scp %>%
   mutate(Race_Chr = ifelse(Race == 9, "Unkown", races_vec[Race]))
 
 ##########################
+# Code for overview graph comparing SCP to Willamson county
+##########################
+# 1. Download tn_conditions.csv from google drive
+
+# 2. Read it in as 'tn_diags'
+#JENNA: tn_diags <- readr::read_csv("C:/Users/jplus/OneDrive/Documents/DataLab/ER_Usage/tn_conditions.csv")
+# ELLIE: tn_diags <- read.csv("Dropbox/DATALAB/er_project/tn_conditions.csv")
+
+#3. Filter out "other" conditions
+tn_diags <- tn_diags %>% filter(county != "Other", Condition != "Other")
+
+##########################
 # Code for Conditions Map
 ##########################
 # Read in the shape file (remember to run ALL libraries at top of page)
@@ -211,9 +221,7 @@ scp <- scp %>%
 
 # NOTE: the name of your file will change depending on where the shape file is 
   # on your computer. So the "___" will change, but keep the name of the variable as
-  # "zipcodes" so that it matches the 
-
-# "zipcodes" so that it matches the rest of the code/shiny app.
+  # "zipcodes" so that it matches the rest of the code/shiny app.
 
 # Filter down to only include SCP zip codes
 zipcodes <- zipcodes %>% 
