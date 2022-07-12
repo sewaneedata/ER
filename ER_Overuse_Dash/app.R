@@ -498,15 +498,16 @@ server <- function(input, output) {
     leaflet() %>% 
       addTiles() %>%
       addPolygons(data = hospitals[hospitals$Patient_Zip %in% input$zipcode,]$geometry,
-                  color = '#253494',
-                  weight = 1,
+                  color = '#ca0020',
+                  weight = 0.5,
                   smoothFactor = 0.25,
-                  opacity = 1.0,
-                  fillOpacity = 0.5,
+                  opacity = 0.5,
+                  fillOpacity = 0.25,
                   highlightOptions = highlightOptions(color = "white",
-                                                      weight = 1.0,
+                                                      weight = 1.5,
+                                                      opacity = 0.5,
                                                       bringToFront = TRUE),
-                  label = paste0("Zip code: ", hospitals$Patient_Zip)) %>%
+                  label = paste0("Zip code: ", input$zipcode)) %>%
     addMarkers(lat = hospitals[hospitals$Patient_Zip %in% input$zipcode,]$latitude,
                lng = hospitals[hospitals$Patient_Zip %in% input$zipcode,]$longitude)
   })
