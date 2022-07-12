@@ -72,4 +72,39 @@ ggplot(data = race, aes(x = condition, y = percentage, fill = type)) +
   theme(axis.ticks.x = element_blank(),
         axis.text.x = element_blank())
 
+#####################
+# making "big picture" map
+top_ten <- scp %>% 
+  group_by(JARID) %>% 
+  tally %>% 
+  arrange(desc(n)) %>% 
+  head(10)
+
+bigpic_hosp <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1JzmcNpV1bYoW3N6sg7bYVgL33LERLbS__CtSYB1_bX4/edit?usp=sharing")
+
+
+bigpic <- scp %>% 
+  group_by(Patient_Zip, acs_primary, nonemerg_primary) %>% 
+  tally %>% 
+  ungroup() %>% 
+  group_by(Patient_Zip) %>% 
+  mutate(total = sum(n)) %>% 
+  summarise(percentage = n/total*100, across(everything())) %>%
+  mutate(type = case_when( !acs_primary & !nonemerg_primary ~ "Unpreventable",
+                            acs_primary ~ "ACS", 
+                            nonemerg_primary ~ "Non emergent" )) %>% 
+  mutate(status = ifelse( type == 'Unpreventable', 'Unpreventable', 'ER Overuse')) %>% 
+  filter(type != 'Unpreventable') %>% 
+  mutate(overuse_perc = sum(n)/total*100)
+  
+bigpic_zip <- inner_join(bigpic, zipcodes, by = "Patient_Zip")
+
+
+leaflet() %>%
+  addTiles() %>% 
+  addPolygons(data = bigpic_zip,
+              color = bigpic_zip$overuse)
+
+tn_diags <- read.csv("Dropbox/DATALAB/er_project/tn_conditions.csv")
+
 
