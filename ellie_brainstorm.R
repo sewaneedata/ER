@@ -100,11 +100,6 @@ bigpic <- scp %>%
 bigpic_zip <- inner_join(bigpic, zipcodes, by = "Patient_Zip")
 
 
-leaflet() %>%
-  addTiles() %>% 
-  addPolygons(data = bigpic_zip,
-              color = bigpic_zip$overuse)
 
-tn_diags <- read.csv("Dropbox/DATALAB/er_project/tn_conditions.csv")
 
 
