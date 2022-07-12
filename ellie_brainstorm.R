@@ -117,7 +117,7 @@ leaflet() %>%
               fillOpacity = .75,
               highlightOptions = highlightOptions(color = "white",
                                                   weight = 1.5,
-                                                  opacity = 0.5,
+                                                  opacity = 1.0,
                                                   bringToFront = TRUE),
               label = paste0("Zip: ", unique(bigpic_zip$Patient_Zip))) %>% 
   addLegend("bottomright",
