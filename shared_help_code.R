@@ -190,7 +190,6 @@ county_visits <- scp %>%
 scp <- inner_join(scp, county_visits, by = 'county') %>%
   dplyr::rename(county_total= 'n')
 
-
 # Next, run the following to add a new column that says Race in characters rather
   # than in values:
 
@@ -200,6 +199,18 @@ races_vec <- c("White", "Black", "Native American")
   # Create the new column called 'Race_Chr'
 scp <- scp %>% 
   mutate(Race_Chr = ifelse(Race == 9, "Unkown", races_vec[Race]))
+
+##########################
+# Code for overview graph comparing SCP to Willamson county
+##########################
+# 1. Download tn_conditions.csv from google drive
+
+# 2. Read it in as 'tn_diags'
+#JENNA: tn_diags <- readr::read_csv("C:/Users/jplus/OneDrive/Documents/DataLab/ER_Usage/tn_conditions.csv")
+# ELLIE: tn_diags <- read.csv("Dropbox/DATALAB/er_project/tn_conditions.csv")
+
+#3. Filter out "other" conditions
+tn_diags <- tn_diags %>% filter(county != "Other", Condition != "Other")
 
 ##########################
 # Code for Conditions Map
