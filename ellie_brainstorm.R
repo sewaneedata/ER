@@ -95,10 +95,37 @@ bigpic <- scp %>%
                             nonemerg_primary ~ "Non emergent" )) %>% 
   mutate(status = ifelse( type == 'Unpreventable', 'Unpreventable', 'ER Overuse')) %>% 
   filter(type != 'Unpreventable') %>% 
-  mutate(overuse_perc = sum(n)/total*100)
+  mutate(overuse_perc = sum(n)/total*100) %>% 
+  group_by(Patient_Zip, overuse_perc) %>% 
+  tally
   
 bigpic_zip <- inner_join(bigpic, zipcodes, by = "Patient_Zip")
 
+palette <- colorNumeric(palette = c('#0571b0','#92c5de',  '#f7f7f7', '#f4a582', '#ca0020'),
+                        domain = bigpic_zip$overuse_perc)
+
+leaflet() %>% 
+  addTiles() %>% 
+  addMarkers(lat = bigpic_hosp$latitude,
+             lng = bigpic_hosp$longitude) %>% 
+  addPolygons(data = bigpic_zip$geometry,
+              color = 'white',
+              fillColor = palette(bigpic_zip$overuse_perc),
+              weight = 0.5,
+              smoothFactor = 0.25,
+              opacity = 0.75,
+              fillOpacity = .75,
+              highlightOptions = highlightOptions(color = "white",
+                                                  weight = 1.5,
+                                                  opacity = 0.5,
+                                                  bringToFront = TRUE),
+              label = paste0("Zip: ", unique(bigpic_zip$Patient_Zip))) %>% 
+  addLegend("bottomright",
+            pal = palette,
+            values = bigpic_zip$overuse_perc,
+            opacity = 0.75,
+            title = "% ER Overuse")
+  
 
 
 
