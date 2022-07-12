@@ -224,10 +224,10 @@ server <- function(input, output) {
       ungroup() %>% 
       mutate(total = sum(n)) %>% 
       summarise(percentage = n/total*100, across(everything())) %>%
-      mutate( type = case_when( !acs_primary & !nonemerg_primary ~ "Other",
+      mutate( type = case_when( !acs_primary & !nonemerg_primary ~ "Unpreventable",
                                 acs_primary ~ "ACS", 
                                 nonemerg_primary ~ "Non emergent" )) %>% 
-      mutate(Condition = ifelse(type == 'Other', "Other", "ACS/Non emergent"))
+      mutate(Condition = ifelse(type == "Unpreventable", "Unpreventable", "Preventable"))
   })  
   
   #DEMOGRAPHICS OBSERVE------
@@ -259,10 +259,10 @@ server <- function(input, output) {
       group_by(county) %>%
       mutate(total = sum(n)) %>%
       summarise(percentage = (n/sum(n))*100, across(everything())) %>%
-      mutate( type = case_when( !acs_primary & !nonemerg_primary ~ "Other",
+      mutate( type = case_when( !acs_primary & !nonemerg_primary ~ "Non-Preventable",
                                 acs_primary ~ "ACS",
                                 nonemerg_primary ~ "Non emergent" )) %>%
-      mutate(Condition = ifelse(type == 'Other', "Other", "ACS/Non emergent"))
+      mutate(Condition = ifelse(type == "Non-Preventable", "Non-Preventable", "Preventable"))
     
     # Make reactive DF
     rv$county_demo <- county_demo
@@ -437,13 +437,15 @@ server <- function(input, output) {
            subtitle = "At the ER",
            y = "Percentage of Visits",
            x = '') +
-      scale_fill_manual(values=c("#c6dbef",
-                                 "#74a9cf",
-                                 "#08306b"),
+      scale_fill_manual(values=c('#fdcc8a',
+                                 '#a1dab4',
+                                 '#2C7FB8'),
                         name = "Type of Condition") +
       scale_y_continuous(labels = scales::percent) + 
       labs(title = "Comparison of Primary Diagnosis Conditions",
-           y = "Percentage of Visits to the ER")
+           y = "Percentage of Visits to the ER") + 
+      geom_text(aes(label = scales::percent(percentage/100)),
+                position = position_stack(vjust = .5))
   })
   
   output$county_graph <- renderPlot({
