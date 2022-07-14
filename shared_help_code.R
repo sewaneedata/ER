@@ -17,7 +17,8 @@ library(leaflet)
 library(raster)
 
 # Read in: scp_data data frame
-#ELLIE: scp <- readr::read_csv("Dropbox/DATALAB/ER_Project/scp_data2")
+#ELLIE: 
+scp <- readr::read_csv("Dropbox/DATALAB/ER_Project/scp_data2")
 #JENNA: scp <- readr::read_csv("C:/Users/jplus/OneDrive/Documents/DataLab/ER_Usage/scp_data2")
 
 # rename weird column
@@ -109,7 +110,7 @@ dental <- paste0("^", dental)
 Tenn_care <- c('8', '10', 'J', 'Q', 'T' )
 Tri_care <- ('C')
 Medi_care <- c('K','M')
-Commerical_care <- c('14', '15', '16', '17', 'B', 'L')
+Commercial_care <- c('14', '15', '16', '17', 'B', 'L')
 Medi_caid <- ('D')
 Unknown_insurance <- c('O','H','13') # 'H' & '13' is in here because there is no code 
 Self_Paid_insurance <- ('P')
@@ -125,7 +126,7 @@ scp <- scp %>%
   mutate(insurance= case_when(Primary_Payer_Class_Cd %in% Tenn_care ~ 'TennCare',
                               Primary_Payer_Class_Cd %in% Tri_care ~ 'TriCare',
                               Primary_Payer_Class_Cd %in% Medi_care ~ 'MediCare',
-                              Primary_Payer_Class_Cd %in% Commerical_care ~ 'Commerical',
+                              Primary_Payer_Class_Cd %in% Commercial_care ~ 'Commercial',
                               Primary_Payer_Class_Cd %in% Medi_caid ~ 'MediCaid',
                               Primary_Payer_Class_Cd %in% Unknown_insurance ~ 'Unknown',
                               Primary_Payer_Class_Cd %in% Self_Paid_insurance ~ 'Self Paid',
@@ -207,16 +208,18 @@ scp <- scp %>%
 
 # 2. Read it in as 'tn_diags'
 #JENNA: tn_diags <- readr::read_csv("C:/Users/jplus/OneDrive/Documents/DataLab/ER_Usage/tn_conditions.csv")
-# ELLIE: tn_diags <- read.csv("Dropbox/DATALAB/er_project/tn_conditions.csv")
+# ELLIE: 
+tn_diags <- read.csv("Dropbox/DATALAB/er_project/tn_conditions.csv")
 
 #3. Filter out "other" conditions
 tn_diags <- tn_diags %>% filter(county != "Other", Condition != "Other")
 
 ##########################
-# Code for Conditions Map
+# Code for "condition type" map
 ##########################
 # Read in the shape file (remember to run ALL libraries at top of page)
-# ELLIE: zipcodes <- st_read("Dropbox/DATALAB/er_project/tl_2019_us_zcta510/tl_2019_us_zcta510.shp")
+# ELLIE: 
+zipcodes <- st_read("Dropbox/DATALAB/er_project/tl_2019_us_zcta510/tl_2019_us_zcta510.shp")
 # JENNA: zipcodes <- st_read("C:/Users/jplus/OneDrive/Documents/DataLab/ER_Usage/ZipCode_Shapes_File/tl_2019_us_zcta510/tl_2019_us_zcta510.shp")
 
 # NOTE: the name of your file will change depending on where the shape file is 
@@ -277,7 +280,47 @@ pal <- colorNumeric(palette = c('#0571b0','#92c5de',  '#f7f7f7', '#f4a582', '#ca
                     domain = combine$input$cond)
 
 ##########################
-# Code for Map in map tab
+# Code for STATIC map in map tab
+##########################
+# Create variable that shows percentage of ER overuse (acs + nonemergent) per zip code.
+bigpic <- scp %>% 
+  group_by(Patient_Zip, acs_primary, nonemerg_primary) %>% 
+  tally %>% 
+  ungroup() %>% 
+  group_by(Patient_Zip) %>% 
+  mutate(total = sum(n)) %>% 
+  summarise(percentage = n/total*100, across(everything())) %>%
+  mutate(type = case_when( !acs_primary & !nonemerg_primary ~ "Appropriate Use",
+                           acs_primary ~ "ACS", 
+                           nonemerg_primary ~ "Non emergent" )) %>% 
+  mutate(status = ifelse(type == "Appropriate Use", "Appropriate Use", 'ER Overuse')) %>% 
+  filter(type != "Appropriate Use") %>% 
+  mutate(overuse_perc = sum(n)/total*100) %>% 
+  group_by(Patient_Zip, overuse_perc) %>% 
+  tally
+
+# Joining variable above with 'zipcodes' data frame    
+bigpic_zip <- inner_join(bigpic, zipcodes, by = "Patient_Zip")
+
+# Read in google sheet with town names and patient zips
+towns <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1200giV6UYXfolA1UkUJ--6MUG5FUavJUGGolS_lRxks/edit?usp=sharing")
+
+# Join google sheet above with 'bigpic_zip'
+bigpic_zip <- inner_join(bigpic_zip, towns, by = 'Patient_Zip')
+
+# Google sheets for hospital, urgent care, and doctor's offices lat/long data
+bigpic_hosp <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1JzmcNpV1bYoW3N6sg7bYVgL33LERLbS__CtSYB1_bX4/edit?usp=sharing")
+
+doctor <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1ZqRk8NK4qp43bA30Q0VyBEWVX9Z_Zd_bgk6_Mt_dDW8/edit?usp=sharing")
+
+urgent_care <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1_tTNbY0YQKAVF51rQcULq0qInGoMIz9thJieHbbfXfs/edit?usp=sharing")
+
+# Color palette for shading the zip codes by severity of ER overuse    
+palette <- colorNumeric(palette = c('#0571b0','#92c5de',  '#f7f7f7', '#f4a582', '#ca0020'),
+                        domain = bigpic_zip$overuse_perc)
+
+##########################
+# Code for INTERACTIVE map in map tab
 ##########################
 # 1. Read in Google sheet of hospital lat/long information:
 hosp_location <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1EHHze7ABHXTTDUvaxbAIz5efFT67MR1VMXrMSkokMQs/edit?usp=sharing")
@@ -309,7 +352,6 @@ h <- inner_join(top_hosp, hosp_location, by = "JARID")
 
 # 4. Join varible made above (h) with 'zipcodes' variable (from other map code).
 hospitals <- inner_join(h, zipcodes, by = "Patient_Zip")
-
 
 ######################################
 ######################################
