@@ -439,17 +439,19 @@ server <- function(input, output) {
   #Main Overview Graph
   
   output$er_overuse <- renderPlot({
-    ggplot(data = rv$acs_nonemerg_other, aes(x = Condition, 
-                                          y = percentage/100, 
-                                          fill = type)) +
+    
+    ggplot(data = rv$acs_nonemerg_other, 
+           aes(x = Condition,
+               y = percentage/100,
+               fill = type)) +
       geom_col()+
       labs(title = "Comparison of Primary Diagnosis Conditions",
            subtitle = "In SCP Counties",
            y = "Percentage of Visits",
            x = '') +
-      scale_fill_manual(values=c('#41b6c4',
-                                 '#253494',
-                                 '#fdcc8a'),
+      scale_fill_manual(values=c('#41b6c4', 
+                                 '#fdcc8a',
+                                 '#253494'),
                         name = "Type of Condition") +
       scale_y_continuous(labels = scales::percent) + 
       labs(title = "Comparison of Primary Diagnosis Conditions",
@@ -464,8 +466,10 @@ server <- function(input, output) {
     #Filter out "other" conditions
     tn_diags <- tn_diags %>% filter(county != "Other", Condition != "Other")
     
+    tn_diags <- tn_diags %>%
+      mutate(order = reorder(county, -precent))
     #Graph
-    ggplot(data = tn_diags, aes(x = county,y = precent/100, fill = type)) +
+    ggplot(data = tn_diags, aes(x = county, y = precent/100, fill = type)) +
       geom_col(position = "dodge") +
       scale_y_continuous(labels = scales::percent) +
       labs(title = "Comparison of Primary Diagnosis Conditions",
@@ -484,7 +488,7 @@ server <- function(input, output) {
   output$insurance_overuse <- renderPlot({
     # Overuse by insurance code
     insurance_overuse <- scp %>%
-      filter(insurance == c("TennCare", "MediCare", "Self Paid", "Commercial")) %>% 
+      filter(insurance %in% c("TennCare", "MediCare", "Self Paid", "Commercial")) %>% 
       group_by(insurance, acs_primary, nonemerg_primary) %>% 
       tally %>% 
       ungroup() %>% 
@@ -497,11 +501,14 @@ server <- function(input, output) {
       mutate(type2 = ifelse(type == "Appropriate Use", "Appropriate Use", "Overuse")) %>% 
       filter(type2 != "Appropriate Use")
     
+    # insurance_overuse <- insurance_overuse %>%
+    #   mutate(insurance = reorder(insurance, -percentage))
+    
     # Overuse by insurance 
     ggplot(data = insurance_overuse, aes(x = reorder(insurance, -percentage), y = percentage/100, fill = type)) +
       geom_col(position = 'dodge') +
       scale_fill_manual(name = 'Type of Condition',
-                        values=c('#41b6c4',
+                        values=c('#41b6c4', 
                                  '#253494')) +
       scale_y_continuous(labels = scales::percent) + 
       labs(x = 'Insurance', y = '% of Patient Visits',
@@ -535,12 +542,12 @@ server <- function(input, output) {
     
     scp_conditions <- scp_conditions[-6,]
     
-    scp_conditions <- scp_conditions %>% 
+    scp_conditions <- scp_conditions %>%
       mutate(type = reorder(type, -percentage))
     
     #plot
     ggplot(data = scp_conditions, 
-           aes(x = reorder(type, -percentage),
+           aes(x = type,
                y = percentage/100,
                fill = type)) +
       geom_col() +
@@ -581,8 +588,8 @@ server <- function(input, output) {
       geom_point(mapping = aes(x = Admit_Hr, y = n, color = Condition)) + 
       geom_line(aes(x = Admit_Hr, y = n, color = Condition)) +
       theme_light(base_size = 18) +
-      scale_color_manual(values=c('#253494',
-                                  '#fdcc8a'),
+      scale_color_manual(values=c('#fdcc8a',
+                                  '#253494'),
                         name = "Type of Condition") +
       labs( x = "Patient Admit Hour",
             y = "% of Patient Visits",
