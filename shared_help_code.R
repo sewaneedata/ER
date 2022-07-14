@@ -286,6 +286,7 @@ hosp_location <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1EHHze7ABHXT
 # 2. Create new data frame called 'top_hosp' that only has the top 3 most visited
 # hospitals from each zip code.
 # a. Arrange most visited hospitals in descending order and make a new variable.
+
 test <- scp %>% 
   group_by(Patient_Zip, JARID) %>%
   tally %>%
