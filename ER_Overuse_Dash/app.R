@@ -187,14 +187,24 @@ library(leaflet)
     
       #FINDINGS TAB
         tabItem(tabName = "overview",
+                # Make hr() lines black
+                tags$head(tags$style(HTML("hr {border-top: 1px solid #000000;}"))),
                 includeMarkdown("www/findings.Rmd"),
-                fluidRow(column(6,
-                                plotOutput("er_overuse")),
-                         column(6, 
+                fluidRow(column(8,
+                                plotOutput("er_overuse"))),
+                hr(),
+                fluidRow(column(8, 
                                 plotOutput("county_graph"))),
-                fluidRow(
-                  plotOutput("insurance_overuse"),
-                  plotOutput("admit_hr_graph"))
+                hr(),
+                fluidRow(column(8, 
+                                plotOutput("insurance_overuse"))),
+                hr(),
+                fluidRow(column(8,
+                                plotOutput("scp_conditions"))),
+                hr(),
+                fluidRow(column(8,
+                                plotOutput("admit_hr_graph"))),
+                
         )))
      
   
@@ -434,7 +444,7 @@ server <- function(input, output) {
                                           fill = type)) +
       geom_col()+
       labs(title = "Comparison of Primary Diagnosis Conditions",
-           subtitle = "At the ER",
+           subtitle = "In SCP Counties",
            y = "Percentage of Visits",
            x = '') +
       scale_fill_manual(values=c('#41b6c4',
@@ -443,7 +453,7 @@ server <- function(input, output) {
                         name = "Type of Condition") +
       scale_y_continuous(labels = scales::percent) + 
       labs(title = "Comparison of Primary Diagnosis Conditions",
-           y = "Percentage of Visits to the ER") + 
+           y = "% of Patient Visits") + 
       geom_text(aes(label = scales::percent(percentage/100)),
                 position = position_stack(vjust = 1.1)) + 
       theme_light(base_size = 18) 
@@ -463,7 +473,7 @@ server <- function(input, output) {
       scale_y_continuous(labels = scales::percent) +
       labs(title = "Comparison of Primary Diagnosis Conditions",
            subtitle = "SCP Counties vs Williamson County",
-           y = "% Visits to the ER") + 
+           y = "% of Patient Visits") + 
       geom_text(aes(label = scales::percent(precent/100)),
                 position = position_dodge(width = .9), 
                 vjust = -.4)  + 
@@ -485,7 +495,7 @@ server <- function(input, output) {
       summarise(percentage = n/total*100, across(everything())) %>% 
       mutate(type = case_when(!acs_primary & !nonemerg_primary ~ "Appropriate Use", 
                               acs_primary ~ "ACS",
-                              nonemerg_primary ~ "Nonemergent")) %>% 
+                              nonemerg_primary ~ "Non emergent")) %>% 
       mutate(type2 = ifelse(type == "Appropriate Use", "Appropriate Use", "Overuse")) %>% 
       filter(type2 != "Appropriate Use")
     
@@ -496,9 +506,64 @@ server <- function(input, output) {
                         values=c('#41b6c4',
                                  '#253494')) +
       scale_y_continuous(labels = scales::percent) + 
-      labs(x = 'Insurance', y = 'Percentage of Visits',
-           title = 'Severity of Overuse by Insurance Type') +
-      theme_light(base_size = 17)
+      labs(x = 'Insurance', y = '% of Patient Visits',
+           title = 'ER Overuse by Insurance Type',
+           subtitle = "In SCP Counties",) +
+      theme_light(base_size = 17) +
+      geom_text(aes(label = scales::percent(x = percentage/100, accuracy = 0.01)),
+                position = position_dodge(width = 0.9),
+                vjust = -.1)
+  })
+  
+  output$scp_conditions <- renderPlot({
+    # code for plot
+    scp_conditions <- scp %>%
+      group_by(acs_primary,
+               nonemerg_primary,
+               dental_primary,
+               mental_primary,
+               subabuse_primary) %>%
+      tally %>%
+      ungroup() %>%
+      summarise(percentage = (n/sum(n))*100, across(everything())) %>%
+      mutate(type = case_when(!dental_primary & !acs_primary & !subabuse_primary & !mental_primary & !nonemerg_primary ~ "Other",
+                              dental_primary ~ "Dental",
+                              acs_primary ~ "ACS",
+                              subabuse_primary ~ "Substance Abuse",
+                              mental_primary ~ "Mental Health",
+                              nonemerg_primary ~ "Non emergent")) %>%
+      filter(type != "Other") %>% 
+      arrange(desc(percentage))
+    
+    scp_conditions <- scp_conditions[-6,]
+    
+    scp_conditions <- scp_conditions %>% 
+      mutate(type = reorder(type, -percentage))
+    
+    #plot
+    ggplot(data = scp_conditions, 
+           aes(x = reorder(type, -percentage),
+               y = percentage/100,
+               fill = type)) +
+      geom_col() +
+      scale_y_continuous(labels = scales::percent) + 
+      theme_light(base_size = 18) +
+      labs(title = "ER Visits by Condition Type",
+           subtitle = "In SCP Counties",
+           x = "Type of Condition",
+           y = "% of Patient Visits") +
+      scale_fill_manual(values=c('#fdcc8a',
+                                 '#a1dab4',
+                                 '#41b6c4',
+                                 '#2c7fb8',
+                                 '#253494'),
+                        name = "Type of Condition") +
+      theme(axis.ticks.x = element_blank(),
+            axis.text.x = element_blank()) +
+      geom_text(aes(label = scales::percent(percentage/100)),
+                position = position_dodge(width = 0.9),
+                vjust = -.1)
+    
   })
   
   output$admit_hr_graph <- renderPlot({
@@ -522,8 +587,9 @@ server <- function(input, output) {
                                  '#253494'),
                         name = "Type of Condition") +
       labs( x = "Patient Admit Hour",
-            y = "# of Visits",
-            title = "ER Visits by Admit Hour")
+            y = "% of Patient Visits",
+            title = "ER Visits by Admit Hour",
+            subtitle = "In SCP Counties",)
     
   })
   
