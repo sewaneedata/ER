@@ -498,7 +498,7 @@ server <- function(input, output) {
       scale_y_continuous(labels = scales::percent) + 
       labs(x = 'Insurance', y = 'Percentage of Visits',
            title = 'Severity of Overuse by Insurance Type') +
-      theme_light(base_size = 18)
+      theme_light(base_size = 17)
   })
   
   output$admit_hr_graph <- renderPlot({
