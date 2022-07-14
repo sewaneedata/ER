@@ -609,39 +609,42 @@ server <- function(input, output) {
   
   # MAPS TAB
   #################################
-
-  output$top10_hospitals <- renderLeaflet({
+output$top10_hospitals <- renderLeaflet({
     
-    # Code for setting up map
-    bigpic <- scp %>% 
+  # Code for setting up map
+bigpic <- scp %>% 
       group_by(Patient_Zip, acs_primary, nonemerg_primary) %>% 
       tally %>% 
       ungroup() %>% 
       group_by(Patient_Zip) %>% 
       mutate(total = sum(n)) %>% 
       summarise(percentage = n/total*100, across(everything())) %>%
-      mutate(type = case_when( !acs_primary & !nonemerg_primary ~ "Unpreventable",
+      mutate(type = case_when( !acs_primary & !nonemerg_primary ~ "Appropriate Use",
                                acs_primary ~ "ACS", 
                                nonemerg_primary ~ "Non emergent" )) %>% 
-      mutate(status = ifelse(type == 'Unpreventable', 'Unpreventable', 'ER Overuse')) %>% 
-      filter(type != 'Unpreventable') %>% 
+      mutate(status = ifelse(type == "Appropriate Use", "Appropriate Use", 'ER Overuse')) %>% 
+      filter(type != "Appropriate Use") %>% 
       mutate(overuse_perc = sum(n)/total*100) %>% 
       group_by(Patient_Zip, overuse_perc) %>% 
       tally
+# joining variable above with zipcodes file    
+bigpic_zip <- inner_join(bigpic, zipcodes, by = "Patient_Zip")
+# read in google sheet with town names and patient zips
+towns <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1200giV6UYXfolA1UkUJ--6MUG5FUavJUGGolS_lRxks/edit?usp=sharing")
+# join google sheet above with 'bigpic_zip'
+bigpic_zip <- inner_join(bigpic_zip, towns, by = 'Patient_Zip')
     
-    bigpic_zip <- inner_join(bigpic, zipcodes, by = "Patient_Zip")
+# Google sheets for hospital, urgent care, and doctor's offices lat/long data
+bigpic_hosp <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1JzmcNpV1bYoW3N6sg7bYVgL33LERLbS__CtSYB1_bX4/edit?usp=sharing")
     
-    # Google sheets for hospital, urgent care, and doctor's offices lat/long data
-    bigpic_hosp <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1JzmcNpV1bYoW3N6sg7bYVgL33LERLbS__CtSYB1_bX4/edit?usp=sharing")
+doctor <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1ZqRk8NK4qp43bA30Q0VyBEWVX9Z_Zd_bgk6_Mt_dDW8/edit?usp=sharing")
     
-    doctor <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1ZqRk8NK4qp43bA30Q0VyBEWVX9Z_Zd_bgk6_Mt_dDW8/edit?usp=sharing")
-    
-    urgent_care <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1_tTNbY0YQKAVF51rQcULq0qInGoMIz9thJieHbbfXfs/edit?usp=sharing")
-    
-    palette <- colorNumeric(palette = c('#0571b0','#92c5de',  '#f7f7f7', '#f4a582', '#ca0020'),
+urgent_care <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1_tTNbY0YQKAVF51rQcULq0qInGoMIz9thJieHbbfXfs/edit?usp=sharing")
+# Color palette for shading the zip codes by severity of ER overuse    
+palette <- colorNumeric(palette = c('#0571b0','#92c5de',  '#f7f7f7', '#f4a582', '#ca0020'),
                             domain = bigpic_zip$overuse_perc)
-    # Map
-    leaflet() %>% 
+# Map
+leaflet() %>% 
       addTiles() %>% 
       addMarkers(lat = bigpic_hosp$latitude,
                  lng = bigpic_hosp$longitude,
@@ -656,8 +659,9 @@ server <- function(input, output) {
                   highlightOptions = highlightOptions(color = "white",
                                                       weight = 1.5,
                                                       opacity = 1.0),
-                  label = paste0("Zip: ", unique(bigpic_zip$Patient_Zip), 
-                                 ' | ER overuse = ', 
+                  label = paste0(bigpic_zip$town,", ",
+                                 unique(bigpic_zip$Patient_Zip),
+                                 ' | ER overuse = ',
                                  round(bigpic_zip$overuse_perc, 1),'%')) %>%
       addCircleMarkers(lat = doctor$lat,
                        lng = doctor$lng,
@@ -771,21 +775,6 @@ server <- function(input, output) {
   ################################
   # condition map leaflet
   output$cond_map <- renderLeaflet({
-    # if(input$cond == "acs_perc"){
-    #   legend_title <- "ACS Conditions"}
-    # 
-    # if(input$cond == "non_perc"){
-    #   legend_title <- "Non Emergent"}
-    # 
-    # if(input$cond == "mental_perc"){
-    #   legend_title <- "Mental Health"}
-    # 
-    # if(input$cond == "dental_perc"){
-    #   legend_title <- "Dental Conditions"}
-    # 
-    # if(input$cond == "sub_perc"){
-    #   legend_title <- "Substance Abuse"}
-    
     leaflet(combine) %>%
       addTiles() %>%
       addPolygons(color = ~pal(get(input$cond)),
