@@ -213,7 +213,7 @@ scp <- scp %>%
   mutate(insurance= case_when(Primary_Payer_Class_Cd %in% Tenn_care ~ 'TennCare',
                               Primary_Payer_Class_Cd %in% Tri_care ~ 'TriCare',
                               Primary_Payer_Class_Cd %in% Medi_care ~ 'MediCare',
-                              Primary_Payer_Class_Cd %in% Commerical_care ~ 'Commercial',
+                              Primary_Payer_Class_Cd %in% Commercial_care ~ 'Commercial',
                               Primary_Payer_Class_Cd %in% Medi_caid ~ 'MediCaid',
                               Primary_Payer_Class_Cd %in% Unknown_insurance ~ 'Unknown',
                               Primary_Payer_Class_Cd %in% Self_Paid_insurance ~ 'Self Pay',
@@ -232,7 +232,7 @@ scp <- scp %>%
 # Percentages
   
   # What percentage of all visits to the ER had a primary diagnosis of ACSC?
-  perc_acsc <- scp %>% 
+perc_acsc <- scp %>% 
   group_by(acs_primary) %>%
   tally %>% 
   mutate(total = sum(n)) %>%
@@ -375,28 +375,76 @@ ggplot(data= icd_zipcode) +
                               '#253494'))
 
 ## Make a stagnant graph of people going to the ER for ACS/Non-emergent reasons by insurance
-county_insurance <- scp %>% 
-  filter(insurance %in% c('TennCare', 'MediCare', 'Commercial', 'Self Pay', 'Uninsured')) %>%
-  filter(acs_primary== TRUE | nonemerg_primary== TRUE) %>% 
-  group_by(insurance, county, county_total) %>% 
+eruse_insurance <- scp %>% 
+  filter(insurance %in% c('TennCare', 'MediCare', 'Commercial', 'Self Pay')) %>%
+  group_by(insurance, acs_primary, nonemerg_primary) %>% 
   tally() %>% 
-  arrange(desc(n)) %>%  
-  summarise(perc= n/ county_total*100)
+  ungroup() %>% 
+  group_by(insurance) %>% 
+  mutate(total= sum(n)) %>% 
+  summarise(perc= n/total*100, across(everything())) %>% 
+    # Creates a column identifying the type of ER visit; ACS condition, non-emerg, or appropriate visit
+  mutate(type= case_when(!acs_primary & !nonemerg_primary ~ 'Appropriate Use',
+                         acs_primary ~ "ACS",
+                         nonemerg_primary ~ "Nonemerg")) %>% 
+    # Creates another column identifying either 'overuse' or 'appropriate use' 
+  mutate(type2= ifelse(type== 'Appropriate Use', 'Appropriate Use', "Overuse"))
+  
 
+## What are the differences of ER visits by insurance type? (Difference between ACS, nonemerg, approp. by insurance)
   # position 'dodge' allows multiple bars on the x- axis
   # [order(-...)] allows the bars to go in descending order
   # 'guides' allows 222a legend title change
-ggplot(data= county_insurance) +
-  geom_col(aes(x= county, y= perc, fill= insurance),position= 'dodge') +
-  labs(x =  'County', y='Percentage') +
+ggplot(data= eruse_insurance) +
+  geom_col(aes(x= insurance, y= perc, fill= type2),position= 'dodge') +
+  labs(x =  'Insurance', y='Percentage') +
   guides(fill=guide_legend(title= 'Insurance Type'))+
   theme_light(base_size= 18) +
-  scale_fill_manual(values= c('#fdcc8a',
-                              '#a1dab4',
-                              '#41b6c4',
-                              '#2c7fb8',
-                              '#253494'))
+  scale_fill_manual(values= c('#a1dab4',
+                              '#253494'
+                              ))
 
+  # Stagnant graph for top ICD 10 codes (acs, non-emerg) for all of SCP by 
+icd_scp <- scp %>% 
+  filter(acs_primary == 'TRUE' | nonemerg_primary== 'TRUE') %>% 
+  group_by(Diag1, acs_primary, nonemerg_primary) %>% 
+  tally() %>%
+  ungroup() %>% 
+  mutate(total = sum(n)) %>%
+  group_by(Diag1) %>% 
+  summarise(perc= n/total*100, across(everything())) %>% 
+  arrange(desc(perc)) %>% 
+  head(10)
+
+
+  # Arrange data set greatest to least
+icd_scp <- icd_scp %>% 
+  mutate( Diag1 = reorder(Diag1, -perc))
+
+  # Bar graph for top 10 ICD 10 codes for all of SCP 
+ggplot(data= icd_scp) +
+  labs(title= ' Top 10 Diagnoses found in instances of ER Overuse ', x= 'Diagnostic Code', y= 'Percentage', fill= 'Diagnosis')+
+  geom_col(aes(x= Diag1, y= perc, fill= Diag1))+
+  theme_light(base_size = 18)+
+  # Allows legend labels to be renamed
+  scale_fill_manual(values= c('#fdcc8a',
+                              '#feb24c',
+                              '#fd8d3c',
+                              '#c7e9b4',
+                              '#7fcdbb',
+                              '#41b6c4',
+                              '#1d91c0',
+                              '#225ea8',
+                              '#253494',
+                              '#081d58'),
+                    labels=c('Urinary Tract Infection', 'Acute Upper Respiratory Infection',
+                             'Obstructive Pulmonary Disease', 'Acute Pharyngitis',
+                             'Influenza', 'Gastroenteritis', 'Strep Throat', 'Periapical Abscess',
+                             'Hypertension', 'Acute Bronchitis'))
+
+
+                              
+                        
 ##############################################################################################################################################################################################################################################################################################################################
 ##############################################################################################################################################################################################################################################################################################################################
 
