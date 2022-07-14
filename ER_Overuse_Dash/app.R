@@ -66,15 +66,19 @@ library(leaflet)
       # EXPLORE ER OVERUSE DROPDOWN
       # MAP TAB
         tabItem(tabName = "map",
-              includeMarkdown("www/er_overuse.Rmd"),
-              fluidRow(
-                column(6,
-                       selectInput(inputId = 'zipcode',
-                                   label = h3("Select Zip code"),
-                                   choices = unique(hospitals$Patient_Zip),
-                                   selected = 1)),
-                column(6, 
-                       leafletOutput("zipMap")))),
+                tags$head(tags$style(HTML("hr {border-top: 1px solid #000000;}"))),
+                includeMarkdown("www/er_overuse.Rmd"),
+                fluidRow(column(8,
+                              leafletOutput("top10_hospitals"))),
+                hr(),
+                fluidRow(
+                  column(6,
+                         selectInput(inputId = 'zipcode',
+                                     label = h3("Select Zip code"),
+                                     choices = unique(hospitals$Patient_Zip),
+                                     selected = 1)),
+                  column(6,
+                         leafletOutput("zipMap")))),
        
       #DEMOGRAPHICS TAB
         tabItem(tabName = "demo",
@@ -505,7 +509,8 @@ server <- function(input, output) {
     #   mutate(insurance = reorder(insurance, -percentage))
     
     # Overuse by insurance 
-    ggplot(data = insurance_overuse, aes(x = reorder(insurance, -percentage), y = percentage/100, fill = type)) +
+    ggplot(data = insurance_overuse, aes(x = reorder(insurance, -percentage), 
+                                         y = percentage/100, fill = type)) +
       geom_col(position = 'dodge') +
       scale_fill_manual(name = 'Type of Condition',
                         values=c('#41b6c4', 
@@ -605,6 +610,72 @@ server <- function(input, output) {
   # MAPS TAB
   #################################
 
+  output$top10_hospitals <- renderLeaflet({
+    
+    # Code for setting up map
+    bigpic <- scp %>% 
+      group_by(Patient_Zip, acs_primary, nonemerg_primary) %>% 
+      tally %>% 
+      ungroup() %>% 
+      group_by(Patient_Zip) %>% 
+      mutate(total = sum(n)) %>% 
+      summarise(percentage = n/total*100, across(everything())) %>%
+      mutate(type = case_when( !acs_primary & !nonemerg_primary ~ "Unpreventable",
+                               acs_primary ~ "ACS", 
+                               nonemerg_primary ~ "Non emergent" )) %>% 
+      mutate(status = ifelse(type == 'Unpreventable', 'Unpreventable', 'ER Overuse')) %>% 
+      filter(type != 'Unpreventable') %>% 
+      mutate(overuse_perc = sum(n)/total*100) %>% 
+      group_by(Patient_Zip, overuse_perc) %>% 
+      tally
+    
+    bigpic_zip <- inner_join(bigpic, zipcodes, by = "Patient_Zip")
+    
+    # Google sheets for hospital, urgent care, and doctor's offices lat/long data
+    bigpic_hosp <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1JzmcNpV1bYoW3N6sg7bYVgL33LERLbS__CtSYB1_bX4/edit?usp=sharing")
+    
+    doctor <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1ZqRk8NK4qp43bA30Q0VyBEWVX9Z_Zd_bgk6_Mt_dDW8/edit?usp=sharing")
+    
+    urgent_care <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1_tTNbY0YQKAVF51rQcULq0qInGoMIz9thJieHbbfXfs/edit?usp=sharing")
+    
+    palette <- colorNumeric(palette = c('#0571b0','#92c5de',  '#f7f7f7', '#f4a582', '#ca0020'),
+                            domain = bigpic_zip$overuse_perc)
+    # Map
+    leaflet() %>% 
+      addTiles() %>% 
+      addMarkers(lat = bigpic_hosp$latitude,
+                 lng = bigpic_hosp$longitude,
+                 popup = bigpic_hosp$name) %>% 
+      addPolygons(data = bigpic_zip$geometry,
+                  color = 'white',
+                  fillColor = palette(bigpic_zip$overuse_perc),
+                  weight = 0.5,
+                  smoothFactor = 0.25,
+                  opacity = 0.25,
+                  fillOpacity = .75,
+                  highlightOptions = highlightOptions(color = "white",
+                                                      weight = 1.5,
+                                                      opacity = 1.0),
+                  label = paste0("Zip: ", unique(bigpic_zip$Patient_Zip), 
+                                 ' | ER overuse = ', 
+                                 round(bigpic_zip$overuse_perc, 1),'%')) %>%
+      addCircleMarkers(lat = doctor$lat,
+                       lng = doctor$lng,
+                       radius =2,
+                       color = "green",
+                       opacity = 0.75) %>%
+      addCircleMarkers(lat = urgent_care$lat,
+                       lng = urgent_care$lng,
+                       radius = 2,
+                       color = "red",
+                       opacity = 0.75) %>%
+      addLegend("bottomright",
+                pal = palette,
+                values = bigpic_zip$overuse_perc,
+                opacity = 0.75,
+                title = "% Overuse")
+  })
+  
   output$zipMap <- renderLeaflet({
     leaflet() %>% 
       addTiles() %>%
@@ -612,12 +683,11 @@ server <- function(input, output) {
                   color = '#ca0020',
                   weight = 0.5,
                   smoothFactor = 0.25,
-                  opacity = 0.5,
+                  opacity = 0.25,
                   fillOpacity = 0.25,
                   highlightOptions = highlightOptions(color = "white",
                                                       weight = 1.5,
-                                                      opacity = 0.5,
-                                                      bringToFront = TRUE),
+                                                      opacity = 1.0),
                   label = paste0("Zip code: ", input$zipcode)) %>%
     addMarkers(lat = hospitals[hospitals$Patient_Zip %in% input$zipcode,]$latitude,
                lng = hospitals[hospitals$Patient_Zip %in% input$zipcode,]$longitude)
