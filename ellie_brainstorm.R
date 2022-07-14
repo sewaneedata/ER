@@ -33,44 +33,6 @@ pie(x,
 legend("bottomleft", legend = c('Other', 'ACSC'),
        fill =  c("light blue", "red"), title = "Condition")
 
-#############
-# Trends in Race
-# table
-race <- scp %>%
-  filter(Race_Chr == c("White", "Black", "Native American")) %>% 
-  group_by(Race_Chr, 
-           acs_primary, 
-           nonemerg_primary, 
-           mental_primary, 
-           dental_primary, 
-           subabuse_primary) %>%
-  tally %>%
-  ungroup()%>%
-  group_by(Race_Chr) %>% 
-  summarise(percentage = (n/sum(n))*100, across(everything())) %>%
-  mutate( type = case_when( !acs_primary & !nonemerg_primary & !mental_primary & !dental_primary & !subabuse_primary ~ "Other",
-                            dental_primary ~ "Dental",
-                            acs_primary ~ "ACS",
-                            subabuse_primary ~ "Substance Abuse",
-                            mental_primary ~ "Mental Health",
-                            nonemerg_primary ~ "Non emergent"))
-
-ggplot(data = race, aes(x = type, y = percentage, fill = type)) +
-  geom_col() +
-  labs(title = "Trends") +
-  theme(legend.position = 'bottom') +
-  scale_fill_discrete(name = "Condition") +
-  facet_wrap(~Race_Chr) +
-  theme(axis.ticks.x = element_blank(),
-        axis.text.x = element_blank())
-
-ggplot(data = race, aes(x = condition, y = percentage, fill = type)) +
-  geom_col() +
-  labs(title = "Trends") +
-  theme(legend.position = 'bottom') +
-  scale_fill_discrete(name = "Condition") +
-  theme(axis.ticks.x = element_blank(),
-        axis.text.x = element_blank())
 
 #####################
 # making "big picture" map
@@ -90,7 +52,7 @@ bigpic <- scp %>%
   mutate(type = case_when( !acs_primary & !nonemerg_primary ~ "Unpreventable",
                             acs_primary ~ "ACS", 
                             nonemerg_primary ~ "Non emergent" )) %>% 
-  mutate(status = ifelse( type == 'Unpreventable', 'Unpreventable', 'ER Overuse')) %>% 
+  mutate(status = ifelse(type == 'Unpreventable', 'Unpreventable', 'ER Overuse')) %>% 
   filter(type != 'Unpreventable') %>% 
   mutate(overuse_perc = sum(n)/total*100) %>% 
   group_by(Patient_Zip, overuse_perc) %>% 
@@ -111,7 +73,8 @@ palette <- colorNumeric(palette = c('#0571b0','#92c5de',  '#f7f7f7', '#f4a582', 
 leaflet() %>% 
   addTiles() %>% 
   addMarkers(lat = bigpic_hosp$latitude,
-             lng = bigpic_hosp$longitude) %>% 
+             lng = bigpic_hosp$longitude,
+             popup = bigpic_hosp$name) %>% 
   addPolygons(data = bigpic_zip$geometry,
               color = 'white',
               fillColor = palette(bigpic_zip$overuse_perc),
@@ -124,11 +87,7 @@ leaflet() %>%
                                                   opacity = 1.0),
               label = paste0("Zip: ", unique(bigpic_zip$Patient_Zip), 
                              ' | ER overuse = ', 
-                             round(bigpic_zip$overuse_perc, 1),'%')) %>% 
-  
-  #label = ~lapply(paste0("Zip code: ", bigpic_zip$Patient_Zip, ",",
-  #               "<br/>",
-  #               paste(round(get(bigpic_zip$overuse_perc), 2)), "%"), HTML)) %>% 
+                             round(bigpic_zip$overuse_perc, 1),'%')) %>%
   addCircleMarkers(lat = doctor$lat,
                    lng = doctor$lng,
                    radius =2,
@@ -147,14 +106,9 @@ leaflet() %>%
 
 
 
-
-
-
-
-
 ################################
 
-test <- scp %>%
+insurance_overuse <- scp %>%
   filter(insurance == c("TennCare", "MediCare", "Self Paid", "Commercial")) %>% 
   group_by(insurance, acs_primary, nonemerg_primary) %>% 
   tally %>% 
@@ -163,31 +117,123 @@ test <- scp %>%
   mutate(total = sum(n)) %>%
   summarise(percentage = n/total*100, across(everything())) %>% 
   mutate(type = case_when(!acs_primary & !nonemerg_primary ~ "Appropriate Use", 
-          acs_primary ~ "ACS Conditions",
-          nonemerg_primary ~ "Nonemergent Conditions")) %>% 
+          acs_primary ~ "ACS",
+          nonemerg_primary ~ "Non emergent")) %>% 
   mutate(type2 = ifelse(type == "Appropriate Use", "Appropriate Use", "Overuse")) %>% 
   filter(type2 != "Appropriate Use")
+
 # Dashboard graph                    
-ggplot(data = test, aes(x = insurance, y = percentage/100, fill = type)) +
+ggplot(data = insurance_overuse, aes(x = insurance, y = percentage/100, fill = type)) +
   geom_col(position = 'dodge') +
-  scale_fill_manual(name = ' ',
+  scale_fill_manual(name = 'Type of Condition',
                     values=c('#41b6c4',
                              '#253494')) +
   scale_y_continuous(labels = scales::percent) + 
   labs(x = ' ', y = 'Percentage of Visits',
        title = 'Severity of Overuse by Insurance Type') +
-  theme_light(base_size = 18) +
-  theme(legend.position = 'bottom')
+  theme_light(base_size = 18)
 
 # poster graph
-ggplot(data = test, aes(x = insurance, y = percentage/100, fill = type)) +
+ggplot(data = insurance_overuse, aes(x = insurance, y = percentage/100, fill = type)) +
   geom_col(position = 'dodge') +
-  scale_fill_manual(name = ' ',
-                    values=c('#af89fa',
-                             '#7fbf7b')) +
+  scale_fill_manual(name = 'Type of Condition',
+                    values=c('#7B3294',
+                             '#C2A5CF')) +
   scale_y_continuous(labels = scales::percent) + 
-  labs(x = ' ', y = 'Percentage of Visits',
-       title = 'Severity of Overuse by Insurance Type') +
+  labs(x = 'Insurance', y = 'Percentage of Visits',
+       title = 'ER Overuse by Insurance Type') +
   theme_light(base_size = 12) +
-  theme(legend.position = 'bottom')
+  geom_text(aes(label = scales::percent(percentage/100)),
+            position = position_dodge(width = 0.9),
+            vjust = -.1)
+
+
+# graph for overview tab of conditions in SCP
+
+scp_conditions <- scp %>%
+    group_by(acs_primary,
+             nonemerg_primary,
+             dental_primary,
+             mental_primary,
+             subabuse_primary) %>%
+    tally %>%
+    ungroup() %>%
+    summarise(percentage = (n/sum(n))*100, across(everything())) %>%
+    mutate(type = case_when(!dental_primary & !acs_primary & !subabuse_primary & !mental_primary & !nonemerg_primary ~ "Other",
+                            dental_primary ~ "Dental",
+                            acs_primary ~ "ACS",
+                            subabuse_primary ~ "Substance Abuse",
+                            mental_primary ~ "Mental Health",
+                            nonemerg_primary ~ "Non emergent")) %>%
+  filter(type != "Other") %>% 
+  arrange(desc(percentage))
+
+scp_conditions <- scp_conditions[-6,]
+
+# dashboard, conditions
+  ggplot(data = scp_conditions, 
+         aes(x = reorder(type, -percentage),
+             y = percentage/100,
+             fill = type)) +
+    geom_col() +
+    scale_y_continuous(labels = scales::percent) + 
+    theme_light(base_size = 10) +
+    labs(title = "ER Visits by Condition Type",
+         subtitle = "On the South Cumberland Plateau",
+      x = "Type of Condition",
+         y = "Percentage of Patient Visits") +
+    scale_fill_manual(values=c('#fdcc8a',
+                               '#a1dab4',
+                               '#41b6c4',
+                               '#2c7fb8',
+                               '#253494'),
+                      name = "Type of Condition") +
+    theme(axis.ticks.x = element_blank(),
+          axis.text.x = element_blank()) +
+    geom_text(aes(label = scales::percent(percentage/100)),
+                position = position_dodge(width = 0.9),
+                vjust = -.1)
+
+  
+scp_conditions <- scp_conditions %>% 
+  mutate(type = reorder(type, -percentage))
+
+# poster, conditions
+  ggplot(data = scp_conditions, 
+         aes(x = type,
+             y = percentage/100,
+             fill = type)) +
+    geom_col() +
+    scale_y_continuous(labels = scales::percent) + 
+    theme_light(base_size = 12) +
+    labs(title = "ER Visits by Condition Type",
+         x = "Type of Condition",
+         y = "Percentage of Patient Visits") +
+    scale_fill_manual(values=c('#7B3294',
+                               '#C2A5CF',
+                               '#008837',
+                               '#A6DBA0',
+                               '#636363'),
+                      name = "Type of Condition") +
+    theme(axis.ticks.x = element_blank(),
+          axis.text.x = element_blank()) +
+    geom_text(aes(label = scales::percent(percentage/100)),
+              position = position_dodge(width = 0.9),
+              vjust = -.1)
+  
+# poster, insurance
+  ggplot(data = insurance_overuse, aes(x = insurance, y = percentage/100, fill = type)) +
+    geom_col(position = 'dodge') +
+    scale_fill_manual(name = 'Type of Condition',
+                      values=c('#7B3294',
+                               '#C2A5CF')) +
+    scale_y_continuous(labels = scales::percent) + 
+    labs(x = 'Insurance', y = 'Percentage of Visits',
+         title = 'ER Overuse by Insurance Type') +
+    theme_light(base_size = 12) +
+    geom_text(aes(label = scales::percent(x = percentage/100, accuracy = 0.01)),
+              position = position_dodge(width = 0.9),
+              vjust = -.1) 
+  
+  
 
