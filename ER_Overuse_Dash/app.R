@@ -185,17 +185,17 @@ library(leaflet)
       
     ),
     
-    
-      
-      
       #FINDINGS TAB
         tabItem(tabName = "overview",
                 includeMarkdown("www/findings.Rmd"),
-                plotOutput("er_overuse"),
-                plotOutput("county_graph"),
-                plotOutput("admit_hr_graph"))
-        )
-    )
+                fluidRow(column(6,
+                                plotOutput("er_overuse")),
+                         column(6, 
+                                plotOutput("county_graph"))),
+                fluidRow(
+                  plotOutput("insurance_overuse"),
+                  plotOutput("admit_hr_graph"))
+        )))
      
   
   # Compile UI ----
@@ -450,8 +450,6 @@ server <- function(input, output) {
   })
   
   output$county_graph <- renderPlot({
-    #Read in TN ER Records
-    tn_diags <- readr::read_csv("C:/Users/jplus/OneDrive/Documents/DataLab/ER_Usage/tn_conditions.csv")
     
     #Filter out "other" conditions
     tn_diags <- tn_diags %>% filter(county != "Other", Condition != "Other")
@@ -473,6 +471,34 @@ server <- function(input, output) {
       scale_fill_manual(values=c('#41b6c4',
                                  '#253494'), 
                          name = "Type of Condition")
+  })
+  
+  output$insurance_overuse <- renderPlot({
+    # Overuse by insurance code
+    insurance_overuse <- scp %>%
+      filter(insurance == c("TennCare", "MediCare", "Self Paid", "Commercial")) %>% 
+      group_by(insurance, acs_primary, nonemerg_primary) %>% 
+      tally %>% 
+      ungroup() %>% 
+      group_by(insurance) %>% 
+      mutate(total = sum(n)) %>%
+      summarise(percentage = n/total*100, across(everything())) %>% 
+      mutate(type = case_when(!acs_primary & !nonemerg_primary ~ "Appropriate Use", 
+                              acs_primary ~ "ACS",
+                              nonemerg_primary ~ "Nonemergent")) %>% 
+      mutate(type2 = ifelse(type == "Appropriate Use", "Appropriate Use", "Overuse")) %>% 
+      filter(type2 != "Appropriate Use")
+    
+    # Overuse by insurance 
+    ggplot(data = insurance_overuse, aes(x = reorder(insurance, -percentage), y = percentage/100, fill = type)) +
+      geom_col(position = 'dodge') +
+      scale_fill_manual(name = 'Type of Condition',
+                        values=c('#41b6c4',
+                                 '#253494')) +
+      scale_y_continuous(labels = scales::percent) + 
+      labs(x = 'Insurance', y = 'Percentage of Visits',
+           title = 'Severity of Overuse by Insurance Type') +
+      theme_light(base_size = 18)
   })
   
   output$admit_hr_graph <- renderPlot({
