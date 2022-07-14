@@ -234,10 +234,10 @@ server <- function(input, output) {
       ungroup() %>% 
       mutate(total = sum(n)) %>% 
       summarise(percentage = n/total*100, across(everything())) %>%
-      mutate( type = case_when( !acs_primary & !nonemerg_primary ~ "Unpreventable",
+      mutate( type = case_when( !acs_primary & !nonemerg_primary ~ "Appropriate Use",
                                 acs_primary ~ "ACS", 
                                 nonemerg_primary ~ "Non emergent" )) %>% 
-      mutate(Condition = ifelse(type == "Unpreventable", "Unpreventable", "Preventable"))
+      mutate(Condition = ifelse(type == "Appropriate Use", "Appropriate Use", "Overuse"))
   })  
   
   #DEMOGRAPHICS OBSERVE------
@@ -269,10 +269,10 @@ server <- function(input, output) {
       group_by(county) %>%
       mutate(total = sum(n)) %>%
       summarise(percentage = (n/sum(n))*100, across(everything())) %>%
-      mutate( type = case_when( !acs_primary & !nonemerg_primary ~ "Non-Preventable",
+      mutate( type = case_when( !acs_primary & !nonemerg_primary ~ "Appropriate Use",
                                 acs_primary ~ "ACS",
                                 nonemerg_primary ~ "Non emergent" )) %>%
-      mutate(Condition = ifelse(type == "Non-Preventable", "Non-Preventable", "Preventable"))
+      mutate(Condition = ifelse(type == "Appropriate Use", "Appropriate Use", "Overuse"))
     
     # Make reactive DF
     rv$county_demo <- county_demo
@@ -306,10 +306,10 @@ server <- function(input, output) {
       group_by(Patient_Zip) %>%
       mutate(total = sum(n)) %>%
       summarise(percentage = (n/sum(n))*100, across(everything())) %>%
-      mutate( type = case_when( !acs_primary & !nonemerg_primary ~ "Other",
+      mutate( type = case_when( !acs_primary & !nonemerg_primary ~ "Appropriate Use",
                                 acs_primary ~ "ACS",
                                 nonemerg_primary ~ "Non emergent" )) %>%
-      mutate(Condition = ifelse(type == 'Other', "Other", "ACS/Non emergent"))
+      mutate(Condition = ifelse(type == "Appropriate Use", "Appropriate Use", "Overuse"))
     
     # Make reactive DF
     rv$zip_demo <- zip_demo
@@ -345,10 +345,10 @@ server <- function(input, output) {
         group_by(Primary_Payer_Class_Cd) %>%
         mutate(total = sum(n)) %>%
         summarise(percentage = (n/sum(n))*100, across(everything())) %>%
-        mutate( type = case_when( !acs_primary & !nonemerg_primary ~ "Other",
+        mutate( type = case_when( !acs_primary & !nonemerg_primary ~ "Appropriate Use",
                                   acs_primary ~ "ACS",
                                   nonemerg_primary ~ "Non emergent" )) %>%
-        mutate(Condition = ifelse(type == 'Other', "Other", "ACS/Non emergent"))
+        mutate(Condition = ifelse(type == "Appropriate Use", "Appropriate Use", "Overuse"))
       
       # Make reactive DF
       rv$insurance_demo <- insurance_demo
@@ -466,13 +466,11 @@ server <- function(input, output) {
     
     #Graph
     ggplot(data = tn_diags, aes(x = county,y = precent/100, fill = type)) +
-      geom_col(position = "dodge")+
-      labs(title = "Comparison of Primary Diagnosis Conditions",
-           y = "Percentage of Visits",
-           x = '') +
+      geom_col(position = "dodge") +
       scale_y_continuous(labels = scales::percent) +
       labs(title = "Comparison of Primary Diagnosis Conditions",
            subtitle = "SCP Counties vs Williamson County",
+           x = "County",
            y = "% of Patient Visits") + 
       geom_text(aes(label = scales::percent(precent/100)),
                 position = position_dodge(width = .9), 
@@ -572,10 +570,10 @@ server <- function(input, output) {
     overuse_hour <- scp %>% 
       group_by(Admit_Hr, acs_primary, nonemerg_primary) %>% 
       drop_na(Admit_Hr) %>% 
-      mutate( type = case_when( !acs_primary & !nonemerg_primary ~ "Unpreventable",
+      mutate( type = case_when( !acs_primary & !nonemerg_primary ~ "Appropriate Use",
                                 acs_primary ~ "ACS", 
                                 nonemerg_primary ~ "Non emergent" )) %>% 
-      mutate(Condition = ifelse(type == "Unpreventable", "Unpreventable", "Preventable")) %>% 
+      mutate(Condition = ifelse(type == "Appropriate Use", "Appropriate Use", "Overuse")) %>% 
       group_by(Admit_Hr, Condition) %>% tally()
     
     #Admit Hour Graph
@@ -583,8 +581,8 @@ server <- function(input, output) {
       geom_point(mapping = aes(x = Admit_Hr, y = n, color = Condition)) + 
       geom_line(aes(x = Admit_Hr, y = n, color = Condition)) +
       theme_light(base_size = 18) +
-      scale_color_manual(values=c('#41B6C4',
-                                 '#253494'),
+      scale_color_manual(values=c('#253494',
+                                  '#fdcc8a'),
                         name = "Type of Condition") +
       labs( x = "Patient Admit Hour",
             y = "% of Patient Visits",
