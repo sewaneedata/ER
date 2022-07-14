@@ -1,16 +1,3 @@
-# Preliminary investigation of shrunken data set
-#########################################
-library(dplyr)
-library(readr)
-library(tidyverse)
-library(ggplot2)
-library(gsheet)
-
-# scp_data set
-scp <- readr::read_csv("scp_data2")
-
-# See "shared_help_code.R" for vectors and necessary code to set up data mining.
-
 ########################################
 # Making a Pie chart
 # 1. ACS conditions
@@ -32,82 +19,8 @@ pie(x,
     main = "Primary Diagnoses at the ER")
 legend("bottomleft", legend = c('Other', 'ACSC'),
        fill =  c("light blue", "red"), title = "Condition")
-
-
-#####################
-# making "big picture" map
-top_ten <- scp %>% 
-  group_by(JARID) %>% 
-  tally %>% 
-  arrange(desc(n)) %>% 
-  head(10)
-
-bigpic <- scp %>% 
-  group_by(Patient_Zip, acs_primary, nonemerg_primary) %>% 
-  tally %>% 
-  ungroup() %>% 
-  group_by(Patient_Zip) %>% 
-  mutate(total = sum(n)) %>% 
-  summarise(percentage = n/total*100, across(everything())) %>%
-  mutate(type = case_when( !acs_primary & !nonemerg_primary ~ "Unpreventable",
-                            acs_primary ~ "ACS", 
-                            nonemerg_primary ~ "Non emergent" )) %>% 
-  mutate(status = ifelse(type == 'Unpreventable', 'Unpreventable', 'ER Overuse')) %>% 
-  filter(type != 'Unpreventable') %>% 
-  mutate(overuse_perc = sum(n)/total*100) %>% 
-  group_by(Patient_Zip, overuse_perc) %>% 
-  tally
-  
-bigpic_zip <- inner_join(bigpic, zipcodes, by = "Patient_Zip")
-
-bigpic_hosp <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1JzmcNpV1bYoW3N6sg7bYVgL33LERLbS__CtSYB1_bX4/edit?usp=sharing")
-
-doctor <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1ZqRk8NK4qp43bA30Q0VyBEWVX9Z_Zd_bgk6_Mt_dDW8/edit?usp=sharing")
-  
-urgent_care <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1_tTNbY0YQKAVF51rQcULq0qInGoMIz9thJieHbbfXfs/edit?usp=sharing")
-
-palette <- colorNumeric(palette = c('#0571b0','#92c5de',  '#f7f7f7', '#f4a582', '#ca0020'),
-                        domain = bigpic_zip$overuse_perc)
-
-
-leaflet() %>% 
-  addTiles() %>% 
-  addMarkers(lat = bigpic_hosp$latitude,
-             lng = bigpic_hosp$longitude,
-             popup = bigpic_hosp$name) %>% 
-  addPolygons(data = bigpic_zip$geometry,
-              color = 'white',
-              fillColor = palette(bigpic_zip$overuse_perc),
-              weight = 0.5,
-              smoothFactor = 0.25,
-              opacity = 0.25,
-              fillOpacity = .75,
-              highlightOptions = highlightOptions(color = "white",
-                                                  weight = 1.5,
-                                                  opacity = 1.0),
-              label = paste0("Zip: ", unique(bigpic_zip$Patient_Zip), 
-                             ' | ER overuse = ', 
-                             round(bigpic_zip$overuse_perc, 1),'%')) %>%
-  addCircleMarkers(lat = doctor$lat,
-                   lng = doctor$lng,
-                   radius =2,
-                   color = "green",
-                   opacity = 0.75) %>%
-  addCircleMarkers(lat = urgent_care$lat,
-                   lng = urgent_care$lng,
-                   radius = 2,
-                   color = "red",
-                   opacity = 0.75) %>%
-  addLegend("bottomright",
-            pal = palette,
-            values = bigpic_zip$overuse_perc,
-            opacity = 0.75,
-            title = "% Overuse")
-
-
-
 ################################
-
+# Static graphs
 insurance_overuse <- scp %>%
   filter(insurance == c("TennCare", "MediCare", "Self Paid", "Commercial")) %>% 
   group_by(insurance, acs_primary, nonemerg_primary) %>% 
