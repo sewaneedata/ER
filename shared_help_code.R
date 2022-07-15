@@ -18,7 +18,7 @@ library(raster)
 
 # Read in: scp_data data frame
 #ELLIE: scp <- readr::read_csv("Dropbox/DATALAB/ER_Project/scp_data2")
-#scp <- readr::read_csv("C:/Users/jplus/OneDrive/Documents/DataLab/ER_Usage/scp_data2")
+scp <- readr::read_csv("C:/Users/jplus/OneDrive/Documents/DataLab/ER_Usage/scp_data2")
 
 # rename weird column
 scp <- rename(scp, visit = ...1)
@@ -128,7 +128,7 @@ scp <- scp %>%
                               Primary_Payer_Class_Cd %in% Commercial_care ~ 'Commercial',
                               Primary_Payer_Class_Cd %in% Medi_caid ~ 'MediCaid',
                               Primary_Payer_Class_Cd %in% Unknown_insurance ~ 'Unknown',
-                              Primary_Payer_Class_Cd %in% Self_Paid_insurance ~ 'Self Paid',
+                              Primary_Payer_Class_Cd %in% Self_Paid_insurance ~ 'Self Pay',
                               Primary_Payer_Class_Cd %in% Uninsured ~ 'Uninsured',
                               Primary_Payer_Class_Cd %in% Work_Comp ~ 'Work Comp',
                               Primary_Payer_Class_Cd %in% Self_Insured ~ 'Self Insured',
