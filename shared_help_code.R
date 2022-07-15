@@ -18,7 +18,7 @@ library(raster)
 
 # Read in: scp_data data frame
 #ELLIE: scp <- readr::read_csv("Dropbox/DATALAB/ER_Project/scp_data2")
-scp <- readr::read_csv("C:/Users/jplus/OneDrive/Documents/DataLab/ER_Usage/scp_data2")
+#scp <- readr::read_csv("C:/Users/jplus/OneDrive/Documents/DataLab/ER_Usage/scp_data2")
 
 # rename weird column
 scp <- rename(scp, visit = ...1)
@@ -210,6 +210,7 @@ scp <- scp %>%
 # 2. Read it in as 'tn_diags'
 tn_diags <- readr::read_csv("C:/Users/jplus/OneDrive/Documents/DataLab/ER_Usage/tn_conditions.csv")
 # ELLIE: tn_diags <- read.csv("Dropbox/DATALAB/er_project/tn_conditions.csv")
+# KEN: tn_diags <- read_csv("tn_conditions.csv")
 
 #3. Filter out "other" conditions
 tn_diags <- tn_diags %>% filter(county != "Other", Condition != "Other")

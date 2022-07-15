@@ -115,6 +115,41 @@ dental <- paste0("^", dental)
 ##############################################################################################################################################################################################################################################################################################################################
 ##############################################################################################################################################################################################################################################################################################################################
 
+## Making vectors for insurance
+# When those characters are read they will be under a new name
+Tenn_care <- c('8', '10', 'J', 'Q', 'T' )
+Tri_care <- ('C')
+Medi_care <- c('K','M')
+Commercial_care <- c('14', '15', '16', '17', 'B', 'L')
+Medi_caid <- ('D')
+Unknown_insurance <- c('O','H','13') # 'H' & '13' is in here because there is no code 
+Self_Paid_insurance <- ('P')
+Uninsured <- ('Z')
+Work_Comp <- ('W')
+Self_Insured <- ('S')
+Prisoner <- ('N')
+Cover_Kids <- ('12')
+Cover_TN <- ('11')
+
+# When the patient insurance is read from the new vector it will be called the new insurance in a different column
+scp <- scp %>% 
+  mutate(insurance= case_when(Primary_Payer_Class_Cd %in% Tenn_care ~ 'TennCare',
+                              Primary_Payer_Class_Cd %in% Tri_care ~ 'TriCare',
+                              Primary_Payer_Class_Cd %in% Medi_care ~ 'MediCare',
+                              Primary_Payer_Class_Cd %in% Commercial_care ~ 'Commercial',
+                              Primary_Payer_Class_Cd %in% Medi_caid ~ 'MediCaid',
+                              Primary_Payer_Class_Cd %in% Unknown_insurance ~ 'Unknown',
+                              Primary_Payer_Class_Cd %in% Self_Paid_insurance ~ 'Self Pay',
+                              Primary_Payer_Class_Cd %in% Uninsured ~ 'Uninsured',
+                              Primary_Payer_Class_Cd %in% Work_Comp ~ 'Work Comp',
+                              Primary_Payer_Class_Cd %in% Self_Insured ~ 'Self Insured',
+                              Primary_Payer_Class_Cd %in% Prisoner ~ 'Prisoner',
+                              Primary_Payer_Class_Cd %in% Cover_Kids ~ 'CoverKids',
+                              Primary_Payer_Class_Cd %in% Cover_TN ~ 'CoverTenn' ))
+
+##############################################################################################################################################################################################################################################################################################################################
+##############################################################################################################################################################################################################################################################################################################################
+
 # Run the following for an updated 'scp' data frame that has:
 
 # New column "county" for county names.
@@ -157,6 +192,8 @@ scp <- scp %>%
                                  ifelse(Patient_Zip %in% marion_zip,
                                         "Marion",
                                         "NULL"))))
+##############################################################################################################################################################################################################################################################################################################################
+##############################################################################################################################################################################################################################################################################################################################
 
 ## Run the following to create a new column "county_total" that will track
   # the total number of ER visits in each county.
@@ -182,6 +219,36 @@ races_vec <- c("White", "Black", "Native American")
 scp <- scp %>% 
   mutate(Race_Chr = ifelse(Race == 9, "Unkown", races_vec[Race]))
 
+########################################################################################################################################################################################################################################################################################################################################################
+##############################################################################################################################################################################################################################################################################################################################
+
+## Code for overview graph comparing SCP to Willamson county
+
+  # 1. Download tn_conditions.csv from google drive
+  # 2. Read it in as 'tn_diags'
+tn_diags <- read_csv("tn_conditions.csv")
+
+  # 3. Filter out "other" conditions
+tn_diags <- tn_diags %>% filter(county != "Other", Condition != "Other")
+
+##############################################################################################################################################################################################################################################################################################################################
+##############################################################################################################################################################################################################################################################################################################################
+
+## Code for "condition type" map
+
+  # Read in the shape file (remember to run ALL libraries at top of page)
+zipcodes <- st_read("Tennesse_Long:Lat_Data/tl_2019_us_zcta510.shp")
+
+# NOTE: the name of your file will change depending on where the shape file is 
+# on your computer. So the "___" will change, but keep the name of the variable as
+# "zipcodes" so that it matches the rest of the code/shiny app.
+
+# Filter down to only include SCP zip codes
+zipcodes <- zipcodes %>% 
+  filter(ZCTA5CE10 %in% c("37301","37305","37313","37339","37356","37365", 
+                          "37366","37374","37375","37383","37387","37397"))
+
+
 ## Create new column in 'scp' called 'zip_total' that counts up total # of ER visits
   # in each zip so we can create reproducible percentages.
 zip_visits <- scp %>%
@@ -192,37 +259,115 @@ zip_visits <- scp %>%
 scp <- inner_join(scp, zip_visits, by = 'Patient_Zip') %>%
   dplyr::rename(zip_total = 'n')
 
-## Making vectors for insurance
-# When those characters are read they will be under a new name
-Tenn_care <- c('8', '10', 'J', 'Q', 'T' )
-Tri_care <- ('C')
-Medi_care <- c('K','M')
-Commercial_care <- c('14', '15', '16', '17', 'B', 'L')
-Medi_caid <- ('D')
-Unknown_insurance <- c('O','H','13') # 'H' & '13' is in here because there is no code 
-Self_Paid_insurance <- ('P')
-Uninsured <- ('Z')
-Work_Comp <- ('W')
-Self_Insured <- ('S')
-Prisoner <- ('N')
-Cover_Kids <- ('12')
-Cover_TN <- ('11')
 
-# When the patient insurance is read from the new vector it will be called the new insurance in a different column
-scp <- scp %>% 
-  mutate(insurance= case_when(Primary_Payer_Class_Cd %in% Tenn_care ~ 'TennCare',
-                              Primary_Payer_Class_Cd %in% Tri_care ~ 'TriCare',
-                              Primary_Payer_Class_Cd %in% Medi_care ~ 'MediCare',
-                              Primary_Payer_Class_Cd %in% Commercial_care ~ 'Commercial',
-                              Primary_Payer_Class_Cd %in% Medi_caid ~ 'MediCaid',
-                              Primary_Payer_Class_Cd %in% Unknown_insurance ~ 'Unknown',
-                              Primary_Payer_Class_Cd %in% Self_Paid_insurance ~ 'Self Pay',
-                              Primary_Payer_Class_Cd %in% Uninsured ~ 'Uninsured',
-                              Primary_Payer_Class_Cd %in% Work_Comp ~ 'Work Comp',
-                              Primary_Payer_Class_Cd %in% Self_Insured ~ 'Self Insured',
-                              Primary_Payer_Class_Cd %in% Prisoner ~ 'Prisoner',
-                              Primary_Payer_Class_Cd %in% Cover_Kids ~ 'CoverKids',
-                              Primary_Payer_Class_Cd %in% Cover_TN ~ 'CoverTenn' ))
+  # Use new column 'zip_total' to create new variable 'scp_map' with percentages.
+scp_map <- scp %>% 
+  group_by(Patient_Zip) %>%
+  summarise(acs_perc = (sum(acs_primary))/zip_total*100, 
+            non_perc = (sum(nonemerg_primary))/zip_total*100,
+            mental_perc = (sum(mental_primary))/zip_total*100,
+            dental_perc = (sum(dental_primary))/zip_total*100,
+            sub_perc = (sum(subabuse_primary))/zip_total*100,
+            across(everything())) %>% 
+  ungroup() %>% 
+  group_by(Patient_Zip, acs_perc, non_perc, mental_perc, dental_perc,sub_perc) %>% 
+  tally
+
+## Rename the column in "zipcodes" that holds zip codes so I can join "zipcodes" 
+  # with "scp_map" by "Patient_Zip".
+zipcodes <- rename(zipcodes, Patient_Zip = ZCTA5CE10)
+
+  # In 'scp_map', delete the row "[10]"  (it's zip should be 37383)
+scp_map <- scp_map[-10,]
+
+  # Join 'scp_map' and 'zipcodes' now that they have the same # of rows.
+
+## Convert 'Patient_Zip' in 'zipcodes' from type character to type double/numeric 
+  # so that it matches 'Patient_Zip' in 'scp_map'.
+zipcodes <- zipcodes %>% 
+  mutate(Patient_Zip = as.numeric(Patient_Zip))
+
+  # Join 'zipcodes' and 'scp_map' to make a new varible called 'map'!
+combine <- left_join(zipcodes, scp_map, by = "Patient_Zip")
+
+  # Creating a palette to shade in the zip codes
+pal <- colorNumeric(palette = c('#0571b0','#92c5de',  '#f7f7f7', '#f4a582', '#ca0020'), 
+                    domain = combine$input$cond)
+
+########################################################################################################################################################################################################################################################################################################################################################
+##############################################################################################################################################################################################################################################################################################################################
+
+## Code for STATIC map in map tab
+
+  # Create variable that shows percentage of ER overuse (acs + nonemergent) per zip code.
+bigpic <- scp %>% 
+  group_by(Patient_Zip, acs_primary, nonemerg_primary) %>% 
+  tally %>% 
+  ungroup() %>% 
+  group_by(Patient_Zip) %>% 
+  mutate(total = sum(n)) %>% 
+  summarise(percentage = n/total*100, across(everything())) %>%
+  mutate(type = case_when( !acs_primary & !nonemerg_primary ~ "Appropriate Use",
+                           acs_primary ~ "ACS", 
+                           nonemerg_primary ~ "Non emergent" )) %>% 
+  mutate(status = ifelse(type == "Appropriate Use", "Appropriate Use", 'ER Overuse')) %>% 
+  filter(type != "Appropriate Use") %>% 
+  mutate(overuse_perc = sum(n)/total*100) %>% 
+  group_by(Patient_Zip, overuse_perc) %>% 
+  tally
+
+  # Joining variable above with 'zipcodes' data frame    
+bigpic_zip <- inner_join(bigpic, zipcodes, by = "Patient_Zip")
+
+  # Read in google sheet with town names and patient zips
+towns <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1200giV6UYXfolA1UkUJ--6MUG5FUavJUGGolS_lRxks/edit?usp=sharing")
+
+  # Join google sheet above with 'bigpic_zip'
+bigpic_zip <- inner_join(bigpic_zip, towns, by = 'Patient_Zip')
+
+  # Google sheets for hospital, urgent care, and doctor's offices lat/long data
+bigpic_hosp <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1JzmcNpV1bYoW3N6sg7bYVgL33LERLbS__CtSYB1_bX4/edit?usp=sharing")
+
+doctor <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1ZqRk8NK4qp43bA30Q0VyBEWVX9Z_Zd_bgk6_Mt_dDW8/edit?usp=sharing")
+
+urgent_care <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1_tTNbY0YQKAVF51rQcULq0qInGoMIz9thJieHbbfXfs/edit?usp=sharing")
+
+  # Color palette for shading the zip codes by severity of ER overuse    
+palette <- colorNumeric(palette = c('#0571b0','#92c5de',  '#f7f7f7', '#f4a582', '#ca0020'),
+                        domain = bigpic_zip$overuse_perc)
+
+########################################################################################################################################################################################################################################################################################################################################################
+##############################################################################################################################################################################################################################################################################################################################
+
+## Code for INTERACTIVE map in map tab
+
+  #Read in Google sheet of hospital lat/long information:
+hosp_location <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1EHHze7ABHXTTDUvaxbAIz5efFT67MR1VMXrMSkokMQs/edit?usp=sharing")
+
+  # 2. Create new data frame called 'top_hosp' that only has the top 3 most visited
+  # hospitals from each zip code.
+  # a. Arrange most visited hospitals in descending order and make a new variable.
+test <- scp %>% 
+  group_by(Patient_Zip, JARID) %>%
+  tally %>%
+  arrange(desc(n))
+
+  # Use the above variable to create a new data frame with top 3 hospitals in each zip.  
+top_hosp <- Reduce(rbind,
+                   by(test,
+                      test["Patient_Zip"],
+                      head,
+                      n = 3))
+
+  # Make JARID in 'top_hosp' type double rather than type character.
+top_hosp <- top_hosp %>% 
+  mutate(JARID = as.numeric(JARID))
+
+  # Join 'top_hosp' with 'hosp_location' using the 'JARID' column.
+h <- inner_join(top_hosp, hosp_location, by = "JARID")
+
+  # Join varible made above (h) with 'zipcodes' variable (from other map code).
+hospitals <- inner_join(h, zipcodes, by = "Patient_Zip")
 
 
 ##############################################################################################################################################################################################################################################################################################################################

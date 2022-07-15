@@ -170,35 +170,50 @@ library(leaflet)
       
       #CONDITIONS TAB
       tabItem(tabName= 'med_condition',
-      fluidRow(
-        column(4, 
-               selectInput(inputId = 'county2',
-                           label= h3 ('Select County'),
-                           choices= unique(scp$county),
-                           selected = 1)),
-        column(4,
-               
-               # So that zip codes are dependent on county
-               selectInput( inputId = 'zip2',
-                            label= h3 ('Select Zip Code'),
-                            choices= NULL
-               )),
-        
-        column(4,
-               
-               selectInput( inputId = 'insurance2',
-                            label= h3('Select Insurance Type'),
-                            choices= unique(scp$Primary_Payer_Class_Cd),
-                            selected=1))),
-      
-      # Putting the graph on its own row below
-      fluidRow(
-        column(6,
-               
-               #Displays the plot to the user
-               #uiOutput('title')
-               plotOutput('conditions_plot')))
-      
+              br(),
+              br(),
+              hr(),
+              fluidRow(
+                plotOutput('icdscp_plot')
+              ),
+              br(),
+              br(),
+              hr(),
+              
+              fluidRow(
+                column(6, 
+                       radioButtons(inputId = 'insurance2',
+                                    label= h3('Select Insurance Type'),
+                                    choices= c('All','TennCare','MediCare', 'Commercial', 'Self Pay'))
+                ),
+                column(6,
+                       radioButtons(inputId = "filter_by",
+                                    label=h3("Filter by"),
+                                    choices = c("County", "ZIP code")),
+                       
+                )),
+              fluidRow(
+                column(12,
+                       hr())
+              ),
+              fluidRow(
+                column(6,
+                       selectInput(inputId = 'county2',
+                                   label= h3 ('Select County'),
+                                   choices= unique(scp$county),
+                                   selected = 1)
+                ),
+                column(6,
+                       selectInput( inputId = 'zip2',
+                                    label= h3 ('Select Zip Code'),
+                                    choices= unique(scp$Patient_Zip)
+                       )
+                )
+              ),
+              fluidRow(
+                plotOutput('conditions_plot')
+                
+              )
     ),
     
       #FINDINGS TAB
@@ -444,34 +459,77 @@ server <- function(input, output) {
       filter(percentage >= 0.02)
   })
   
-  #ER Conditions 
+ ##ER Conditions Observe
   # This makes zip code options dependent on county selected 
-  county2 <- reactive({
-    filter(scp, county == input$county2)
+  observeEvent(input$filter_by, {
+    if('County' %in% input$filter_by){
+      shinyjs::disable('zip2') 
+      shinyjs::enable('county2')
+    }
+    if('ZIP code' %in% input$filter_by){
+      shinyjs::disable('county2')
+      shinyjs::enable('zip2')
+    }
   })
-  
-  observeEvent(county2(), {
-    choices <- unique(county2()$Patient_Zip)
-    updateSelectInput(inputId = "zip2", choices = choices)
-  })
-  
+
   ## Create reactive values
   # ^ Let us control which parts of your app update when, which prevents unnecessary computation that can slow down your app
-
+  
+  rv <- reactiveValues() 
   observe({
-    rv$conditions <- scp %>% 
-      filter(county %in% input$county2,
-             Primary_Payer_Class_Cd %in% input$insurance2,
-             Patient_Zip %in% input$zip2) %>% 
-      group_by(Diag1, county_total) %>% 
-      tally() %>% 
-      arrange(desc(n))%>% 
-      summarise(perc = n/county_total*100) %>% 
-      arrange(desc(perc)) %>% 
-      head(5)
-  })
+    if(input$insurance2== 'All'){
+      rv$countyicd <- scp %>% 
+        filter(county %in% input$county2) %>% 
+        group_by(Diag1 ) %>% 
+        tally()%>% 
+        ungroup() %>% 
+        mutate(total=sum(n)) %>% 
+        group_by(Diag1) %>% 
+        summarise(perc=n/total*100) %>% 
+        arrange(desc(perc)) %>% 
+        head(5)}
     
-
+    else{rv$countyicd <- scp %>% 
+      filter(county %in% input$county2,
+             insurance %in% input$insurance2) %>% 
+      group_by(Diag1 ) %>% 
+      tally()%>% 
+      ungroup() %>% 
+      mutate(total=sum(n)) %>% 
+      group_by(Diag1) %>% 
+      summarise(perc=n/total*100) %>% 
+      arrange(desc(perc)) %>% 
+      head(5)}
+    
+    
+  })
+  
+  observe({
+    if(input$insurance2== 'All'){
+      rv$zipicd <- scp %>% 
+        filter(Patient_Zip %in% input$zip2) %>% 
+        group_by(Diag1 ) %>% 
+        tally()%>% 
+        ungroup() %>% 
+        mutate(total=sum(n)) %>% 
+        group_by(Diag1) %>% 
+        summarise(perc=n/total*100) %>% 
+        arrange(desc(perc)) %>% 
+        head(5)}
+    
+    else{rv$zipicd <- scp %>% 
+      filter(Patient_Zip %in% input$zip2,
+             insurance %in% input$insurance2) %>% 
+      group_by(Diag1 ) %>% 
+      tally()%>% 
+      ungroup() %>% 
+      mutate(total=sum(n)) %>% 
+      group_by(Diag1) %>% 
+      summarise(perc=n/total*100) %>% 
+      arrange(desc(perc)) %>% 
+      head(5)}
+    
+  })
   
   #OUTPUTS ------
 ##############################################################################
@@ -634,7 +692,7 @@ server <- function(input, output) {
                                   '#253494'),
                         name = "Type of Condition") +
       labs( x = "Patient Admit Hour",
-            y = "% of Patient Visits",
+            y = "Number of Patient Visits",
             title = "ER Visits by Admit Hour",
             subtitle = "In SCP Counties",)
     
@@ -747,7 +805,7 @@ leaflet() %>%
       theme_light(base_size = 18) +
       scale_fill_manual(values=c('#fdcc8a',
                                  '#a1dab4',
-                                 '#253494'),
+                                 '#41b6c4'),
                         name = "Type of Condition") +
       scale_y_continuous(labels = scales::percent) + 
       labs(title = "Comparison of Primary Diagnosis Conditions",
@@ -772,7 +830,7 @@ leaflet() %>%
       theme_light(base_size = 18) +
       scale_fill_manual(values=c('#fdcc8a',
                                  '#a1dab4',
-                                 '#253494'),
+                                 '#41b6c4'),
                         name = "Type of Condition") +
       scale_y_continuous(labels = scales::percent) + 
       labs(title = "Comparison of Primary Diagnosis Conditions",
@@ -791,7 +849,7 @@ leaflet() %>%
       theme_light(base_size = 18) +
       scale_fill_manual(values=c('#fdcc8a',
                                  '#a1dab4',
-                                 '#253494'),
+                                 '#41b6c4'),
                         name = "Type of Condition") +
       scale_y_continuous(labels = scales::percent) + 
       labs(title = "Comparison of Primary Diagnosis Conditions",
@@ -901,24 +959,80 @@ output$all_cond_insurance <- renderPlot({
 
 # ER Conditions Tab
 #################################
-output$conditions_plot <- renderPlot({
-  ggplot(data = rv$conditions, aes(x= Diag1,
-                                   y= perc, fill= Diag1)) +
-    geom_col()+
-    # This puts percent sign on y-axis
-    scale_y_continuous(labels = scales::percent)+
-    labs(title= 'Top 5 Primary Diagnoses', x= 'Specific Diagnosis', y= 'Percentage of Patients')+
-    # Gives a minimalistic theme to the graph and changes the text size on the graph
-    theme_light(base_size = 18)+
-    scale_fill_manual(values= c('#fdcc8a',
-                                '#a1dab4',
-                                '#41b6c4',
-                                '#2c7fb8',
-                                '#253494'))
+observe(output$conditions_plot <- if(input$filter_by == "County"){
+  renderPlot({
+    
+    ggplot(data = rv$countyicd, aes(x= Diag1,
+                                    y= perc, fill= Diag1)) +
+      geom_col()+
+      # This puts percent sign on y-axis
+      labs(x= 'Diagnostic Codes', y= 'Percentage', fill= 'Diagnosis')+
+      # Gives a minimalistic theme to the graph and changes the text size on the graph
+      theme_light(base_size = 18)+
+      scale_fill_manual(values= c('#fdcc8a',
+                                  '#a1dab4',
+                                  '#41b6c4',
+                                  '#2c7fb8',
+                                  '#253494'))
+    
+  })}
+  # If the filter_by input is not county then plot this... and we only have two varibles so if it is vs. if not
+  else{renderPlot({
+    ggplot(data= rv$zipicd, aes(x= Diag1,
+                                y= perc, fill= Diag1))+
+      geom_col()+
+      labs(x= 'Diagnostic Codes', y= 'Percentage', fill= 'Diagnosis')+
+      # Gives a minimalistic theme to the graph and changes the text size on the graph
+      theme_light(base_size = 18)+
+      scale_fill_manual(values= c('#fdcc8a',
+                                  '#a1dab4',
+                                  '#41b6c4',
+                                  '#2c7fb8',
+                                  '#253494'))
+  })})
+
+## Static Graph with top 10 ICD 10 codes at the top of the tab
+output$icdscp_plot <- renderPlot({
+  icdscp <- scp %>% 
+    filter(acs_primary == 'TRUE' | nonemerg_primary== 'TRUE') %>% 
+    group_by(Diag1, acs_primary, nonemerg_primary) %>% 
+    tally() %>%
+    ungroup() %>% 
+    mutate(total = sum(n)) %>%
+    group_by(Diag1) %>% 
+    summarise(perc= n/total*100, across(everything())) %>% 
+    arrange(desc(perc)) %>% 
+    head(10)
   
+  
+  # Arrange data set greatest to least
+  icdscp <- icdscp %>% 
+    mutate( Diag1 = reorder(Diag1, -perc))
+  
+  # Bar graph for top 10 ICD 10 codes for all of SCP 
+  ggplot(data= icdscp) +
+    labs(title= ' Top 10 Diagnoses in Instances of ER Overuse ',
+         subtitle= '   In SCP Counties',
+         x= 'Diagnostic Code', y= 'Percentage', fill= 'Diagnosis')+
+    geom_col(aes(x= Diag1, y= perc, fill= Diag1))+
+    theme_light(base_size = 18)+
+    # Allows legend labels to be renamed
+    scale_fill_manual(values= c('#fdcc8a',
+                                '#feb24c',
+                                '#fd8d3c',
+                                '#c7e9b4',
+                                '#7fcdbb',
+                                '#41b6c4',
+                                '#1d91c0',
+                                '#225ea8',
+                                '#253494',
+                                '#081d58'),
+                      labels=c('Urinary Tract Infection', 'Acute Upper Respiratory Infection',
+                               'Obstructive Pulmonary Disease', 'Acute Pharyngitis',
+                               'Influenza', 'Gastroenteritis', 'Strep Throat', 'Periapical Abscess',
+                               'Hypertension', 'Acute Bronchitis'))
 })
 
 }
-
 # Run the application 
 shinyApp(ui = ui, server = server)
