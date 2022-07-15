@@ -266,15 +266,15 @@ server <- function(input, output) {
     
     # If Statements for all/both buttons
     if(input$sex != 'Both'){
-      county_demo <- county_demo %>% filter(Patient_Sex == input$sex)
+      county_demo <- county_demo %>% filter(Patient_Sex %in% input$sex)
     }
     
     if(input$race != 'All'){
-      county_demo <- county_demo %>% filter(Race_Chr == input$race)
+      county_demo <- county_demo %>% filter(Race_Chr %in% input$race)
     }
     
     if(input$age != 'All'){
-      county_demo <- county_demo %>% filter(age_group == input$age)
+      county_demo <- county_demo %>% filter(age_group %in% input$age)
     }
     
     # Continue DF Altering
@@ -303,15 +303,15 @@ server <- function(input, output) {
     
     # If Statements for all/both buttons
     if(input$sex != 'Both'){
-      zip_demo <- zip_demo %>% filter(Patient_Sex == input$sex)
+      zip_demo <- zip_demo %>% filter(Patient_Sex %in% input$sex)
     }
     
     if(input$race != 'All'){
-      zip_demo <- zip_demo %>% filter(Race_Chr == input$race)
+      zip_demo <- zip_demo %>% filter(Race_Chr %in% input$race)
     }
     
     if(input$age != 'All'){
-      zip_demo <- zip_demo %>% filter(age_group == input$age)
+      zip_demo <- zip_demo %>% filter(age_group %in% input$age)
     }
     
     # Continue DF Altering
@@ -342,15 +342,15 @@ server <- function(input, output) {
       
       # If Statements for all/both buttons
       if(input$sex != 'Both'){
-        insurance_demo <- insurance_demo %>% filter(Patient_Sex == input$sex)
+        insurance_demo <- insurance_demo %>% filter(Patient_Sex %in% input$sex)
       }
       
       if(input$race != 'All'){
-        insurance_demo <- insurance_demo %>% filter(Race_Chr == input$race)
+        insurance_demo <- insurance_demo %>% filter(Race_Chr %in% input$race)
       }
       
       if(input$age != 'All'){
-        insurance_demo <- insurance_demo %>% filter(age_group == input$age)
+        insurance_demo <- insurance_demo %>% filter(age_group %in% input$age)
       }
       
       # Continue DF Altering
