@@ -15,6 +15,7 @@ library(dplyr)
 library(ggplot2)
 library(DT)
 library(leaflet) 
+library(shinyjs)
 
 ################################################################################
 # UI ------
@@ -53,6 +54,7 @@ library(leaflet)
   # BODY ----
   ##########################
   body <- dashboardBody(
+    useShinyjs(),
     tabItems(
       #Adds content to each tab
       
@@ -118,13 +120,16 @@ library(leaflet)
                 fluidRow(column(4, 
                                 selectInput( inputId = "insurance",
                                               label = h3("Select Insurance Type"),
-                                              choices = c('MediCare', 'TennCare', 'Self Paid', "Commercial"),
+                                              choices = c('MediCare', 'TennCare', 'Self Pay', "Commercial"),
                                               selected = 'Medicare')),
                          column(8,
                                 plotOutput("insurance_plot")))),
       
       #PRIMARY CARE SERVICE TAB
         tabItem(tabName = "care_service",
+                
+                fluidRow(column(8,
+                                plotOutput("scp_conditions"))),
                 # the below makes the "hr()" line black.
                 tags$head(tags$style(HTML("hr {border-top: 1px solid #000000;}"))),
                 
@@ -163,7 +168,7 @@ library(leaflet)
                 fluidRow(column(4,
                                 selectInput(inputId = "ins",
                                             label = "Select Insurance",
-                                            choices = c('MediCare', 'TennCare', 'Self Paid', "Commercial"),
+                                            choices = c('MediCare', 'TennCare', 'Self Pay', "Commercial"),
                                             selected = 'Medicare')),
                          column(8,
                                 plotOutput("all_cond_insurance")))),
@@ -231,9 +236,6 @@ library(leaflet)
                                 plotOutput("insurance_overuse"))),
                 hr(),
                 fluidRow(column(8,
-                                plotOutput("scp_conditions"))),
-                hr(),
-                fluidRow(column(8,
                                 plotOutput("admit_hr_graph"))),
                 
         )))
@@ -241,7 +243,7 @@ library(leaflet)
   
   # Compile UI ----
   ########################
-  ui <- dashboardPage(header, sidebar, body, 
+  ui <- dashboardPage( header, sidebar, body, 
                     skin = "black")
 
   
@@ -463,12 +465,12 @@ server <- function(input, output) {
   # This makes zip code options dependent on county selected 
   observeEvent(input$filter_by, {
     if('County' %in% input$filter_by){
-      shinyjs::disable('zip2') 
-      shinyjs::enable('county2')
+      shinyjs::disable(id = 'zip2') 
+      shinyjs::enable(id = 'county2')
     }
     if('ZIP code' %in% input$filter_by){
-      shinyjs::disable('county2')
-      shinyjs::enable('zip2')
+      shinyjs::disable(id = 'county2')
+      shinyjs::enable(id = 'zip2')
     }
   })
 
@@ -588,7 +590,7 @@ server <- function(input, output) {
   output$insurance_overuse <- renderPlot({
     # Overuse by insurance code
     insurance_overuse <- scp %>%
-      filter(insurance %in% c("TennCare", "MediCare", "Self Paid", "Commercial")) %>% 
+      filter(insurance %in% c("TennCare", "MediCare", "Self Pay", "Commercial")) %>% 
       group_by(insurance, acs_primary, nonemerg_primary) %>% 
       tally %>% 
       ungroup() %>% 
