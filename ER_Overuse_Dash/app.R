@@ -41,20 +41,36 @@ library(shinyjs)
         "<br>"
         )),
     # Where tabs and subtabs are created, named, and given icons
-    menuItem("About", tabName = "about", icon = icon("home")),
     menuItem("Background", tabName = "background", icon = icon("file")),
     menuItem("Overview", tabName = "overview", icon = icon("book-medical")),
     menuItem("Explore ER Overuse", tabName = "ER_Overuse", icon = icon("hospital"),
              menuSubItem("Map", tabName = "map"),
              menuSubItem("Demographics", tabName = "demo"),
              menuSubItem("Primary Care Services", tabName = "care_service"),
-             menuSubItem("Conditions", tabName = "med_condition"))
+             menuSubItem("Conditions", tabName = "med_condition")),
+    menuItem("About", tabName = "about", icon = icon("home"))
     ))
   
   # BODY ----
   ##########################
   body <- dashboardBody(
     useShinyjs(),
+    #CSS Edits to Dashboard header and nav bar
+    tags$head(
+      tags$style(HTML("         /*Change color of 'Investigating ER Overuse'*/
+                                .skin-blue .main-header .logo {
+                                background-color: #1b266b;
+                                }
+                                
+                                /* navbar (rest of the header) */
+                                .skin-blue .main-header .navbar {
+                                background-color: #253494;}
+                                
+                                /* Color change for selected menu item */
+                                .skin-blue .sidebar-menu > li.active > a,
+                                .skin-blue .sidebar-menu > li:hover > a {
+                                  border-left-color: #253494;}")
+                 )),
     tabItems(
       #Adds content to each tab
       
@@ -243,8 +259,7 @@ library(shinyjs)
   
   # Compile UI ----
   ########################
-  ui <- dashboardPage( header, sidebar, body, 
-                    skin = "black")
+  ui <- dashboardPage( header, sidebar, body)
 
   
 ################################################################################
