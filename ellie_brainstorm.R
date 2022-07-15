@@ -22,7 +22,7 @@ legend("bottomleft", legend = c('Other', 'ACSC'),
 ################################
 # Static graphs
 insurance_overuse <- scp %>%
-  filter(insurance == c("TennCare", "MediCare", "Self Paid", "Commercial")) %>% 
+  filter(insurance %in% c("TennCare", "MediCare", "Self Paid", "Commercial")) %>% 
   group_by(insurance, acs_primary, nonemerg_primary) %>% 
   tally %>% 
   ungroup() %>% 
@@ -36,7 +36,7 @@ insurance_overuse <- scp %>%
   filter(type2 != "Appropriate Use")
 
 # Dashboard graph                    
-ggplot(data = insurance_overuse, aes(x = insurance, y = percentage/100, fill = type)) +
+ggplot(data = insurance_overuse, aes(x = reorder(insurance, -percentage), y = percentage/100, fill = type)) +
   geom_col(position = 'dodge') +
   scale_fill_manual(name = 'Type of Condition',
                     values=c('#41b6c4',
@@ -44,7 +44,10 @@ ggplot(data = insurance_overuse, aes(x = insurance, y = percentage/100, fill = t
   scale_y_continuous(labels = scales::percent) + 
   labs(x = ' ', y = 'Percentage of Visits',
        title = 'Severity of Overuse by Insurance Type') +
-  theme_light(base_size = 18)
+  theme_light(base_size = 18)+
+  geom_text(aes(label = scales::percent(percentage/100)),
+            position = position_dodge(width = 0.9),
+            vjust = -.1)
 
 # poster graph
 ggplot(data = insurance_overuse, aes(x = insurance, y = percentage/100, fill = type)) +
@@ -55,10 +58,10 @@ ggplot(data = insurance_overuse, aes(x = insurance, y = percentage/100, fill = t
   scale_y_continuous(labels = scales::percent) + 
   labs(x = 'Insurance', y = 'Percentage of Visits',
        title = 'ER Overuse by Insurance Type') +
-  theme_light(base_size = 12) +
+  theme_light(base_size = 10) +
   geom_text(aes(label = scales::percent(percentage/100)),
-            position = position_dodge(width = 0.9),
-            vjust = -.1)
+            position = position_dodge(width = 1.05),
+            vjust = -.2)
 
 
 # graph for overview tab of conditions in SCP
@@ -149,4 +152,46 @@ scp_conditions <- scp_conditions %>%
               vjust = -.1) 
   
   
+  scp %>% 
+    group_by(age_group) %>% 
+    tally
+
+test %>% 
+  group_by(age_group) %>% 
+  tally
+  scp %>% 
+    filter(Age %in% c(0, 1, 2, 3, 4, 5, 6, 7, 8, 9)) %>% 
+    group_by(Age) %>% 
+    tally %>% 
+    summarise(total = sum(n))
+  
+  
+  
+  
+  
+test <- scp %>% 
+  filter(insurance == "MediCare") %>% 
+  group_by(insurance, 
+           acs_primary,
+           nonemerg_primary,
+           dental_primary,
+           mental_primary,
+           subabuse_primary) %>%
+  tally %>%
+  ungroup() %>%
+  summarise(percentage = (n/sum(n))*100, across(everything())) %>%
+  mutate(type = case_when(!dental_primary & !acs_primary & !subabuse_primary & !mental_primary & !nonemerg_primary ~ "Other",
+                          dental_primary ~ "Dental",
+                          acs_primary ~ "ACS",
+                          subabuse_primary ~ "Substance Abuse",
+                          mental_primary ~ "Mental Health",
+                          mental_primary & nonemerg_primary ~ "n",
+                          nonemerg_primary ~ "Non emergent")) %>%
+  filter(type != "Other") %>% 
+  filter(percentage >= 0.02) %>% 
+  arrange(desc(percentage))
+
+
+
+
 
