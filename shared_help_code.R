@@ -159,7 +159,7 @@ marion_zip <- c("37397",
                 "37374")
 
 scp <- scp %>%
-  drop_na(Patient_Sex) %>% 
+  drop_na(Patient_Sex) %>%
   mutate(acs_primary = grepl(acs, Diag1),
          nonemerg_primary = grepl(non_emerg, Diag1),
          mental_primary = grepl(mental, Diag1),
@@ -168,14 +168,15 @@ scp <- scp %>%
          age_group = cut(Age,
                          breaks = 10,
                          labels = c('0-9', '10-19', '20-29', '30-39', '40-49',
-                                    '50-59', '60-69', '70-79', '80-89', '90-99')),
-         county = ifelse(Patient_Zip %in% grundy_zip, 
-                         "Grundy", 
+                                    '50-59', '60-69', '70-99', '70-99', '70-99')), #
+         county = ifelse(Patient_Zip %in% grundy_zip,
+                         "Grundy",
                          ifelse( Patient_Zip %in% franklin_zip,
                                  "Franklin",
                                  ifelse(Patient_Zip %in% marion_zip,
                                         "Marion",
                                         "NULL"))))
+
 
 # Then, run the following to create a new column "county_total" that will track
   # the total number of ER visits in each county.
