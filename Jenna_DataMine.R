@@ -595,7 +595,14 @@ extrafont::fonttable() %>%
 
 waffle(c(50, 30, 15, 5), rows = 5, title = "Your basic waffle chart")
 
+
+scp %>% group_by(Admit_Hr) %>% drop_na(Admit_Hr) %>% group_by(Hospital_ID) %>% tally() %>% arrange(desc(Hospital_ID))
+
+ scp %>% group_by(JARID, ER_Record_Flag) %>% tally()
  
+ scp %>% group_by(Hospital_ID) %>% tally()
+ 
+ scp %>% group_by(JARID, ER_Record_Flag) %>% tally()
 
  
 
