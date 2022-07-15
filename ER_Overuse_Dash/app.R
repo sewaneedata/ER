@@ -154,7 +154,16 @@ library(leaflet)
                 br(),
                 br(),
                 fluidRow(column(6,  plotOutput("all_cond_county")),
-                         column(6,  plotOutput("all_cond_zip")))),
+                         column(6,  plotOutput("all_cond_zip"))),
+                br(),
+                br(),
+                fluidRow(column(4,
+                                selectInput(inputId = "ins",
+                                            label = "Select Insurance",
+                                            choices = c('MediCare', 'TennCare', 'Self Paid', "Commercial"),
+                                            selected = 'Medicare')),
+                         column(8,
+                                plotOutput("all_cond_insurance")))),
       
       #CONDITIONS TAB
       tabItem(tabName= 'med_condition',
@@ -381,7 +390,8 @@ server <- function(input, output) {
                               subabuse_primary ~ "Substance Abuse",
                               mental_primary ~ "Mental Health",
                               nonemerg_primary ~ "Non emergent")) %>%
-      filter(type != "Other")
+      filter(type != "Other") %>% 
+      filter(percentage >= 0.02)
   })
 
   observe({
@@ -403,7 +413,31 @@ server <- function(input, output) {
                               subabuse_primary ~ "Substance Abuse",
                               mental_primary ~ "Mental Health",
                               nonemerg_primary ~ "Non emergent")) %>%
-      filter(type != "Other")
+      filter(type != "Other") %>%
+      filter(percentage >= 0.02)
+  })
+  
+  observe({
+    rv$ins <- scp %>% 
+      filter(insurance %in% input$ins) %>%
+      group_by(insurance,
+               acs_primary,
+               nonemerg_primary,
+               dental_primary,
+               mental_primary,
+               subabuse_primary) %>%
+      tally %>%
+      ungroup() %>%
+      group_by(insurance) %>%
+      summarise(percentage = (n/sum(n))*100, across(everything())) %>%
+      mutate(type = case_when(!dental_primary & !acs_primary & !subabuse_primary & !mental_primary & !nonemerg_primary ~ "Other",
+                              dental_primary ~ "Dental",
+                              acs_primary ~ "ACS",
+                              subabuse_primary ~ "Substance Abuse",
+                              mental_primary ~ "Mental Health",
+                              nonemerg_primary ~ "Non emergent")) %>%
+      filter(type != "Other") %>% 
+      filter(percentage >= 0.02)
   })
   
   #ER Conditions 
@@ -791,12 +825,13 @@ leaflet() %>%
       addLegend("bottomright",
                 pal = pal,
                 values = (combine %>% pull(!!input$cond) %>% range), #creates range of values within column selected
-                title = "% of Visits",
+                title = "% of Patient Visits",
                 opacity = 1)
   })
   
   # county plot
   output$all_cond_county <- renderPlot({
+
     ggplot(data = rv$county, 
            aes(x = reorder(type, -percentage),
                y = percentage/100,
@@ -805,7 +840,7 @@ leaflet() %>%
       scale_y_continuous(labels = scales::percent) + 
       theme_light(base_size = 18) +
       labs(x = " ",
-           y = "Percentage of Patient Visits") +
+           y = "% of Patient Visits") +
       scale_fill_manual(values=c('#fdcc8a',
                                  '#a1dab4',
                                  '#41b6c4',
@@ -813,7 +848,10 @@ leaflet() %>%
                                  '#253494'),
                         name = "Type of Condition") +
       theme(axis.ticks.x = element_blank(),
-            axis.text.x = element_blank())
+            axis.text.x = element_blank()) +
+      geom_text(aes(label = scales::percent(x = percentage/100, accuracy = 0.01)),
+                position = position_dodge(width = 0.9),
+                vjust = -.1) 
   })
   # zip code plot
   output$all_cond_zip <- renderPlot({
@@ -825,7 +863,7 @@ leaflet() %>%
       scale_y_continuous(labels = scales::percent) + 
       theme_light(base_size = 18)+
       labs(x = " ",
-           y = "Percentage of Patient Visits") +
+           y = "% of Patient Visits") +
       scale_fill_manual(values=c('#fdcc8a',
                                  '#a1dab4',
                                  '#41b6c4',
@@ -833,9 +871,36 @@ leaflet() %>%
                                  '#253494'),
                         name = "Type of Condition") +
       theme(axis.ticks.x = element_blank(),
-            axis.text.x = element_blank())
+            axis.text.x = element_blank()) +
+      geom_text(aes(label = scales::percent(x = percentage/100, accuracy = 0.01)),
+                position = position_dodge(width = 0.9),
+                vjust = -.1) 
   })
+  
+# Insurance plot
+output$all_cond_insurance <- renderPlot({
 
+    ggplot(data = rv$ins, 
+           aes(x = reorder(type, -percentage),
+               y = percentage/100,
+               fill = type)) +
+      geom_col() +
+      scale_y_continuous(labels = scales::percent) + 
+      theme_light(base_size = 18)+
+      labs(x = " ",
+           y = "% of Patient Visits") +
+      scale_fill_manual(values=c('#fdcc8a',
+                                 '#a1dab4',
+                                 '#41b6c4',
+                                 '#2c7fb8',
+                                 '#253494'),
+                        name = "Type of Condition") +
+      theme(axis.ticks.x = element_blank(),
+            axis.text.x = element_blank()) +
+    geom_text(aes(label = scales::percent(x = percentage/100, accuracy = 0.01)),
+              position = position_dodge(width = 0.9),
+              vjust = -.1) 
+})
 
 # ER Conditions Tab
 #################################
