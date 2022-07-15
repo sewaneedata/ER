@@ -202,12 +202,17 @@ library(shinyjs)
               hr(),
               
               fluidRow(
-                column(6, 
+                  column(4,
+                         radioButtons(inputId = 'sex2',
+                                      label= h3('Select Sex'),
+                                      choices= c('Both', 'M', 'F'),
+                                      selected= 'Both')),
+                column(4, 
                        radioButtons(inputId = 'insurance2',
                                     label= h3('Select Insurance Type'),
                                     choices= c('All','TennCare','MediCare', 'Commercial', 'Self Pay'))
                 ),
-                column(6,
+                column(4,
                        radioButtons(inputId = "filter_by",
                                     label=h3("Filter by"),
                                     choices = c("County", "ZIP code")),
@@ -494,7 +499,8 @@ server <- function(input, output) {
   
   rv <- reactiveValues() 
   observe({
-    if(input$insurance2== 'All'){
+    if('Both' %in% input$sex2)
+    {if('All' %in% input$insurance2){
       rv$countyicd <- scp %>% 
         filter(county %in% input$county2) %>% 
         group_by(Diag1 ) %>% 
@@ -505,26 +511,36 @@ server <- function(input, output) {
         summarise(perc=n/total*100) %>% 
         arrange(desc(perc)) %>% 
         head(5)}
-    
-    else{rv$countyicd <- scp %>% 
-      filter(county %in% input$county2,
-             insurance %in% input$insurance2) %>% 
-      group_by(Diag1 ) %>% 
-      tally()%>% 
-      ungroup() %>% 
-      mutate(total=sum(n)) %>% 
-      group_by(Diag1) %>% 
-      summarise(perc=n/total*100) %>% 
-      arrange(desc(perc)) %>% 
-      head(5)}
-    
-    
-  })
-  
-  observe({
-    if(input$insurance2== 'All'){
-      rv$zipicd <- scp %>% 
-        filter(Patient_Zip %in% input$zip2) %>% 
+      
+      else{rv$countyicd <- scp %>% 
+        filter(county %in% input$county2,
+               insurance %in% input$insurance2) %>% 
+        group_by(Diag1 ) %>% 
+        tally()%>% 
+        ungroup() %>% 
+        mutate(total=sum(n)) %>% 
+        group_by(Diag1) %>% 
+        summarise(perc=n/total*100) %>% 
+        arrange(desc(perc)) %>% 
+        head(5)}}
+    else{
+      if('All' %in% input$insurance2){
+        rv$countyicd <- scp %>% 
+          filter(county %in% input$county2,
+                 Patient_Sex %in% input$sex2) %>% 
+          group_by(Diag1 ) %>% 
+          tally()%>% 
+          ungroup() %>% 
+          mutate(total=sum(n)) %>% 
+          group_by(Diag1) %>% 
+          summarise(perc=n/total*100) %>% 
+          arrange(desc(perc)) %>% 
+          head(5)}
+      
+      else{rv$countyicd <- scp %>% 
+        filter(county %in% input$county2,
+               insurance %in% input$insurance2,
+               Patient_Sex %in% input$sex2) %>% 
         group_by(Diag1 ) %>% 
         tally()%>% 
         ungroup() %>% 
@@ -533,21 +549,65 @@ server <- function(input, output) {
         summarise(perc=n/total*100) %>% 
         arrange(desc(perc)) %>% 
         head(5)}
+    }
     
-    else{rv$zipicd <- scp %>% 
-      filter(Patient_Zip %in% input$zip2,
-             insurance %in% input$insurance2) %>% 
-      group_by(Diag1 ) %>% 
-      tally()%>% 
-      ungroup() %>% 
-      mutate(total=sum(n)) %>% 
-      group_by(Diag1) %>% 
-      summarise(perc=n/total*100) %>% 
-      arrange(desc(perc)) %>% 
-      head(5)}
     
   })
   
+  observe({
+    if('Both' %in% input$sex2){
+      if('All' %in% input$insurance2){
+        rv$zipicd <- scp %>% 
+          filter(Patient_Zip %in% input$zip2) %>% 
+          group_by(Diag1 ) %>% 
+          tally()%>% 
+          ungroup() %>% 
+          mutate(total=sum(n)) %>% 
+          group_by(Diag1) %>% 
+          summarise(perc=n/total*100) %>% 
+          arrange(desc(perc)) %>% 
+          head(5)}
+      
+      else{rv$zipicd <- scp %>% 
+        filter(Patient_Zip %in% input$zip2,
+               insurance %in% input$insurance2) %>% 
+        group_by(Diag1 ) %>% 
+        tally()%>% 
+        ungroup() %>% 
+        mutate(total=sum(n)) %>% 
+        group_by(Diag1) %>% 
+        summarise(perc=n/total*100) %>% 
+        arrange(desc(perc)) %>% 
+        head(5)}
+      
+    }
+    else{
+      if('All' %in% input$insurance2){
+        rv$zipicd <- scp %>% 
+          filter(Patient_Zip %in% input$zip2,
+                 Patient_Sex %in% input$sex2) %>% 
+          group_by(Diag1 ) %>% 
+          tally()%>% 
+          ungroup() %>% 
+          mutate(total=sum(n)) %>% 
+          group_by(Diag1) %>% 
+          summarise(perc=n/total*100) %>% 
+          arrange(desc(perc)) %>% 
+          head(5)}
+      
+      else{rv$zipicd <- scp %>% 
+        filter(Patient_Zip %in% input$zip2,
+               insurance %in% input$insurance2,
+               Patient_Sex %in% input$sex2) %>% 
+        group_by(Diag1 ) %>% 
+        tally()%>% 
+        ungroup() %>% 
+        mutate(total=sum(n)) %>% 
+        group_by(Diag1) %>% 
+        summarise(perc=n/total*100) %>% 
+        arrange(desc(perc)) %>% 
+        head(5)} 
+    }})
   #OUTPUTS ------
 ##############################################################################
   
