@@ -405,7 +405,7 @@ ggplot(data= eruse_insurance) +
                               ))
 
   # Stagnant graph for top ICD 10 codes (acs, non-emerg) for all of SCP by 
-icd_scp <- scp %>% 
+icdscp <- scp %>% 
   filter(acs_primary == 'TRUE' | nonemerg_primary== 'TRUE') %>% 
   group_by(Diag1, acs_primary, nonemerg_primary) %>% 
   tally() %>%
@@ -418,33 +418,89 @@ icd_scp <- scp %>%
 
 
   # Arrange data set greatest to least
-icd_scp <- icd_scp %>% 
+icdscp <- icdscp %>% 
   mutate( Diag1 = reorder(Diag1, -perc))
 
   # Bar graph for top 10 ICD 10 codes for all of SCP 
-ggplot(data= icd_scp) +
-  labs(title= ' Top 10 Diagnoses found in instances of ER Overuse ', x= 'Diagnostic Code', y= 'Percentage', fill= 'Diagnosis')+
+ggplot(data= icdscp) +
+  labs(title= ' Top 10 Diagnoses in Instances of ER Overuse ',
+       subtitle= '   In The South Cumberland Plateau',
+         x= 'Diagnostic Code', y= 'Percentage', fill= 'Diagnosis')+
   geom_col(aes(x= Diag1, y= perc, fill= Diag1))+
   theme_light(base_size = 18)+
   # Allows legend labels to be renamed
   scale_fill_manual(values= c('#fdcc8a',
-                              '#feb24c',
-                              '#fd8d3c',
-                              '#c7e9b4',
-                              '#7fcdbb',
-                              '#41b6c4',
-                              '#1d91c0',
-                              '#225ea8',
-                              '#253494',
-                              '#081d58'),
+    '#feb24c',
+    '#fd8d3c',
+    '#c7e9b4',
+    '#7fcdbb',
+    '#41b6c4',
+    '#1d91c0',
+    '#225ea8',
+    '#253494',
+    '#081d58'),
                     labels=c('Urinary Tract Infection', 'Acute Upper Respiratory Infection',
                              'Obstructive Pulmonary Disease', 'Acute Pharyngitis',
                              'Influenza', 'Gastroenteritis', 'Strep Throat', 'Periapical Abscess',
                              'Hypertension', 'Acute Bronchitis'))
 
+## Making a graph for Top 5 icd codes by county
+  # Make data set for Shiny
+countyicd <- scp %>% 
+  filter(acs_primary== TRUE | nonemerg_primary== TRUE) %>% 
+  group_by(county, Diag1 ) %>% 
+  tally()%>% 
+  ungroup() %>% 
+  mutate(total=sum(n)) %>% 
+  group_by(Diag1) %>% 
+  summarise(perc=n/total*100) %>% 
+  arrange(desc(perc)) %>% 
+  head(5)
 
-                              
-                        
+  # Make the data set stats go from greatest to least
+countyicd <- countyicd %>% 
+  mutate( Diag1 = reorder(Diag1, -perc))
+
+  # Make a graph for this data set
+ggplot(data= countyicd) +
+  geom_col(aes(x= Diag1, y= perc, fill= Diag1)) +
+  labs(x= 'Diagnostic Codes', y= 'Percentage', fill= 'Diagnosis')+
+  theme_light(base_size = 18) +
+  scale_fill_manual(values= c('#fdcc8a',
+                              '#a1dab4',
+                              '#41b6c4',
+                              '#2c7fb8',
+                              '#253494'))
+
+## Make a graph for top 5 ICD 10 codes for zip code
+  # Make a data set 
+  zipicd <- scp %>% 
+    filter(acs_primary==TRUE | non_emerg==TRUE) %>% 
+    group_by(Patient_Zip, Diag1) %>% 
+    tally() %>% 
+    ungroup() %>% 
+    mutate(total=sum(n)) %>% 
+    group_by(Diag1) %>% 
+    summarise(perc=n/total*100) %>% 
+    arrange(desc(perc)) %>% 
+    head(5)
+  
+  zipicd <- zipicd %>% 
+    mutate( Diag1 = reorder(Diag1, -perc))
+  
+    # Make a graph
+  ggplot(data= zipicd) +
+    geom_col(aes(x= Diag1, y= perc, fill= Diag1)) +
+    labs(x= 'Diagnostic Codes', y= 'Percentage', fill= 'Diagnosis') +
+    theme_light(base_size = 18) +
+    scale_fill_manual(values= c('#fdcc8a',
+                                '#a1dab4',
+                                '#41b6c4',
+                                '#2c7fb8',
+                                '#253494'))
+
+
+                            
 ##############################################################################################################################################################################################################################################################################################################################
 ##############################################################################################################################################################################################################################################################################################################################
 
