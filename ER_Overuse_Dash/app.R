@@ -113,12 +113,15 @@ library(leaflet)
                                       selected = 1,
                                       multiple = TRUE),
                 plotOutput("zip_plot"))),
-                         selectInput( inputId = "insurance",
-                                      label = h3("Select Insurance Type"),
-                                      choices = unique(scp$Primary_Payer_Class_Cd),
-                                      selected = 1,
-                                      multiple = TRUE),
-                plotOutput("insurance_plot")),
+                br(),
+                br(),
+                fluidRow(column(4, 
+                                selectInput( inputId = "insurance",
+                                              label = h3("Select Insurance Type"),
+                                              choices = c('MediCare', 'TennCare', 'Self Paid', "Commercial"),
+                                              selected = 'Medicare')),
+                         column(8,
+                                plotOutput("insurance_plot")))),
       
       #PRIMARY CARE SERVICE TAB
         tabItem(tabName = "care_service",
@@ -335,7 +338,7 @@ server <- function(input, output) {
       scp$age_group <- as.character(scp$age_group)
       
       insurance_demo <- scp %>%
-        filter(Primary_Payer_Class_Cd %in% input$insurance) 
+        filter(insurance %in% input$insurance) 
       
       # If Statements for all/both buttons
       if(input$sex != 'Both'){
@@ -352,10 +355,11 @@ server <- function(input, output) {
       
       # Continue DF Altering
       insurance_demo <- insurance_demo %>% 
-        group_by(Primary_Payer_Class_Cd, acs_primary, nonemerg_primary) %>%
+        filter(insurance %in% input$insurance) %>% 
+        group_by(insurance, acs_primary, nonemerg_primary) %>%
         tally %>%
         ungroup() %>%
-        group_by(Primary_Payer_Class_Cd) %>%
+        group_by(insurance) %>%
         mutate(total = sum(n)) %>%
         summarise(percentage = (n/sum(n))*100, across(everything())) %>%
         mutate( type = case_when( !acs_primary & !nonemerg_primary ~ "Appropriate Use",
@@ -539,8 +543,7 @@ server <- function(input, output) {
       mutate(type2 = ifelse(type == "Appropriate Use", "Appropriate Use", "Overuse")) %>% 
       filter(type2 != "Appropriate Use")
     
-    # insurance_overuse <- insurance_overuse %>%
-    #   mutate(insurance = reorder(insurance, -percentage))
+
     
     # Overuse by insurance 
     ggplot(data = insurance_overuse, aes(x = reorder(insurance, -percentage), 
@@ -741,10 +744,6 @@ leaflet() %>%
                 y = percentage/100, 
                 fill = type)) + 
       geom_col(position = "dodge") +
-      labs(title = "ER Overuse of Demographic",
-         subtitle = "In County",
-         y = "Percentage of Visits",
-         x = '') +
       theme_light(base_size = 18) +
       scale_fill_manual(values=c('#fdcc8a',
                                  '#a1dab4',
@@ -752,7 +751,8 @@ leaflet() %>%
                         name = "Type of Condition") +
       scale_y_continuous(labels = scales::percent) + 
       labs(title = "Comparison of Primary Diagnosis Conditions",
-           y = "Percentage of Visits to the ER") +
+           y = "% of Patient Visits",
+           x = ' ') +
       geom_text(aes(label = scales::percent(percentage/100)),
                 position = position_dodge(width = 0.9), 
                 vjust = -.5)
@@ -767,7 +767,7 @@ leaflet() %>%
       geom_col(position = "dodge") +
       labs(title = "ER Overuse of Demographic",
            subtitle = "In Zipcodes",
-           y = "Percentage of Visits",
+           y = "% of Patient Visits",
            x = '') +
       theme_light(base_size = 18) +
       scale_fill_manual(values=c('#fdcc8a',
@@ -776,7 +776,7 @@ leaflet() %>%
                         name = "Type of Condition") +
       scale_y_continuous(labels = scales::percent) + 
       labs(title = "Comparison of Primary Diagnosis Conditions",
-           y = "Percentage of Visits to the ER") +
+           y = "% of Patient Visits") +
       geom_text(aes(label = scales::percent(percentage/100)),
                 position = position_dodge(width = 0.9), 
                 vjust = -.5)
@@ -784,14 +784,10 @@ leaflet() %>%
   
   #INSURANCE PLOT
   output$insurance_plot <- renderPlot({
-    ggplot(data = rv$insurance_demo, aes(x = factor(Primary_Payer_Class_Cd), 
+    ggplot(data = rv$insurance_demo, aes(x = reorder(type, -percentage), 
                                          y = percentage/100, 
                                          fill = type)) + 
       geom_col(position = "dodge") +
-      labs(title = "ER Overuse of Demographic",
-           subtitle = "In Zipcodes",
-           y = "Percentage of Visits",
-           x = '') +
       theme_light(base_size = 18) +
       scale_fill_manual(values=c('#fdcc8a',
                                  '#a1dab4',
@@ -799,10 +795,11 @@ leaflet() %>%
                         name = "Type of Condition") +
       scale_y_continuous(labels = scales::percent) + 
       labs(title = "Comparison of Primary Diagnosis Conditions",
-           y = "Percentage of Visits to the ER") +
-      geom_text(aes(label = scales::percent(percentage/100)),
-                position = position_dodge(width = 0.9), 
-                vjust = -.5)
+           y = "Percentage of Visits to the ER",
+           x = "") +
+      geom_text(aes(label = scales::percent(x = percentage/100, accuracy = 0.01)),
+                position = position_dodge(width = 0.9),
+                vjust = -.1) 
   })
 
   # PRIMARY CARE SERVICES TAB
