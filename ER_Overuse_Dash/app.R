@@ -84,26 +84,38 @@ library(shinyjs)
       # EXPLORE ER OVERUSE DROPDOWN
       # MAP TAB
         tabItem(tabName = "map",
+                HTML(paste0("<h1><b>ER Overuse by Zip Code</b></h1>")),
+                # Line Code
                 tags$head(tags$style(HTML("hr {border-top: 1px solid #000000;}"))),
-                includeMarkdown("www/er_overuse.Rmd"),
                 fluidRow(column(8,
-                              leafletOutput("top10_hospitals"))),
+                              leafletOutput("top10_hospitals")),
+                         column(4, HTML(paste0("<p><u>ADD TEXT</u></p>")),
+                         )),
                 hr(),
                 fluidRow(
-                  column(6,
+                  column(4,
+                         HTML(paste0(
+                           "<h1><b>Instructions</b></h1>",
+                           "<p>Select a zipcode in order to see the top 3 ERs patients from the selected zipcode visit most. </p>"
+                           )),
                          selectInput(inputId = 'zipcode',
                                      label = h3("Select Zip code"),
                                      choices = unique(hospitals$Patient_Zip),
                                      selected = 1)),
-                  column(6,
+                  column(8,
                          leafletOutput("zipMap")))),
        
       #DEMOGRAPHICS TAB
         tabItem(tabName = "demo",
-                includeMarkdown("www/demographics.Rmd"),
+                HTML(paste0("<h1><b>ER Overuse by Demographics</b></h1>",
+                            "<p><u>ADD TEXT</u></p>",
+                            "<h3><b>Instructions</b></h3>",
+                            "<p>Begin by selecting a sex, race, and age range*. Then below the black line, you may generate graphs for county, zipcode, and insurance type by selecting an option from the drop down menus. You may select multiple zipcodes to show on the graph.</p>")),
                 #Demo Filter Widgets
                 fluidRow(
-                  column(3, #WIDGET -----
+                  box( status = "primary",
+                  column(3, 
+                         #WIDGET -----
                          radioButtons( inputId = "sex",
                                        label = h3("Select Sex"),
                                        choices = c("Both", "M", "F"),
@@ -116,30 +128,37 @@ library(shinyjs)
                          selectInput( inputId = "age",
                                       label = h3("Select Age Group"),
                                       choices = c('All', sort(unique(scp$age_group))),
-                                      selected = "All"))),
+                                      selected = "All")),
+                  width = 10)),
+                  HTML(paste0("<h6> * = Ages 70-99 are grouped into one due to Federal Law</h6>")),
+                hr(),
                 fluidRow(
                   column(6,
+                         box( status = "primary", 
                 selectInput( inputId = "county",
                              label = h3("Select County"),
                              choices = unique(scp$county),
                              selected = "Grundy"),
-                plotOutput("county_plot")),
+                plotOutput("county_plot"), width = 14)),
                 column(6,
+                       box( status = "primary",
                          selectInput( inputId = "zip",
                                       label = h3("Select ZipCodes"),
                                       choices = unique(scp$Patient_Zip),
                                       selected = 1,
                                       multiple = TRUE),
-                plotOutput("zip_plot"))),
+                plotOutput("zip_plot"), width = 14))),
                 br(),
                 br(),
-                fluidRow(column(4, 
+                fluidRow(column(2),
+                         column(8,
+                                box( status = "primary", width = 15, 
                                 selectInput( inputId = "insurance",
                                               label = h3("Select Insurance Type"),
                                               choices = c('MediCare', 'TennCare', 'Self Pay', "Commercial"),
-                                              selected = 'Medicare')),
-                         column(8,
-                                plotOutput("insurance_plot")))),
+                                              selected = 'Medicare'),
+                                plotOutput("insurance_plot"))),
+                         column(2))),
       
       #PRIMARY CARE SERVICE TAB
         tabItem(tabName = "care_service",
@@ -202,7 +221,7 @@ library(shinyjs)
               hr(),
               
               fluidRow(
-                  column(4,
+                column(4,
                          radioButtons(inputId = 'sex2',
                                       label= h3('Select Sex'),
                                       choices= c('Both', 'M', 'F'),
@@ -890,7 +909,8 @@ leaflet() %>%
            x = ' ') +
       geom_text(aes(label = scales::percent(percentage/100)),
                 position = position_dodge(width = 0.9), 
-                vjust = -.5)
+                vjust = -.5) +
+      theme(legend.key.size = unit(.5, 'cm'))
    })
   
   #ZIPCODE PLOT
@@ -907,14 +927,14 @@ leaflet() %>%
       theme_light(base_size = 18) +
       scale_fill_manual(values=c('#fdcc8a',
                                  '#a1dab4',
-                                 '#41b6c4'),
-                        name = "Type of Condition") +
+                                 '#41b6c4')) +
       scale_y_continuous(labels = scales::percent) + 
       labs(title = "Comparison of Primary Diagnosis Conditions",
            y = "% of Patient Visits") +
       geom_text(aes(label = scales::percent(percentage/100)),
                 position = position_dodge(width = 0.9), 
-                vjust = -.5)
+                vjust = -.5)+ 
+      theme(legend.position = "bottom", legend.key.size = unit(.5, 'cm'), legend.title = "")
   })
   
   #INSURANCE PLOT
