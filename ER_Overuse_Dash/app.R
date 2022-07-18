@@ -113,23 +113,27 @@ library(shinyjs)
                             "<p>Begin by selecting a sex, race, and age range*. Then below the black line, you may generate graphs for county, zipcode, and insurance type by selecting an option from the drop down menus. You may select multiple zipcodes to show on the graph.</p>")),
                 #Demo Filter Widgets
                 fluidRow(
+                  column(2),
+                  fluidRow(
+                    column(8,
                   box( status = "primary",
-                  column(3, 
+                  column(4, 
                          #WIDGET -----
                          radioButtons( inputId = "sex",
                                        label = h3("Select Sex"),
                                        choices = c("Both", "M", "F"),
                                        selected = 'Both')),
-                  column(3,
+                  column(4,
                          radioButtons("race", label = h3("Select Race"),
                                       choices = c("All", unique(scp$Race_Chr)), 
                                       selected = "All")),
-                  column(3,
+                  column(4,
                          selectInput( inputId = "age",
                                       label = h3("Select Age Group"),
                                       choices = c('All', sort(unique(scp$age_group))),
                                       selected = "All")),
-                  width = 10)),
+                  width = 10))),
+                  column(2)),
                   HTML(paste0("<h6> * = Ages 70-99 are grouped into one due to Federal Law</h6>")),
                 hr(),
                 fluidRow(
@@ -904,13 +908,11 @@ leaflet() %>%
                                  '#41b6c4'),
                         name = "Type of Condition") +
       scale_y_continuous(labels = scales::percent) + 
-      labs(title = "Comparison of Primary Diagnosis Conditions",
-           y = "% of Patient Visits",
+      labs(y = "% of ER Visits",
            x = ' ') +
       geom_text(aes(label = scales::percent(percentage/100)),
                 position = position_dodge(width = 0.9), 
-                vjust = -.5) +
-      theme(legend.key.size = unit(.5, 'cm'))
+                vjust = -.5) 
    })
   
   #ZIPCODE PLOT
@@ -920,21 +922,17 @@ leaflet() %>%
               y = percentage/100,
               fill = type)) + 
       geom_col(position = "dodge") +
-      labs(title = "ER Overuse of Demographic",
-           subtitle = "In Zipcodes",
-           y = "% of Patient Visits",
+      labs(y = "% of ER Visits",
            x = '') +
       theme_light(base_size = 18) +
       scale_fill_manual(values=c('#fdcc8a',
                                  '#a1dab4',
-                                 '#41b6c4')) +
+                                 '#41b6c4'),
+                        name = "Type of Condition") +
       scale_y_continuous(labels = scales::percent) + 
-      labs(title = "Comparison of Primary Diagnosis Conditions",
-           y = "% of Patient Visits") +
       geom_text(aes(label = scales::percent(percentage/100)),
                 position = position_dodge(width = 0.9), 
-                vjust = -.5)+ 
-      theme(legend.position = "bottom", legend.key.size = unit(.5, 'cm'), legend.title = "")
+                vjust = -.5)
   })
   
   #INSURANCE PLOT
@@ -949,8 +947,7 @@ leaflet() %>%
                                  '#41b6c4'),
                         name = "Type of Condition") +
       scale_y_continuous(labels = scales::percent) + 
-      labs(title = "Comparison of Primary Diagnosis Conditions",
-           y = "Percentage of Visits to the ER",
+      labs(y = "% of ER Visits",
            x = "") +
       geom_text(aes(label = scales::percent(x = percentage/100, accuracy = 0.01)),
                 position = position_dodge(width = 0.9),
