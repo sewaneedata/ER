@@ -74,15 +74,15 @@ library(shinyjs)
     tabItems(
       #Adds content to each tab
       
-      #ABOUT TAB
+      #ABOUT TAB ------
         tabItem(tabName = "about",
                 includeMarkdown("www/home.Rmd")),
-      #BACKGROUND TAB
+      #BACKGROUND TAB ------
         tabItem(tabName = "background", 
                 includeMarkdown("www/overview.Rmd")),
       
       # EXPLORE ER OVERUSE DROPDOWN
-      # MAP TAB
+      # MAP TAB ------
         tabItem(tabName = "map",
                 HTML(paste0("<h1><b>ER Overuse by Zip Code</b></h1>")),
                 # Line Code
@@ -105,7 +105,7 @@ library(shinyjs)
                   column(8,
                          leafletOutput("zipMap")))),
        
-      #DEMOGRAPHICS TAB
+      #DEMOGRAPHICS TAB ------
         tabItem(tabName = "demo",
                 HTML(paste0("<h1><b>ER Overuse by Demographics</b></h1>",
                             "<p><u>ADD TEXT</u></p>",
@@ -164,17 +164,21 @@ library(shinyjs)
                                 plotOutput("insurance_plot"))),
                          column(2))),
       
-      #PRIMARY CARE SERVICE TAB
+      #PRIMARY CARE SERVICE TAB ------
         tabItem(tabName = "care_service",
                 HTML(paste0("<h1><b>Type of ER Overuse</b></h1>",
                             "<p><u>ADD TEXT</u></p>")),
                 fluidRow(column(8,
-                                plotOutput("scp_conditions"))),
+                                plotOutput("scp_conditions")),
+                         column(4, 
+                                HTML(paste0("<p><u>ADD TEXT</u></p>"))
+                                )),
                 # the below makes the "hr()" line black.
                 tags$head(tags$style(HTML("hr {border-top: 1px solid #000000;}"))),
                 hr(),
                 HTML(paste0("<h3><b>Instructions</b></h3>",
-                            "<p>ADD TEXT</p>")),
+                            "<p>The map below visualizes the percentage of ER visits that were certain conditions from each county in the SCP.
+                            Select what kind of condition wanted for analysis and the map will generate. Be mindful that the graph may take a few seconds to load.</p>")),
                 fluidRow(column(2),
                          column(8,
                 fluidRow(box(status = "primary", width = 15, 
@@ -193,6 +197,10 @@ library(shinyjs)
                 column(2)),
                 br(),
                 hr(),
+                HTML(paste0("<h3><b>Instructions</b></h3>",
+                            "<p>The graphs below depict the percentage of ER visits were for 
+                            different kinds of overuse conditions. Select by county, zipcode, 
+                            or insurance types, and the corresponding graph will generate.</p>")),
                 br(),
                 fluidRow(
                       column(6,
@@ -221,7 +229,7 @@ library(shinyjs)
                          plotOutput("all_cond_insurance"))),
                          column(2))),
       
-      #CONDITIONS TAB
+      #CONDITIONS TAB -------
       tabItem(tabName= 'med_condition',
               HTML(paste0("<h1><b>ER Overuse by Condition</b></h1>",
                           "<p><u>ADD INTRO TEXT</u></p>")),
@@ -232,6 +240,9 @@ library(shinyjs)
                        )),
               br(),
               hr(),
+              HTML(paste0("<h3><b>Instructions</b></h3>",
+                          "<p>The following graphs depicts the top 5 ICD-10 codes for the selected sex, insurance type, and county/zip code. To begin, select what sex and what insurance type.
+                          Select if you would like to view the graph by county or zipcode. Then, select which county/zipcode you would like the graph to analyze.</p>")),
                 fluidRow(
                   column(1),
                 column(6,
@@ -263,6 +274,8 @@ library(shinyjs)
                                      )
                               )),
                 column(1)),
+              HTML(paste0("<h6>NOTE: Click the following link to look up what a specific ICD-10 code means: <a href='https://www.icd10data.com/'>ICD-10 Code Search Engine</a></h6>")),
+              hr(),
                 fluidRow(
                   column(2),
                   column(8,
