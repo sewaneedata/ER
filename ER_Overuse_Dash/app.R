@@ -166,13 +166,19 @@ library(shinyjs)
       
       #PRIMARY CARE SERVICE TAB
         tabItem(tabName = "care_service",
-                
+                HTML(paste0("<h1><b>Type of ER Overuse</b></h1>",
+                            "<p><u>ADD TEXT</u></p>")),
                 fluidRow(column(8,
                                 plotOutput("scp_conditions"))),
                 # the below makes the "hr()" line black.
                 tags$head(tags$style(HTML("hr {border-top: 1px solid #000000;}"))),
-                
-                fluidRow(column(6, 
+                hr(),
+                HTML(paste0("<h3><b>Instructions</b></h3>",
+                            "<p>ADD TEXT</p>")),
+                fluidRow(column(2),
+                         column(8,
+                fluidRow(box(status = "primary", width = 15, 
+                             column(4, 
                                 selectInput(inputId = "cond",
                                             label = h3("Select Condition Type"),
                                             choices = c("ACS" = "acs_perc",
@@ -182,87 +188,86 @@ library(shinyjs)
                                                         "Substance abuse" = "sub_perc",
                                                         "Total ER visits" = "n"),
                                             selected = "acs_perc")),
-                         column(6, 
-                                leafletOutput("cond_map"))),
+                         column(8, 
+                                leafletOutput("cond_map"))))),
+                column(2)),
                 br(),
                 hr(),
                 br(),
                 fluidRow(
-                  column(6,
+                      column(6,
+                        box(status = "primary", width = 15,
                          selectInput(inputId = "county1",
                                      label= h3("Select County"),
                                      choices = unique(scp$county),
-                                     selected = "Grundy")),
-                  column(6,
+                                     selected = "Grundy"),
+                         plotOutput("all_cond_county"))),
+                      column(6,
+                        box(status = "primary", width = 15,
                          selectInput(inputId = "zip1",
                                      label = h3("Select Zip Code"),
                                      choices = unique(scp$Patient_Zip),
-                                     selected = "A"))),
+                                     selected = "A"),
+                         plotOutput("all_cond_zip")))),
                 br(),
                 br(),
-                fluidRow(column(6,  plotOutput("all_cond_county")),
-                         column(6,  plotOutput("all_cond_zip"))),
-                br(),
-                br(),
-                fluidRow(column(4,
+                fluidRow(column(2), 
+                         column(8,
+                                box( status = "primary", width = 15,
                                 selectInput(inputId = "ins",
                                             label = "Select Insurance",
                                             choices = c('MediCare', 'TennCare', 'Self Pay', "Commercial"),
-                                            selected = 'Medicare')),
-                         column(8,
-                                plotOutput("all_cond_insurance")))),
+                                            selected = 'Medicare'),
+                         plotOutput("all_cond_insurance"))),
+                         column(2))),
       
       #CONDITIONS TAB
       tabItem(tabName= 'med_condition',
-              br(),
+              HTML(paste0("<h1><b>ER Overuse by Condition</b></h1>",
+                          "<p><u>ADD INTRO TEXT</u></p>")),
+              fluidRow(
+                column(9, plotOutput('icdscp_plot')),
+                column(3, 
+                       HTML(paste0("<p><u>ADD graph explain TEXT</u></p>"))
+                       )),
               br(),
               hr(),
-              fluidRow(
-                plotOutput('icdscp_plot')
-              ),
-              br(),
-              br(),
-              hr(),
-              
-              fluidRow(
-                column(4,
-                         radioButtons(inputId = 'sex2',
-                                      label= h3('Select Sex'),
-                                      choices= c('Both', 'M', 'F'),
-                                      selected= 'Both')),
-                column(4, 
-                       radioButtons(inputId = 'insurance2',
-                                    label= h3('Select Insurance Type'),
-                                    choices= c('All','TennCare','MediCare', 'Commercial', 'Self Pay'))
-                ),
-                column(4,
-                       radioButtons(inputId = "filter_by",
-                                    label=h3("Filter by"),
-                                    choices = c("County", "ZIP code")),
-                       
-                )),
-              fluidRow(
-                column(12,
-                       hr())
-              ),
-              fluidRow(
+                fluidRow(
+                  column(1),
                 column(6,
-                       selectInput(inputId = 'county2',
-                                   label= h3 ('Select County'),
-                                   choices= unique(scp$county),
-                                   selected = 1)
-                ),
-                column(6,
-                       selectInput( inputId = 'zip2',
-                                    label= h3 ('Select Zip Code'),
-                                    choices= unique(scp$Patient_Zip)
-                       )
-                )
-              ),
-              fluidRow(
-                plotOutput('conditions_plot')
-                
-              )
+                        box( status = "primary", width = 10,
+                        column(3,
+                                 radioButtons(inputId = 'sex2',
+                                              label= h3('Select Sex'),
+                                              choices= c('Both', 'M', 'F'),
+                                              selected= 'Both')),
+                        column(5, 
+                               radioButtons(inputId = 'insurance2',
+                                            label= h3('Select Insurance Type'),
+                                            choices= c('All','TennCare','MediCare', 'Commercial', 'Self Pay'))
+                        ),
+                        column(3,
+                               radioButtons(inputId = "filter_by",
+                                            label=h3("Filter by"),
+                                            choices = c("County", "ZIP code")),
+                       ))),
+                column(4,
+                         box( status = "primary", width = 13,
+                                     selectInput(inputId = 'county2',
+                                                 label= h3 ('Select County'),
+                                                 choices= unique(scp$county),
+                                                 selected = 1),
+                              selectInput( inputId = 'zip2',
+                                                  label= h3 ('Select Zip Code'),
+                                                  choices= unique(scp$Patient_Zip)
+                                     )
+                              )),
+                column(1)),
+                fluidRow(
+                  column(2),
+                  column(8,
+                    plotOutput('conditions_plot')),
+                column(2))
     ),
     
       #FINDINGS TAB
