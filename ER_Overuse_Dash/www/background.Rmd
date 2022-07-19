@@ -4,7 +4,8 @@ author: "Jenna Lusk"
 date: '2022-06-30'
 output: html_document
 ---
-# Background
+# **Background**
+<hr>
 ## **Emergency Room Overuse in the United States**
 Concern has grown in recent years regarding the overuse of emergency departments in the U.S., especially in rural parts of the country where severe ER overuse has been linked to inadequate primary care health service. Investigating trends in ER use can provide helpful insight into the status of the primary care health services of different communities by highlighting who is being underserved and how.
 
@@ -25,7 +26,6 @@ Our focus this summer is on investigating trends in ER use from the South Cumber
 **ICD-10 Codes:** Used to identify conditions and diagnoses.  
 **Primary Diagnosis:** Our dataset includes 18 different “Diagnosis” columns for each patient. We have focused our attention on the first diagnosis column for each patient, the primary diagnosis.  
 **Medically Underserved Area (MUA) or Population (MUP):**  MUA/MUPs are defined by the Health Resources and Services Administration as having a shortage of primary care health services either within an entire geographic area (MUA) or for a population subset within a geographic area (MUP).  
-
 
 
 

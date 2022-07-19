@@ -42,7 +42,7 @@ library(shinyjs)
         )),
     # Where tabs and subtabs are created, named, and given icons
     menuItem("Background", tabName = "background", icon = icon("file")),
-    menuItem("Overview", tabName = "overview", icon = icon("book-medical")),
+    menuItem("Primary Findings", tabName = "findings", icon = icon("book-medical")),
     menuItem("Explore ER Overuse", tabName = "ER_Overuse", icon = icon("hospital"),
              menuSubItem("Map", tabName = "map"),
              menuSubItem("Demographics", tabName = "demo"),
@@ -77,6 +77,7 @@ library(shinyjs)
       #ABOUT TAB ------
         tabItem(tabName = "about",
                 HTML(paste0("<h1><b>About</h1></b>",
+                  "<hr>",
                   "<p>During the Summer of 2022, DataLab fellows created this dashboard for the South Cumberland Health Network to provide them with the data analysis needed to fill the large primary care health service gaps that are prevelant on the South Cumberland Plateau.</p>",
                   "<h2><b>What is DataLab?</h2></b>",
                   "<p>Sewanee Datalab is a data science for social good program hosted at Sewanee: The University of The South. This program trains aspiring data scientists that work exclusively on social impact projects partnered with clients and organizations.</p>",
@@ -120,22 +121,50 @@ library(shinyjs)
                 HTML(paste0("<h1><b>ER Overuse by Zip Code</b></h1>",
                             "<p>Exploring where ER overuse is coming from provides a great insight into what communities are facing medical gaps the most. The following maps use a scale of blue to red in order to show severity of overuse per county. The maps use blue markers to show the top 10 most visited hospitals by residents of the plateau. The red dots are urgent cares, and the green dots are primary care doctors.</p>")),
                 # Line Code
+                hr(),
                 tags$head(tags$style(HTML("hr {border-top: 1px solid #000000;}"))),
                 fluidRow(column(8,
                               leafletOutput("top10_hospitals")),
-                         column(4, HTML(paste0("<p><u>ADD TEXT</u></p>")),
+                         column(4, HTML(paste0("<p> The map visualizes ER overuse on the Plateau broken 
+                                               down by zip code. We found overuse is most prevalent in 
+                                               Sequatchie, TN, with 43.7% of ER visits being instances 
+                                               of overuse. This area is noted as having no urgent care 
+                                               (red dots) nor primary care doctors (green dots). 
+                                               The hospitals shown are the top 10 most visited by patients from the SCP.</p>",
+                                               "<h3><b>Legend</b></h3>",
+                                               "<img src='legend_map.PNG' width='150' height='125' align='center'>")),
                          )),
                 hr(),
                 fluidRow(
                   column(4,
                          HTML(paste0(
-                           "<h1><b>Instructions</b></h1>",
-                           "<p>The following graphs depicts the top 5 ICD-10 codes for the selected sex, insurance type, and county/zip code. To begin, select what sex and what insurance type.Select if you would like to view the graph by county or zipcode. Then, select which county/zip code you would like the graph to analyze.</p>"
+                           "<h3><b>Instructions</b></h3>",
+                           "<p>The following graphs depicts the top 5 ICD-10 codes 
+                           for the selected sex, insurance type, and county/zip code. 
+                           To begin, select what sex and what insurance type.Select if 
+                           you would like to view the graph by county or zipcode. Then, 
+                           select which county/zip code you would like the graph to analyze.</p>"
                            )),
                          selectInput(inputId = 'zipcode',
                                      label = h3("Select Zip code"),
                                      choices = unique(hospitals$Patient_Zip),
-                                     selected = 1)),
+                                     selected = 1),
+                         HTML(paste0("<h3><b>Zip Code Key</b></h3>")),
+                         fluidRow(column(4,
+                                         HTML(paste0("<h6>37301 - Altamont</h6>",
+                                                     "<h6>37305 - Beersheba Springs</h6>",
+                                                     "<h6>37313 - Coalmont</h6>",
+                                                     "<h6>37339 - Gruetli-Laager</h6>"
+                                                     ))),
+                                  column(4, HTML(paste0("<h6>37356 - Monteagle</h6>",
+                                                        "<h6>37365 - Palmer</h6>",
+                                                        "<h6>37366 - Pelham</h6>",
+                                                        "<h6>37374 - Sequatchie</h6>"))),
+                                  column(4, 
+                                         HTML(paste0("<h6>37375 - Sewanee</h6>",
+                                                     "<h6>37387 - Tracy City</h6>",
+                                                     "<h6>37397 - Whitwell</h6>"))
+                                         ))),
                   column(8,
                          leafletOutput("zipMap")))),
        
@@ -203,10 +232,15 @@ library(shinyjs)
         tabItem(tabName = "care_service",
                 HTML(paste0("<h1><b>ER Overuse by Types of Conditions</b></h1>",
                             "<p>Looking into what kinds of ER overuse conditions can help pinpoint what kind of healthcares are lacking in a community. The map and graphs below show the percentage of ER visits that are for ACSC and non-emergent conditions, and also analyze dental, mental health, and substance use conditions to find lack of services for these specific healthcare needs.</p>")),
+                hr(),
                 fluidRow(column(8,
                                 plotOutput("scp_conditions")),
                          column(4, 
-                                HTML(paste0("<p><u>ADD TEXT</u></p>"))
+                                HTML(paste0("<p>The graph indicates overuse for several 
+                                            different kinds of conditions. These conditions 
+                                            can all be treated in other healthcare facilities. 
+                                            This raises questions about a possible deficiency 
+                                            in services within the SCP communities. </p>"))
                                 )),
                 # the below makes the "hr()" line black.
                 tags$head(tags$style(HTML("hr {border-top: 1px solid #000000;}"))),
@@ -255,22 +289,22 @@ library(shinyjs)
                          column(8,
                                 box( status = "primary", width = 15,
                                 selectInput(inputId = "ins",
-                                            label = "Select Insurance",
+                                            label = h3("Select Insurance"),
                                             choices = c('MediCare', 'TennCare', 'Self Pay', "Commercial"),
                                             selected = 'Medicare'),
                          plotOutput("all_cond_insurance"))),
                          column(2))),
       
-      #CONDITIONS TAB -------
+      #DIAGNOSIS TAB -------
       tabItem(tabName= 'med_condition',
               HTML(paste0("<h1><b>ER Overuse by Diagnoses</b></h1>",
                           "<p>Analyzing what specific ICD-10 codes are most common amongst the SCP and specific demographics give an exact explanation about what overuse conditions residents are using the ER for.</p>")),
+              hr(),
               fluidRow(
                 column(9, plotOutput('icdscp_plot')),
                 column(3, 
-                       HTML(paste0("<p><u>ADD graph explain TEXT</u></p>"))
+                       HTML(paste0("<p>This graph displays the top 10 diagnoses found in ER visits from SCP residents. These diagnoses are all conditions that could have been treated with primary care or urgent care. This provides insight into the needed health care accessibility for the community to decrease these instances of ER overuse.</p>"))
                        )),
-              br(),
               hr(),
               HTML(paste0("<h3><b>Instructions</b></h3>",
                           "<p>The following graphs depicts the top 5 ICD-10 codes for the selected sex, insurance type, and county/zip code. To begin, select what sex and what insurance type. Select if you would like to view the graph by county or zip code. Then, select which county/zip code you would like the graph to analyze.</p>")),
@@ -315,20 +349,63 @@ library(shinyjs)
     ),
     
       #FINDINGS TAB ----
-        tabItem(tabName = "overview",
+        tabItem(tabName = "findings",
                 # Make hr() lines black
+                HTML(paste0("<h1><b>Primary Findings</b></h1>",
+                            "<hr>")),
+                fluidRow(column(8,plotOutput("er_overuse")), 
+                         column(4,
+                                HTML(paste0("<h2><b>ER Overuse</b></h2>",
+                                            "<p>Our data analysis revealed that <b>40.9%</b> of ER visits 
+                                            from patients in the SCP were instances of ER Overuse, 
+                                            double the national average of 19%.</p>")),
+                                )),
+
                 tags$head(tags$style(HTML("hr {border-top: 1px solid #000000;}"))),
-                fluidRow(column(8,
-                                plotOutput("er_overuse"))),
+
+                
                 hr(),
                 fluidRow(column(8, 
-                                plotOutput("county_graph"))),
+                                plotOutput("county_graph")),
+                         column(4,
+                                HTML(paste0("<h2><b>Overuse by County</b></h2>",
+                                            "<p>Williamson county is the healthiest county in 
+                                            Tennessee. Grundy county, which makes up a large part 
+                                            of the South Cumberland Plateau, is among the least healthy
+                                            counties in all of Tennessee. This graph compares ER overuse
+                                            in the South Cumberland Plateau counties with ER overuse in 
+                                            Williamson county. The graph shows that ER overuse is higher 
+                                            in the counties that make up the South Cumberland Plateau 
+                                            than it is in Williamson county. </p>")))),
                 hr(),
                 fluidRow(column(8, 
-                                plotOutput("insurance_overuse"))),
+                                plotOutput("insurance_overuse")),
+                         column(4, 
+                                HTML(paste0("<h2><b>Overuse by Insurance Type</b></h2>",
+                                "<p>The data analysis reveals that patients 
+                                            with state/federal government insurance or who self-pay (uninsured) 
+                                            use the ER to treat ACS conditions at a greater rate than those with 
+                                            commercial insurance. The findings may be related to the fact that ERs 
+                                            must treat patients regardless of insurance or lack thereof unlike primary 
+                                            and urgent care clinics.</p>")))),
                 hr(),
                 fluidRow(column(8,
-                                plotOutput("admit_hr_graph"))),
+                                plotOutput("admit_hr_graph")),
+                         column(4,
+                                HTML(paste0("<h2><b>Overuse by Admit Hour</b></h2>",
+                                            "<p>One of our partner’s initial hypotheses was 
+                                            that there would potentially be a difference in 
+                                            the time of day that patients visited the ER for 
+                                            “appropriate” versus “overuse” reasons. This graph 
+                                            does not support that hypothesis. This lack of evidence 
+                                            supporting the initial hypothesis may indicate that the 
+                                            problem(s) influencing ER overuse on the Plateau lie 
+                                            elsewhere in the system. For instance, is the issue that 
+                                            urgent cares or primary care clinics will not accept certain 
+                                            types of insurance?  Are urgent cares in the area too far 
+                                            away, or much farther away than certain ERs? Do the primary 
+                                            care clinics on the Plateau offer all needed health care 
+                                            services?</p>"))))
                 
         )))
      
@@ -681,9 +758,9 @@ server <- function(input, output) {
   #OUTPUTS ------
 ##############################################################################
   
-  #OVERVIEW GRAPHS ------
+  #FINDINGS GRAPHS ------
   ##########################################
-  #Main Overview Graph
+  #Main Findings Graph
   
   output$er_overuse <- renderPlot({
     
@@ -694,7 +771,7 @@ server <- function(input, output) {
       geom_col()+
       labs(title = "Comparison of Primary Diagnosis Conditions",
            subtitle = "In SCP Counties",
-           y = "Percentage of Visits",
+           y = "% of ER Visits",
            x = '') +
       scale_fill_manual(values=c('#41b6c4', 
                                  '#fdcc8a',
@@ -702,7 +779,7 @@ server <- function(input, output) {
                         name = "Type of Condition") +
       scale_y_continuous(labels = scales::percent) + 
       labs(title = "Comparison of Primary Diagnosis Conditions",
-           y = "% of Patient Visits") + 
+           y = "% of ER Visits") + 
       geom_text(aes(label = scales::percent(percentage/100)),
                 position = position_stack(vjust = 1.1)) + 
       theme_light(base_size = 18) 
@@ -722,7 +799,7 @@ server <- function(input, output) {
       labs(title = "Comparison of Primary Diagnosis Conditions",
            subtitle = "SCP Counties vs Williamson County",
            x = "County",
-           y = "% of Patient Visits") + 
+           y = "% of ER Visits") + 
       geom_text(aes(label = scales::percent(precent/100)),
                 position = position_dodge(width = .9), 
                 vjust = -.4)  + 
@@ -758,7 +835,7 @@ server <- function(input, output) {
                         values=c('#41b6c4', 
                                  '#253494')) +
       scale_y_continuous(labels = scales::percent) + 
-      labs(x = 'Insurance', y = '% of Patient Visits',
+      labs(x = 'Insurance', y = '% of ER Visits',
            title = 'ER Overuse by Insurance Type',
            subtitle = "In SCP Counties",) +
       theme_light(base_size = 17) +
@@ -803,7 +880,7 @@ server <- function(input, output) {
       labs(title = "ER Visits by Condition Type",
            subtitle = "In SCP Counties",
            x = "Type of Condition",
-           y = "% of Patient Visits") +
+           y = "% of ER Visits") +
       scale_fill_manual(values=c('#fdcc8a',
                                  '#a1dab4',
                                  '#41b6c4',
@@ -1021,7 +1098,7 @@ leaflet() %>%
       addLegend("bottomright",
                 pal = pal,
                 values = (combine %>% pull(!!input$cond) %>% range), #creates range of values within column selected
-                title = "% of Patient Visits",
+                title = "% of ER Visits",
                 opacity = 1)
   })
   
@@ -1036,7 +1113,7 @@ leaflet() %>%
       scale_y_continuous(labels = scales::percent) + 
       theme_light(base_size = 18) +
       labs(x = " ",
-           y = "% of Patient Visits") +
+           y = "% of ER Visits") +
       scale_fill_manual(values=c('#fdcc8a',
                                  '#a1dab4',
                                  '#41b6c4',
@@ -1059,7 +1136,7 @@ leaflet() %>%
       scale_y_continuous(labels = scales::percent) + 
       theme_light(base_size = 18)+
       labs(x = " ",
-           y = "% of Patient Visits") +
+           y = "% of ER Visits") +
       scale_fill_manual(values=c('#fdcc8a',
                                  '#a1dab4',
                                  '#41b6c4',
@@ -1084,7 +1161,7 @@ output$all_cond_insurance <- renderPlot({
       scale_y_continuous(labels = scales::percent) + 
       theme_light(base_size = 18)+
       labs(x = " ",
-           y = "% of Patient Visits") +
+           y = "% of ER Visits") +
       scale_fill_manual(values=c('#fdcc8a',
                                  '#a1dab4',
                                  '#41b6c4',
@@ -1107,7 +1184,7 @@ observe(output$conditions_plot <- if(input$filter_by == "County"){
                                     y= perc, fill= Diag1)) +
       geom_col()+
       # This puts percent sign on y-axis
-      labs(x= 'Diagnostic Codes', y= 'Percentage', fill= 'Diagnosis')+
+      labs(x= 'Diagnostic Codes', y= '% of ER Visits', fill= 'Diagnosis')+
       # Gives a minimalistic theme to the graph and changes the text size on the graph
       theme_light(base_size = 18)+
       scale_fill_manual(values= c('#fdcc8a',
