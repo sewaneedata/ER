@@ -60,8 +60,8 @@ ggplot(data = insurance_overuse, aes(x = insurance, y = percentage/100, fill = t
        title = 'ER Overuse by Insurance Type') +
   theme_light(base_size = 10) +
   geom_text(aes(label = scales::percent(percentage/100)),
-            position = position_dodge(width = 1.05),
-            vjust = -.2)
+            position = position_dodge(width = 1),
+            vjust = -.05)
 
 
 # graph for overview tab of conditions in SCP
