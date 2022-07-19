@@ -46,8 +46,8 @@ library(shinyjs)
     menuItem("Explore ER Overuse", tabName = "ER_Overuse", icon = icon("hospital"),
              menuSubItem("Map", tabName = "map"),
              menuSubItem("Demographics", tabName = "demo"),
-             menuSubItem("Primary Care Services", tabName = "care_service"),
-             menuSubItem("Conditions", tabName = "med_condition")),
+             menuSubItem("Types of Conditions", tabName = "care_service"),
+             menuSubItem("Top Diagnoses", tabName = "med_condition")),
     menuItem("About", tabName = "about", icon = icon("home"))
     ))
   
@@ -76,15 +76,49 @@ library(shinyjs)
       
       #ABOUT TAB ------
         tabItem(tabName = "about",
-                includeMarkdown("www/home.Rmd")),
+                HTML(paste0("<h1><b>About</h1></b>",
+                  "<p>During the Summer of 2022, DataLab fellows created this dashboard for the South Cumberland Health Network to provide them with the data analysis needed to fill the large primary care health service gaps that are prevelant on the South Cumberland Plateau.</p>",
+                  "<h2><b>What is DataLab?</h2></b>",
+                  "<p>Sewanee Datalab is a data science for social good program hosted at Sewanee: The University of The South. This program trains aspiring data scientists that work exclusively on social impact projects partnered with clients and organizations.</p>",
+                  "<h2><b>Our Community Partner</h2></b>",
+                  "<p>The South Cumberland Health Network (SCHN) is a non-profit organization that works to remediate barriers to health care access among residents of Grundy county and parts of  Franklin and Marion counties on the South Cumberland Plateau of Tennessee. The SCHN serves medically underserved, low-income, and minority populations. </p>",
+                  "<h2><b>The Fellows</h2></b>")),
+                fluidRow(column(2,
+                                HTML(paste0("<img src='Ellie_Davis.JPG' alt='' width='150' height='150' align='left'>"))
+                                ),
+                column(10,
+                       HTML(paste0("<h3><b>Ellie Davis</h3></b>",
+                                   "<p>Senior at Sewanee: The University of the South; Class of 2023. Majoring in Politics & Women’s & Gender studies.</p>",
+                                   "<a href='https://www.linkedin.com/in/elizabeth-davis-a96366230/'>LinkedIn</a>"))
+                        )),
+                br(),
+                fluidRow(column(2,
+                                HTML(paste0("<img src='Jenna_Lusk.JPG' alt='' width='150' height='150' align='left'>"))
+                ),
+                column(10,
+                       HTML(paste0("<h3><b>Jenna Lusk</h3></b>",
+                                   "<p>Sophomore at Purdue University; Class of 2025. Majoring in Computer Information Technology and minoring in Design & Innovation and Organizational Leadership.</p>",
+                                   "<a href='https://www.linkedin.com/in/jenna-lusk-5849a1200'>LinkedIn</a>"))
+                )),
+                br(),
+                fluidRow(column(2,
+                                HTML(paste0("<img src='Kenedi_Clinton.JPG' alt='' width='150' height='150' align='left'>"))
+                ),
+                column(10,
+                       HTML(paste0("<h3><b>Kenedi Clinton</h3></b>",
+                                   "<p>Junior at Sewanee: The University of The South; Class of 2024. Majoring in Biology, minoring in Rhetoric, and receiving a Civic and Global Leadership certificate.</p>",
+                                   "<a href='https://www.linkedin.com/in/kenedi-clinton-6ba5b61ba'>LinkedIn</a>"))
+                ))), 
+      
       #BACKGROUND TAB ------
         tabItem(tabName = "background", 
-                includeMarkdown("www/overview.Rmd")),
+                includeMarkdown("www/background.Rmd")),
       
       # EXPLORE ER OVERUSE DROPDOWN
       # MAP TAB ------
         tabItem(tabName = "map",
-                HTML(paste0("<h1><b>ER Overuse by Zip Code</b></h1>")),
+                HTML(paste0("<h1><b>ER Overuse by Zip Code</b></h1>",
+                            "<p>Exploring where ER overuse is coming from provides a great insight into what communities are facing medical gaps the most. The following maps use a scale of blue to red in order to show severity of overuse per county. The maps use blue markers to show the top 10 most visited hospitals by residents of the plateau. The red dots are urgent cares, and the green dots are primary care doctors.</p>")),
                 # Line Code
                 tags$head(tags$style(HTML("hr {border-top: 1px solid #000000;}"))),
                 fluidRow(column(8,
@@ -96,7 +130,7 @@ library(shinyjs)
                   column(4,
                          HTML(paste0(
                            "<h1><b>Instructions</b></h1>",
-                           "<p>Select a zipcode in order to see the top 3 ERs patients from the selected zipcode visit most. </p>"
+                           "<p>The following graphs depicts the top 5 ICD-10 codes for the selected sex, insurance type, and county/zip code. To begin, select what sex and what insurance type.Select if you would like to view the graph by county or zipcode. Then, select which county/zip code you would like the graph to analyze.</p>"
                            )),
                          selectInput(inputId = 'zipcode',
                                      label = h3("Select Zip code"),
@@ -108,9 +142,10 @@ library(shinyjs)
       #DEMOGRAPHICS TAB ------
         tabItem(tabName = "demo",
                 HTML(paste0("<h1><b>ER Overuse by Demographics</b></h1>",
-                            "<p><u>ADD TEXT</u></p>",
-                            "<h3><b>Instructions</b></h3>",
-                            "<p>Begin by selecting a sex, race, and age range*. Then below the black line, you may generate graphs for county, zipcode, and insurance type by selecting an option from the drop down menus. You may select multiple zipcodes to show on the graph.</p>")),
+                            "<p>Analyzing patient demographics and ER overuse can reveal trends regarding what groups of people face medical gaps or if there is a specific demographic that is significantly underserved. The following graphs show overuse by ACSC and non-emergent by the selected demographics.</p>")),
+                hr(),
+                HTML(paste0("<h3><b>Instructions</b></h3>",
+                            "<p>Begin by selecting a sex, race, and age range*. Then below the black line, you may generate graphs for county, zip code, and insurance type by selecting an option from the drop down menus. You may select multiple zip codes to show on the graph.</p>")),
                 #Demo Filter Widgets
                 fluidRow(
                   column(2),
@@ -164,10 +199,10 @@ library(shinyjs)
                                 plotOutput("insurance_plot"))),
                          column(2))),
       
-      #PRIMARY CARE SERVICE TAB ------
+      #Types of Conditions TAB ------
         tabItem(tabName = "care_service",
-                HTML(paste0("<h1><b>Type of ER Overuse</b></h1>",
-                            "<p><u>ADD TEXT</u></p>")),
+                HTML(paste0("<h1><b>ER Overuse by Types of Conditions</b></h1>",
+                            "<p>Looking into what kinds of ER overuse conditions can help pinpoint what kind of healthcares are lacking in a community. The map and graphs below show the percentage of ER visits that are for ACSC and non-emergent conditions, and also analyze dental, mental health, and substance use conditions to find lack of services for these specific healthcare needs.</p>")),
                 fluidRow(column(8,
                                 plotOutput("scp_conditions")),
                          column(4, 
@@ -177,8 +212,7 @@ library(shinyjs)
                 tags$head(tags$style(HTML("hr {border-top: 1px solid #000000;}"))),
                 hr(),
                 HTML(paste0("<h3><b>Instructions</b></h3>",
-                            "<p>The map below visualizes the percentage of ER visits that were certain conditions from each county in the SCP.
-                            Select what kind of condition wanted for analysis and the map will generate. Be mindful that the graph may take a few seconds to load.</p>")),
+                            "<p>The map below visualizes the percentage of ER visits that were under certain conditions from each county in the SCP. Select what kind of condition is wanted for analysis and the map will generate. Be mindful that the graph may take a few seconds to load.</p>")),
                 fluidRow(column(2),
                          column(8,
                 fluidRow(box(status = "primary", width = 15, 
@@ -198,9 +232,7 @@ library(shinyjs)
                 br(),
                 hr(),
                 HTML(paste0("<h3><b>Instructions</b></h3>",
-                            "<p>The graphs below depict the percentage of ER visits were for 
-                            different kinds of overuse conditions. Select by county, zipcode, 
-                            or insurance types, and the corresponding graph will generate.</p>")),
+                            "<p>The graphs below depict the percentage of ER visits were for different kinds of overuse conditions. Select by county, zip code, or insurance types, and the corresponding graph will generate.</p>")),
                 br(),
                 fluidRow(
                       column(6,
@@ -231,8 +263,8 @@ library(shinyjs)
       
       #CONDITIONS TAB -------
       tabItem(tabName= 'med_condition',
-              HTML(paste0("<h1><b>ER Overuse by Condition</b></h1>",
-                          "<p><u>ADD INTRO TEXT</u></p>")),
+              HTML(paste0("<h1><b>ER Overuse by Diagnoses</b></h1>",
+                          "<p>Analyzing what specific ICD-10 codes are most common amongst the SCP and specific demographics give an exact explanation about what overuse conditions residents are using the ER for.</p>")),
               fluidRow(
                 column(9, plotOutput('icdscp_plot')),
                 column(3, 
@@ -241,8 +273,7 @@ library(shinyjs)
               br(),
               hr(),
               HTML(paste0("<h3><b>Instructions</b></h3>",
-                          "<p>The following graphs depicts the top 5 ICD-10 codes for the selected sex, insurance type, and county/zip code. To begin, select what sex and what insurance type.
-                          Select if you would like to view the graph by county or zipcode. Then, select which county/zipcode you would like the graph to analyze.</p>")),
+                          "<p>The following graphs depicts the top 5 ICD-10 codes for the selected sex, insurance type, and county/zip code. To begin, select what sex and what insurance type. Select if you would like to view the graph by county or zip code. Then, select which county/zip code you would like the graph to analyze.</p>")),
                 fluidRow(
                   column(1),
                 column(6,
@@ -273,7 +304,7 @@ library(shinyjs)
                                                   choices= unique(scp$Patient_Zip)
                                      )
                               )),
-                column(1)),
+                column(1)), 
               HTML(paste0("<h6>NOTE: Click the following link to look up what a specific ICD-10 code means: <a href='https://www.icd10data.com/'>ICD-10 Code Search Engine</a></h6>")),
               hr(),
                 fluidRow(
@@ -283,11 +314,10 @@ library(shinyjs)
                 column(2))
     ),
     
-      #FINDINGS TAB
+      #FINDINGS TAB ----
         tabItem(tabName = "overview",
                 # Make hr() lines black
                 tags$head(tags$style(HTML("hr {border-top: 1px solid #000000;}"))),
-                includeMarkdown("www/findings.Rmd"),
                 fluidRow(column(8,
                                 plotOutput("er_overuse"))),
                 hr(),
@@ -307,7 +337,6 @@ library(shinyjs)
   ########################
   ui <- dashboardPage( header, sidebar, body)
 
-  
 ################################################################################
 #SERVER ------
 ################################################################################
