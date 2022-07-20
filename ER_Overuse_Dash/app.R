@@ -139,11 +139,8 @@ library(shinyjs)
                   column(4,
                          HTML(paste0(
                            "<h3><b>Instructions</b></h3>",
-                           "<p>The following graphs depicts the top 5 ICD-10 codes 
-                           for the selected sex, insurance type, and county/zip code. 
-                           To begin, select what sex and what insurance type.Select if 
-                           you would like to view the graph by county or zipcode. Then, 
-                           select which county/zip code you would like the graph to analyze.</p>"
+                           "<p>Select a zip code for which you'd like to see 
+                           the top three most visited hospitals from patients from the selected zip code. </p>"
                            )),
                          selectInput(inputId = 'zipcode',
                                      label = h3("Select Zip code"),
