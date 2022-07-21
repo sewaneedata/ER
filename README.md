@@ -5,7 +5,7 @@ This tab explores the background research that influenced the creation of our pr
 - Background research on ER overuse in the United States with stats, 
 - What ER overuse is, 
 - Why we care about exploring ER overuse on the South Cumberland Plateau,
-- What our partner wants to gain from our project,
+- What our partner wants to gain from our project, and
 - Important vocabulary.
 
 # Primary Findings tab
@@ -14,7 +14,7 @@ This tab explores some of our primary findings. It consists of four static graph
 
 - ER overuse on the South Cumberland Plateau,
 - ER overuse in Williamson county, the "healthiest" county in Tennessee, versus on the SCP,
-- ER overuse by insurance type,
+- ER overuse by insurance type, and
 - Visits to the ER at differenet times of day for both "appropriate" and "overuse" reasons.
 
 All static graphs are accompanied by summaries of what they show.
@@ -28,9 +28,14 @@ The other map is interactive and shows the top three hospitals visited by reside
 
 **Demographics:** This tab explores trends in ER use based on demographics of Sex, Race, and Age group. The user can choose to investigate trends in ER use based on these demographics by zip code, county, and insurance type.
 
-**Types of Conditions:** 
+**Types of Conditions:** This tab explores the rate at which residents of the SCP visit the ER for certain types of conditions. Types of conditions include:
+- ACS, 
+- non-emergent, 
+- mental health, 
+- dental, and
+- substance abuse conditions.
 
-**Top Diagnoses:**
+**Top Diagnoses:** This tab 
 
 # About tab
 
