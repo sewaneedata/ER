@@ -1,13 +1,18 @@
-`# TN OVERUSE AVERAGES
-# Description: In this script, we read in the initial data set and keep all ER visits 
-# in total as well as their Diag and zipcode in order to compare the SCP overuse % to 
-# a county that has better healthcare (Williamson) and the entirety of TN
+################################################################################
+# TN Overuse
+
+# Description: 
+# This file uses the initial database to measure overuse across TN. Used to compare selected
+# counties to other counties in TN. Runs SQL to select ER visits and specific columns to 
+# measure overuse and then general analysis to create comparison. 
+################################################################################
 
 ##################################3
-# NEW CSV ------
+# FILTER ER ------
+# SQLite
 ###################################
-#SQLITE in RSTUDIO example!
 
+#Library
 library(RSQLite)
 
 # Reading in sqlite
@@ -20,28 +25,30 @@ dbListTables(portaldb)
 dbListFields(portaldb, "discharges_phi")
 
 # Query description
-# Where I selected all rows I wanted to keep since couldnt write a csv with all columns
+# Selected ER visits and their Diag1 columns
 res<-"SELECT Patient_Zip, Diag1, ER_Record_Flag FROM discharges_phi WHERE ER_Record_Flag = 'Y'"
+
 # Creating query
 ex<-dbGetQuery(portaldb, res)
 
 # Writing query data
 write.csv(ex, "tn_diag_data.csv")
-# One time thing
 
 # Disconnect from sqlite
 dbDisconnect(portaldb)
 
+#######################
+# OVERUSE TN ------
+#######################
 
-# FILTER NEW CSV ------------------
-
+#Libraries
 library(dplyr)
 library(gsheet)
 library(ggplot2)
 library(readr)
 library(tidyverse)
 
-#Load in new CSV
+#Load in CSV
 tn_diags <- readr::read_csv("tn_diag_data.csv")
 
 #ACSC List
@@ -56,6 +63,7 @@ non_emerg <- as.vector(unlist(non_emerg$'ICD_10_code'))
 non_emerg <- paste0( non_emerg, collapse = "|^" )
 non_emerg <- paste0("^", non_emerg)
 
+# County zip codes
 grundy_zip <- c("37301",
                 "37305",
                 "37313",
@@ -65,13 +73,11 @@ grundy_zip <- c("37301",
                 "37366",
                 "37387")
 
-franklin_zip <- c("37324",
-                  "37375",
+franklin_zip <- c("37375",
                   "37383")
 
 marion_zip <- c("37397",
-                "37405",
-                "37419")
+                "37374")
 
 williamson_zip <- c("37014",
                     "37024",
@@ -86,6 +92,8 @@ williamson_zip <- c("37014",
                     "37135",
                     "37179",
                     "38476")
+
+# Assign county
 tn_diags <- tn_diags %>% mutate(acs_primary = grepl(acs, Diag1),
          nonemerg_primary = grepl(non_emerg, Diag1),
          county = ifelse(Patient_Zip %in% grundy_zip,
@@ -109,49 +117,6 @@ tn_diag2 <- tn_diags %>% group_by(county, acs_primary, nonemerg_primary) %>%
                             nonemerg_primary ~ "Non emergent" )) %>%
   mutate(Condition = ifelse(type == 'Other', "Other", "ACS/Non emergent"))
 
-write.csv(tn_diag2) #############
 
-#Filter out "other" conditions
-tn_diag3 <- tn_diag2 %>% filter(Condition != "Other", county != "Other")
-
-#Plot of % by county
-ggplot(data = tn_diag3, aes(x = county,y = precent/100, fill = type)) +
-  geom_col(position = "dodge")+
-  labs(title = "Comparison of Primary Diagnosis Conditions",
-       y = "Percentage of Visits",
-       x = '') +
-  scale_fill_manual(values=c("#74A9CF",
-                             "#08306B"),
-                    name = "Type of Condition") +
-  scale_y_continuous(labels = scales::percent) +
-  labs(title = "Comparison of Primary Diagnosis Conditions",
-       y = "Percentage of Visits to the ER")
-
-
-###################################3
-# SCP vs. WILLIAMSON vs. OTHER-------
-###################################3
-
-
-# Code to make graph by SCP and Williamson
-tn_diag3 <- tn_diag3 %>% mutate(scp = ifelse(county == "Franklin" | county == "Marion" | county == "Grundy", "SCP", 
-                                             ifelse(county == "Williamson", "Williamson", "Other"))) %>% 
-  group_by(scp, type) %>% 
-  summarize(mean_prec = mean(precent))
-
-#Plot of % by SCP or Williamson (DODGE GRAPH)
-ggplot(data = tn_diag3, aes(x = scp,y = mean_prec/100, fill = type)) +
-  geom_col(position = "dodge")+
-  labs(title = "Comparison of Primary Diagnosis Conditions",
-       y = "Percentage of Visits",
-       x = '') +
-  scale_fill_manual(values=c("#74A9CF",
-                             "#08306B"),
-                    name = "Type of Condition") +
-  scale_y_continuous(labels = scales::percent) +
-  labs(title = "Comparison of Primary Diagnosis Conditions",
-       y = "Percentage of Visits to the ER") + geom_text(aes(label = scales::percent(mean_prec/100)),position = position_dodge(width = 0.9), vjust = -.5)
-
-
-
-                                       
+# Create CSV for graph generation
+write.csv(tn_conditions)
