@@ -219,8 +219,7 @@ tn_diags <- tn_diags %>% filter(county != "Other", Condition != "Other")
 # Code for "condition type" map
 ##########################
 # Read in the shape file (remember to run ALL libraries at top of page)
-# ELLIE: 
-zipcodes <- st_read("Dropbox/DATALAB/er_project/tl_2019_us_zcta510/tl_2019_us_zcta510.shp")
+# ELLIE: zipcodes <- st_read("Dropbox/DATALAB/er_project/tl_2019_us_zcta510/tl_2019_us_zcta510.shp")
 zipcodes <- st_read("C:/Users/jplus/OneDrive/Documents/DataLab/ER_Usage/ZipCode_Shapes_File/tl_2019_us_zcta510/tl_2019_us_zcta510.shp")
 
 # NOTE: the name of your file will change depending on where the shape file is 
