@@ -1,10 +1,24 @@
+################################################################################
+#Data Scrub -----
+
+# Description: 
+# This file contains the code in which was used to scrub the inital database to 
+# include specific rows and columns and generate the CSV file for data analysis. 
+# The code to select patients from certian zipcodes was written using SQL.
+# R was used to then scrub the columns in which were not needed for data analysis. 
+# Run this code on the combined inpatient and outpatient 2019 TN hospital discharge data to 
+# prepare it for data analysis. 
+################################################################################
+
+# Library
 library(RSQLite)
 
 #######################
-# CODE FOR SCP DATA SET FOR SCP ZIPS
+# FILTER ZIP CODES ------
+# SQLite
 #######################
 
-# Reading in sqlite
+# Read in inital database
 portaldb <- dbConnect(SQLite(), 'discharges_phi')
 
 # List tables in database
@@ -14,21 +28,25 @@ dbListTables(portaldb)
 dbListFields(portaldb, 'discharges_phi')
 
 # Query description
-# Where I selected all rows I wanted to keep since couldn't write a csv with all columns
+# Select which rows to keep based on patient zip codes
 res<-"SELECT * FROM discharges_phi WHERE Patient_Zip IN ('37301','37305', '37313', '37339', '37356','37365', '37366', '37374', '37375', '37383', '37387', '37397')"
-# Creating query
+
+# Run query
 ex<-dbGetQuery(portaldb, res)
 
 # Disconnect from sqlite
 dbDisconnect(portaldb)
 
 #############################
-# COL SCRUB
+# COLUMN SCRUB ------
+# R
 ##############################
+
+#Libraries
 library(dplyr)
 library(tidyverse)
 
-
+# First Batch of columns to remove
 scp <- select (ex,-c(Data_Yr, Bill_Number, Record_Seq_Num, Form_Type, Fed_Tax_SubID,
                     Fed_Tax_Num, Do_Not_Resuscitate, Accident_St, Rev_Cd1,
                     Rev_Cd2, Rev_Cd3, Rev_Cd4, Rev_Cd5, Rev_Cd6, Rev_Cd7, Rev_Cd8, 
@@ -77,11 +95,9 @@ scp <- select (scp,-c(Attend_MD, Attend_MD_TN_Lic_Num, Attend_MD_UPIN,
 #Batch 3      
 scp <- select (scp,-c(Accident_Code, Operate_MD_TN_Lic_Num,Operate_MD_UPIN)) 
 
-# Remove Columns Cont.
+# Batch 4 - all columns containing...
 scp <- select(scp, -starts_with(c('Ecode', 'E_POA', 'Proc')))
 
 #Create New CSV File of this Data
-
-# Inital CSV FILE (included removal of admit_hr col)
 write.csv(scp, "scp_data2", row.names = TRUE)
 
