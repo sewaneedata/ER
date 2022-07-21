@@ -1,11 +1,17 @@
 ################################################################################
 # INTERACIVE DASHBOARD ------
+
 # Description: 
-# This code is the working interactive dashboard that will be our final product.
+# This is the code for the interactive dashboard. This uses the CSV files created
+# in data_scrub.R and overuse_TN.R. 
+
+#Use:
+# Run the start code into your environment with the proper file locations for the
+# CSVs needed. Then you may run the dashboard. 
 
 ################################################################################
-# Libraries ------
 
+# Libraries ------
 library(shiny)
 library(bslib)
 library(markdown)
@@ -31,7 +37,7 @@ library(shinyjs)
   
   #NAVIGATION BAR ----
   ####################
-  # This is the side navigation bar that links each tab to its contents
+  # Side Navigation Bar
   sidebar <- dashboardSidebar(
     sidebarMenu(
       #Navigation Image
@@ -40,7 +46,7 @@ library(shinyjs)
         "<a href='SCHN_Logo.png' target='_blank'><img style = 'display: block; margin-left: auto; margin-right: auto;' src='SCHN_Logo.png' width = '186'></a>",
         "<br>"
         )),
-    # Where tabs and subtabs are created, named, and given icons
+    # Tab and Subtab Creation
     menuItem("Background", tabName = "background", icon = icon("file")),
     menuItem("Primary Findings", tabName = "findings", icon = icon("book-medical")),
     menuItem("Explore ER Overuse", tabName = "ER_Overuse", icon = icon("hospital"),
@@ -72,8 +78,7 @@ library(shinyjs)
                                   border-left-color: #253494;}")
                  )),
     tabItems(
-      #Adds content to each tab
-      
+      #TAB CONTENT ----
       #ABOUT TAB ------
         tabItem(tabName = "about",
                 HTML(paste0("<h1><b>About</h1></b>",
@@ -115,12 +120,11 @@ library(shinyjs)
         tabItem(tabName = "background", 
                 includeMarkdown("www/background.Rmd")),
       
-      # EXPLORE ER OVERUSE DROPDOWN
+      # EXPLORE ER OVERUSE-----
       # MAP TAB ------
         tabItem(tabName = "map",
                 HTML(paste0("<h1><b>ER Overuse by Zip Code</b></h1>",
                             "<p>Exploring where ER overuse is coming from provides a great insight into what communities are facing medical gaps the most. The following maps use a scale of blue to red in order to show severity of overuse per county. The maps use blue markers to show the top 10 most visited hospitals by residents of the plateau. The red dots are urgent cares, and the green dots are primary care doctors.</p>")),
-                # Line Code
                 hr(),
                 tags$head(tags$style(HTML("hr {border-top: 1px solid #000000;}"))),
                 fluidRow(column(8,
@@ -172,7 +176,6 @@ library(shinyjs)
                 hr(),
                 HTML(paste0("<h3><b>Instructions</b></h3>",
                             "<p>Begin by selecting a sex, race, and age range*. Then below the black line, you may generate graphs for county, zip code, and insurance type by selecting an option from the drop down menus. You may select multiple zip codes to show on the graph.</p>")),
-                #Demo Filter Widgets
                 fluidRow(
                   column(2),
                   fluidRow(
@@ -225,7 +228,7 @@ library(shinyjs)
                                 plotOutput("insurance_plot"))),
                          column(2))),
       
-      #Types of Conditions TAB ------
+      # TYPES OF CONDITIONS TAB ------
         tabItem(tabName = "care_service",
                 HTML(paste0("<h1><b>ER Overuse by Types of Conditions</b></h1>",
                             "<p>Looking into what kinds of ER overuse conditions can help pinpoint what kind of healthcares are lacking in a community. The map and graphs below show the percentage of ER visits that are for ACSC and non-emergent conditions, and also analyze dental, mental health, and substance use conditions to find lack of services for these specific healthcare needs.</p>")),
@@ -239,7 +242,6 @@ library(shinyjs)
                                             This raises questions about a possible deficiency 
                                             in services within the SCP communities. </p>"))
                                 )),
-                # the below makes the "hr()" line black.
                 tags$head(tags$style(HTML("hr {border-top: 1px solid #000000;}"))),
                 hr(),
                 HTML(paste0("<h3><b>Instructions</b></h3>",
@@ -346,7 +348,6 @@ library(shinyjs)
     
       #FINDINGS TAB ----
         tabItem(tabName = "findings",
-                # Make hr() lines black
                 HTML(paste0("<h1><b>Primary Findings</b></h1>",
                             "<hr>")),
                 fluidRow(column(8,plotOutput("er_overuse")), 
@@ -358,8 +359,6 @@ library(shinyjs)
                                 )),
 
                 tags$head(tags$style(HTML("hr {border-top: 1px solid #000000;}"))),
-
-                
                 hr(),
                 fluidRow(column(8, 
                                 plotOutput("county_graph")),
@@ -414,7 +413,7 @@ library(shinyjs)
 #SERVER ------
 ################################################################################
 
-# Define server logic required to draw a histogram
+# Define server logic
 server <- function(input, output) {
   
   #Create Reactive Values
@@ -422,8 +421,10 @@ server <- function(input, output) {
   
   #OBSERVE ------
   ######################################
+  
+  #FINDINGS OBSERVE -----
   observe({
-    #ER_Overuse Graph DF
+    # FINDINGS = ER Overuse
     rv$acs_nonemerg_other <- scp %>% 
       group_by(acs_primary, nonemerg_primary) %>% 
       tally %>% 
@@ -437,14 +438,15 @@ server <- function(input, output) {
   })  
   
   #DEMOGRAPHICS OBSERVE------
-  observe({ #County DF
-    #Make age_group column from factor to character
-    scp$age_group <- as.character(scp$age_group)
+  observe({ 
+    # DEMOGRAPHICS = County DF------
+    
+    scp$age_group <- as.character(scp$age_group) #Make age_group column from factor to character
     
     county_demo <- scp %>%
       filter(county %in% input$county) 
     
-    # If Statements for all/both buttons
+    # All/Both buttons
     if(input$sex != 'Both'){
       county_demo <- county_demo %>% filter(Patient_Sex %in% input$sex)
     }
@@ -473,15 +475,17 @@ server <- function(input, output) {
     # Make reactive DF
     rv$county_demo <- county_demo
   })
-  observe({ #Zip DF
+  
+  
+  observe({ 
+    # DEMOGRAPHICS = Zip code DF
     
-    #Make age_group column from factor to character
-    scp$age_group <- as.character(scp$age_group)
+    scp$age_group <- as.character(scp$age_group)#Make age_group column from factor to character
     
     zip_demo <- scp %>%
       filter(Patient_Zip %in% input$zip) 
     
-    # If Statements for all/both buttons
+    # All/Both buttons
     if(input$sex != 'Both'){
       zip_demo <- zip_demo %>% filter(Patient_Sex %in% input$sex)
     }
@@ -512,15 +516,15 @@ server <- function(input, output) {
     
   })
 
-    observe({ #Insurance DF
+    observe({ 
+      #DEMOGRAPHICS = Insurance DF
       
-      #Make age_group column from factor to character
-      scp$age_group <- as.character(scp$age_group)
+      scp$age_group <- as.character(scp$age_group) #Make age_group column from factor to character
       
       insurance_demo <- scp %>%
         filter(insurance %in% input$insurance) 
       
-      # If Statements for all/both buttons
+      # All/Both buttons
       if(input$sex != 'Both'){
         insurance_demo <- insurance_demo %>% filter(Patient_Sex %in% input$sex)
       }
@@ -553,9 +557,9 @@ server <- function(input, output) {
     })
     
   
-  #MEDICAL SERVICES OBSERVE----
-
+  #TYPE OF CONDITIONS OBSERVE-----
   observe({
+    # TYPE OF CONDITIONS = County DF -------
     rv$county <- scp %>%
       filter(county %in% input$county1) %>%
       group_by(county,
@@ -579,6 +583,7 @@ server <- function(input, output) {
   })
 
   observe({
+    # TYPE OF CONDITIONS = Zip code DF ----
     rv$zip <- scp %>%
       filter(Patient_Zip %in% input$zip1) %>%
       group_by(Patient_Zip,
@@ -602,6 +607,7 @@ server <- function(input, output) {
   })
   
   observe({
+    # TYPE OF CONDITIONS = Insurance DF
     rv$ins <- scp %>% 
       filter(insurance %in% input$ins) %>%
       group_by(insurance,
@@ -624,8 +630,8 @@ server <- function(input, output) {
       filter(percentage >= 0.02)
   })
   
- ##ER Conditions Observe
-  # This makes zip code options dependent on county selected 
+ # TOP DIAGNOSIS OBSERVE -----
+  # Makes zip/county button disable
   observeEvent(input$filter_by, {
     if('County' %in% input$filter_by){
       shinyjs::disable(id = 'zip2') 
@@ -637,8 +643,9 @@ server <- function(input, output) {
     }
   })
 
-  ## Create reactive values
-  # ^ Let us control which parts of your app update when, which prevents unnecessary computation that can slow down your app
+  # CREATE REACTIVE VALUES: ------
+  # ^ Let us control which parts of your app update when, which prevents 
+  # unnecessary computation that can slow down your app
   
   rv <- reactiveValues() 
   observe({
@@ -751,14 +758,14 @@ server <- function(input, output) {
         arrange(desc(perc)) %>% 
         head(5)} 
     }})
+  
+  
   #OUTPUTS ------
 ##############################################################################
   
   #FINDINGS GRAPHS ------
-  ##########################################
-  #Main Findings Graph
-  
   output$er_overuse <- renderPlot({
+    # FINDINGS = Main ER Overuse Graph
     
     ggplot(data = rv$acs_nonemerg_other, 
            aes(x = Condition,
@@ -782,13 +789,13 @@ server <- function(input, output) {
   })
   
   output$county_graph <- renderPlot({
+    #FINDINGS = County vs Williamson Graph 
     
-    #Filter out "other" conditions
     tn_diags <- tn_diags %>% filter(county != "Other", Condition != "Other")
     
     tn_diags <- tn_diags %>%
       mutate(order = reorder(county, -precent))
-    #Graph
+    
     ggplot(data = tn_diags, aes(x = county, y = precent/100, fill = type)) +
       geom_col(position = "dodge") +
       scale_y_continuous(labels = scales::percent) +
@@ -806,7 +813,7 @@ server <- function(input, output) {
   })
   
   output$insurance_overuse <- renderPlot({
-    # Overuse by insurance code
+    #FINDINGS = Insurance Comparison Graph
     insurance_overuse <- scp %>%
       filter(insurance %in% c("TennCare", "MediCare", "Self Pay", "Commercial")) %>% 
       group_by(insurance, acs_primary, nonemerg_primary) %>% 
@@ -821,9 +828,6 @@ server <- function(input, output) {
       mutate(type2 = ifelse(type == "Appropriate Use", "Appropriate Use", "Overuse")) %>% 
       filter(type2 != "Appropriate Use")
     
-
-    
-    # Overuse by insurance 
     ggplot(data = insurance_overuse, aes(x = reorder(insurance, -percentage), 
                                          y = percentage/100, fill = type)) +
       geom_col(position = 'dodge') +
@@ -840,59 +844,8 @@ server <- function(input, output) {
                 vjust = -.1)
   })
   
-  output$scp_conditions <- renderPlot({
-    # code for plot
-    scp_conditions <- scp %>%
-      group_by(acs_primary,
-               nonemerg_primary,
-               dental_primary,
-               mental_primary,
-               subabuse_primary) %>%
-      tally %>%
-      ungroup() %>%
-      summarise(percentage = (n/sum(n))*100, across(everything())) %>%
-      mutate(type = case_when(!dental_primary & !acs_primary & !subabuse_primary & !mental_primary & !nonemerg_primary ~ "Other",
-                              dental_primary ~ "Dental",
-                              acs_primary ~ "ACS",
-                              subabuse_primary ~ "Substance Abuse",
-                              mental_primary ~ "Mental Health",
-                              nonemerg_primary ~ "Non emergent")) %>%
-      filter(type != "Other") %>% 
-      arrange(desc(percentage))
-    
-    scp_conditions <- scp_conditions[-6,]
-    
-    scp_conditions <- scp_conditions %>%
-      mutate(type = reorder(type, -percentage))
-    
-    #plot
-    ggplot(data = scp_conditions, 
-           aes(x = type,
-               y = percentage/100,
-               fill = type)) +
-      geom_col() +
-      scale_y_continuous(labels = scales::percent) + 
-      theme_light(base_size = 18) +
-      labs(title = "ER Visits by Condition Type",
-           subtitle = "In SCP Counties",
-           x = "Type of Condition",
-           y = "% of ER Visits") +
-      scale_fill_manual(values=c('#fdcc8a',
-                                 '#a1dab4',
-                                 '#41b6c4',
-                                 '#2c7fb8',
-                                 '#253494'),
-                        name = "Type of Condition") +
-      theme(axis.ticks.x = element_blank(),
-            axis.text.x = element_blank()) +
-      geom_text(aes(label = scales::percent(percentage/100)),
-                position = position_dodge(width = 0.9),
-                vjust = -.1)
-    
-  })
-  
   output$admit_hr_graph <- renderPlot({
-    #Admit Hour Graph Code
+    #FINDINGS = Admit Hour Graph
     scp$Admit_Hr <- as.numeric(scp$Admit_Hr)
     overuse_hour <- scp %>% 
       group_by(Admit_Hr, acs_primary, nonemerg_primary) %>% 
@@ -903,14 +856,13 @@ server <- function(input, output) {
       mutate(Condition = ifelse(type == "Appropriate Use", "Appropriate Use", "Overuse")) %>% 
       group_by(Admit_Hr, Condition) %>% tally()
     
-    #Admit Hour Graph
     ggplot(data = overuse_hour) +
       geom_point(mapping = aes(x = Admit_Hr, y = n, color = Condition)) + 
       geom_line(aes(x = Admit_Hr, y = n, color = Condition)) +
       theme_light(base_size = 18) +
       scale_color_manual(values=c('#fdcc8a',
                                   '#253494'),
-                        name = "Type of Condition") +
+                         name = "Type of Condition") +
       labs( x = "Patient Admit Hour",
             y = "Number of Patient Visits",
             title = "ER Visits by Admit Hour",
@@ -918,16 +870,13 @@ server <- function(input, output) {
     
   })
   
-  
-  ##############################################################################
   # EXPLORE ER TAB GRAPHS ------
   
-  # MAPS TAB
+  # MAPS TAB -----
   #################################
-output$top10_hospitals <- renderLeaflet({
-    
-  # Code for setting up map
-bigpic <- scp %>% 
+  output$top10_hospitals <- renderLeaflet({
+    # MAPS: Main Map
+  bigpic <- scp %>% 
       group_by(Patient_Zip, acs_primary, nonemerg_primary) %>% 
       tally %>% 
       ungroup() %>% 
@@ -942,24 +891,24 @@ bigpic <- scp %>%
       mutate(overuse_perc = sum(n)/total*100) %>% 
       group_by(Patient_Zip, overuse_perc) %>% 
       tally
-# joining variable above with zipcodes file    
-bigpic_zip <- inner_join(bigpic, zipcodes, by = "Patient_Zip")
-# read in google sheet with town names and patient zips
-towns <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1200giV6UYXfolA1UkUJ--6MUG5FUavJUGGolS_lRxks/edit?usp=sharing")
-# join google sheet above with 'bigpic_zip'
-bigpic_zip <- inner_join(bigpic_zip, towns, by = 'Patient_Zip')
-    
-# Google sheets for hospital, urgent care, and doctor's offices lat/long data
-bigpic_hosp <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1JzmcNpV1bYoW3N6sg7bYVgL33LERLbS__CtSYB1_bX4/edit?usp=sharing")
-    
-doctor <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1ZqRk8NK4qp43bA30Q0VyBEWVX9Z_Zd_bgk6_Mt_dDW8/edit?usp=sharing")
-    
-urgent_care <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1_tTNbY0YQKAVF51rQcULq0qInGoMIz9thJieHbbfXfs/edit?usp=sharing")
-# Color palette for shading the zip codes by severity of ER overuse    
-palette <- colorNumeric(palette = c('#0571b0','#92c5de',  '#f7f7f7', '#f4a582', '#ca0020'),
-                            domain = bigpic_zip$overuse_perc)
-# Map
-leaflet() %>% 
+      # joining variable above with zipcodes file    
+      bigpic_zip <- inner_join(bigpic, zipcodes, by = "Patient_Zip")
+      # read in google sheet with town names and patient zips
+      towns <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1200giV6UYXfolA1UkUJ--6MUG5FUavJUGGolS_lRxks/edit?usp=sharing")
+      # join google sheet above with 'bigpic_zip'
+      bigpic_zip <- inner_join(bigpic_zip, towns, by = 'Patient_Zip')
+          
+      # Google sheets for hospital, urgent care, and doctor's offices lat/long data
+      bigpic_hosp <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1JzmcNpV1bYoW3N6sg7bYVgL33LERLbS__CtSYB1_bX4/edit?usp=sharing")
+          
+      doctor <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1ZqRk8NK4qp43bA30Q0VyBEWVX9Z_Zd_bgk6_Mt_dDW8/edit?usp=sharing")
+          
+      urgent_care <- gsheet2tbl("https://docs.google.com/spreadsheets/d/1_tTNbY0YQKAVF51rQcULq0qInGoMIz9thJieHbbfXfs/edit?usp=sharing")
+      # Color palette for shading the zip codes by severity of ER overuse    
+      palette <- colorNumeric(palette = c('#0571b0','#92c5de',  '#f7f7f7', '#f4a582', '#ca0020'),
+                                  domain = bigpic_zip$overuse_perc)
+      # Map
+      leaflet() %>% 
       addTiles() %>% 
       addMarkers(lat = bigpic_hosp$latitude,
                  lng = bigpic_hosp$longitude,
@@ -996,6 +945,7 @@ leaflet() %>%
   })
   
   output$zipMap <- renderLeaflet({
+    #MAPS = Zip code map
     leaflet() %>% 
       addTiles() %>%
       addPolygons(data = hospitals[hospitals$Patient_Zip %in% input$zipcode,]$geometry,
@@ -1015,7 +965,7 @@ leaflet() %>%
   # DEMOGRAPHICS TAB
   #################################
   
-  #COUNTY PLOT
+  # DEMOGRAPHICS = County Plot
   output$county_plot <- renderPlot({
      ggplot(data = rv$county_demo, 
             aes(x = reorder(type, -percentage), 
@@ -1035,7 +985,7 @@ leaflet() %>%
                 vjust = -.5) 
    })
   
-  #ZIPCODE PLOT
+  # DEMOGRAPHICS = Zip code plot
   output$zip_plot <- renderPlot({
     ggplot(data = rv$zip_demo, 
            aes(x = factor(Patient_Zip),
@@ -1055,7 +1005,7 @@ leaflet() %>%
                 vjust = -.5)
   })
   
-  #INSURANCE PLOT
+  # DEMOGRAPHICS = Insurance Plot
   output$insurance_plot <- renderPlot({
     ggplot(data = rv$insurance_demo, aes(x = reorder(type, -percentage), 
                                          y = percentage/100, 
@@ -1074,10 +1024,60 @@ leaflet() %>%
                 vjust = -.1) 
   })
 
-  # PRIMARY CARE SERVICES TAB
-  ################################
-  # condition map leaflet
+  #TYPES OF CONDITIONS GRAPHS ------
+  
+  output$scp_conditions <- renderPlot({
+    #TYPES OF CONDITIONS = All overuse condition comparison
+    scp_conditions <- scp %>%
+      group_by(acs_primary,
+               nonemerg_primary,
+               dental_primary,
+               mental_primary,
+               subabuse_primary) %>%
+      tally %>%
+      ungroup() %>%
+      summarise(percentage = (n/sum(n))*100, across(everything())) %>%
+      mutate(type = case_when(!dental_primary & !acs_primary & !subabuse_primary & !mental_primary & !nonemerg_primary ~ "Other",
+                              dental_primary ~ "Dental",
+                              acs_primary ~ "ACS",
+                              subabuse_primary ~ "Substance Abuse",
+                              mental_primary ~ "Mental Health",
+                              nonemerg_primary ~ "Non emergent")) %>%
+      filter(type != "Other") %>% 
+      arrange(desc(percentage))
+    
+    scp_conditions <- scp_conditions[-6,]
+    
+    scp_conditions <- scp_conditions %>%
+      mutate(type = reorder(type, -percentage))
+    
+    ggplot(data = scp_conditions, 
+           aes(x = type,
+               y = percentage/100,
+               fill = type)) +
+      geom_col() +
+      scale_y_continuous(labels = scales::percent) + 
+      theme_light(base_size = 18) +
+      labs(title = "ER Visits by Condition Type",
+           subtitle = "In SCP Counties",
+           x = "Type of Condition",
+           y = "% of ER Visits") +
+      scale_fill_manual(values=c('#fdcc8a',
+                                 '#a1dab4',
+                                 '#41b6c4',
+                                 '#2c7fb8',
+                                 '#253494'),
+                        name = "Type of Condition") +
+      theme(axis.ticks.x = element_blank(),
+            axis.text.x = element_blank()) +
+      geom_text(aes(label = scales::percent(percentage/100)),
+                position = position_dodge(width = 0.9),
+                vjust = -.1)
+    
+  })
+  
   output$cond_map <- renderLeaflet({
+    #TYPES OF CONDITIONS = Condition by zipcode map
     leaflet(combine) %>%
       addTiles() %>%
       addPolygons(color = ~pal(get(input$cond)),
@@ -1098,9 +1098,8 @@ leaflet() %>%
                 opacity = 1)
   })
   
-  # county plot
   output$all_cond_county <- renderPlot({
-
+    #TYPES OF CONDITIONS = County graph
     ggplot(data = rv$county, 
            aes(x = reorder(type, -percentage),
                y = percentage/100,
@@ -1122,8 +1121,9 @@ leaflet() %>%
                 position = position_dodge(width = 0.9),
                 vjust = -.1) 
   })
-  # zip code plot
+
   output$all_cond_zip <- renderPlot({
+    #TYPES OF CONDITIONS = Zip code graph
     ggplot(data = rv$zip, 
            aes(x = reorder(type, -percentage),
                y = percentage/100,
@@ -1145,10 +1145,9 @@ leaflet() %>%
                 position = position_dodge(width = 0.9),
                 vjust = -.1) 
   })
-  
-# Insurance plot
-output$all_cond_insurance <- renderPlot({
 
+    output$all_cond_insurance <- renderPlot({
+    #TYPES OF CONDITIONS = Insurance graph
     ggplot(data = rv$ins, 
            aes(x = reorder(type, -percentage),
                y = percentage/100,
@@ -1171,8 +1170,9 @@ output$all_cond_insurance <- renderPlot({
               vjust = -.1) 
 })
 
-# ER Conditions Tab
-#################################
+# DIAGNOSIS GRAPHS ------
+    
+    #DIAGNOSIS: County/Zip graphs
 observe(output$conditions_plot <- if(input$filter_by == "County"){
   renderPlot({
     
@@ -1205,8 +1205,8 @@ observe(output$conditions_plot <- if(input$filter_by == "County"){
                                   '#253494'))
   })})
 
-## Static Graph with top 10 ICD 10 codes at the top of the tab
 output$icdscp_plot <- renderPlot({
+  #TYPES OF CONDITIONS = Top 10 ICD-10 codes graph
   icdscp <- scp %>% 
     filter(acs_primary == 'TRUE' | nonemerg_primary== 'TRUE') %>% 
     group_by(Diag1, acs_primary, nonemerg_primary) %>% 
@@ -1218,19 +1218,15 @@ output$icdscp_plot <- renderPlot({
     arrange(desc(perc)) %>% 
     head(10)
   
-  
-  # Arrange data set greatest to least
   icdscp <- icdscp %>% 
     mutate( Diag1 = reorder(Diag1, -perc))
-  
-  # Bar graph for top 10 ICD 10 codes for all of SCP 
+
   ggplot(data= icdscp) +
     labs(title= ' Top 10 Diagnoses in Instances of ER Overuse ',
          subtitle= '   In SCP Counties',
          x= 'Diagnostic Code', y= 'Percentage', fill= 'Diagnosis')+
     geom_col(aes(x= Diag1, y= perc, fill= Diag1))+
     theme_light(base_size = 18)+
-    # Allows legend labels to be renamed
     scale_fill_manual(values= c('#fdcc8a',
                                 '#feb24c',
                                 '#fd8d3c',
