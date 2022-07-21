@@ -21,7 +21,11 @@ All static graphs are accompanied by summaries of what they show.
 
 # Explore ER Overuse dropdown tab
 
-This tab is a dropdown tab where the user can play around in the data. All instructions for how to operate the tools in these tabs are in the dashboard. The tabs included in here are as follows:
+This tab is a dropdown tab where the user can play around in the data. 
+
+**All instructions for how to operate the tools in these tabs are in the dashboard.**
+
+The tabs included in here are as follows:
 
 **Map:** Outlines the South Cumberland Plateau and expresses severity of ER overuse by zip code. Urgent cares in the area are indicated by red dots, while primary care doctors (ONLY) on the Plateau are indicated by green dots. Blue markers represent the top ten most visited ERs by residents from the Plateau.
 The other map is interactive and shows the top three hospitals visited by residents from a specifuc zip code.
@@ -35,7 +39,7 @@ The other map is interactive and shows the top three hospitals visited by reside
 - dental, and
 - substance abuse conditions.
 
-**Top Diagnoses:** This tab 
+**Top Diagnoses:** This tab explores the top 5 diagnoses seen at the ER in instances of overuse in different zip codes, counties, and by insurance type.
 
 # About tab
 
