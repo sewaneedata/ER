@@ -1,4 +1,8 @@
-# Background tab
+# Welcome
+Welcome to the DataLab 2022 Investigating ER Overuse project. The file above contain the scrubbing, prepping, and final dashboard. The following information explains how to use the inveractive dashboard and steps that need to be taken to run the code and dashboard.
+
+# Dashboard Explaination
+## Background tab
 
 This tab explores the background research that influenced the creation of our project. It walks the user through 
 
@@ -8,7 +12,7 @@ This tab explores the background research that influenced the creation of our pr
 - What our partner wants to gain from our project, and
 - Important vocabulary.
 
-# Primary Findings tab
+## Primary Findings tab
 
 This tab explores some of our primary findings. It consists of four static graphs that explore the following:
 
@@ -19,7 +23,7 @@ This tab explores some of our primary findings. It consists of four static graph
 
 All static graphs are accompanied by summaries of what they show.
 
-# Explore ER Overuse dropdown tab
+## Explore ER Overuse dropdown tab
 
 **All instructions for how to operate the tools in these tabs are in the dashboard.**
 
@@ -42,11 +46,10 @@ The other map is interactive and shows the top three hospitals visited by reside
 
 **Top Diagnoses:** This tab explores the top 5 diagnoses seen at the ER in instances of overuse in different zip codes, counties, and by insurance type.
 
-# About tab
+## About tab
 
 This tab introduces the user to DataLab, the Fellows, and our partner, the South Cumberland Health Network (SCHN).
 
-#
 # How to run the dashboard
 The following is a detailed breakdown on how to use this code to scrub, prepare, and analyze data using the scripts and dashboard created. 
 
