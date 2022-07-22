@@ -9,7 +9,6 @@
 # Run this code on the combined inpatient and outpatient 2019 TN hospital discharge data to 
 # prepare it for data analysis. 
 ################################################################################
-
 ####################################
 # PACKAGE INSTALL ------
 #Install all packages needed to use dashboard for all scripts
