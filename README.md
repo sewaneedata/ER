@@ -61,7 +61,7 @@ The following is a detailed breakdown on how to use this code to scrub, prepare,
 1. Download conjoined, anonymized data (see note above) onto computer  
 2. Download [RStudio](https://www.rstudio.com/products/rstudio/download/) onto computer  
 3. Download all github files onto computer  
-a. Go to [DataLab ER GitHub](https://github.com/sewaneedata/ER)
+a. Go to [DataLab ER GitHub](https://github.com/sewaneedata/ER)  
 b. Click the green “Code” button  
 c. Select “Download Zip” option  
 4. Unzip GitHub download file  
