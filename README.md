@@ -1,47 +1,53 @@
-# Investigating ER Overuse
+# Background tab
 
-DataLab Summer 2022 Project
+This tab explores the background research that influenced the creation of our project. It walks the user through 
 
-Ellie Davis, Kenedi Clinton, & Jenna Lusk
+- Background research on ER overuse in the United States with stats, 
+- What ER overuse is, 
+- Why we care about exploring ER overuse on the South Cumberland Plateau,
+- What our partner wants to gain from our project, and
+- Important vocabulary.
 
-## Problem Statement
-Grundy County is defined as a Medically Underserved Area (MUA) by the Health Resources and Services Administration. This means that the county lacks the health care services required to adequately meet community needs. Research has shown that across the U.S. in rural MUAs, citizens are increasingly seeking primary care at ERs. Due to trends such as these, our partner, the South Cumberland Health Network (SCHN), believes that analyzing ER discharge data may offer helpful insight into _how_ Grundy County is medically underserved. Our team’s objective is to create an interactive dashboard that expresses trends in ER discharge data from the South Cumberland Plateau to aid the SCHN in creating solutions to Grundy’s health service shortage.
+# Primary Findings tab
 
-## DataLab Team Introduction
-As members of the 2022 DataLab Sewanee Internship, we have dedicated our summer to learning data science and performing data analysis for a client in our local community. Each of us are discouraged by the large medical service gaps seen in Grundy County and Sewanee Community, and passionate about providing data analysis to help South Cumberland Health Network in filling those gaps. These are the members of our team:
+This tab explores some of our primary findings. It consists of four static graphs that explore the following:
 
-- **Ellie Davis**: Rising senior at Sewanee: The University of the South, studying both political science and women’s & gender studies.
+- ER overuse on the South Cumberland Plateau,
+- ER overuse in Williamson county, the "healthiest" county in Tennessee, versus on the SCP,
+- ER overuse by insurance type, and
+- Visits to the ER at differenet times of day for both "appropriate" and "overuse" reasons.
 
-- **Kenedi Clinton**: Junior student-athlete at Sewanee: The University of The South. Pursuing a Biology major, Rhetoric minor, and a Civic and Global Leadership certificate.
+All static graphs are accompanied by summaries of what they show.
 
-- **Jenna Lusk**: Sophomore at Purdue University (Class of 2025) studying Computer Information Technology, with minors in Design & Innovation and Organizational Leadership. 
+# Explore ER Overuse dropdown tab
 
-## Deliverables
-### Client Perspective Report
+**All instructions for how to operate the tools in these tabs are in the dashboard.**
 
-A report which outlines the perspective of the client, South Cumberland Health Network, showing their viewpoint of what the problem it is that we are addressing and what is expected from the DataLab team as a result.
+This tab is a dropdown tab where the user can play around in the data.
 
-[Client Perspective Report.pdf](https://github.com/sewaneedata/ER/files/8950670/Client.Perspective.Report.pdf)
+The tabs included in here are as follows:
 
-### Goal-setting
+**Map:** Outlines the South Cumberland Plateau and expresses severity of ER overuse by zip code. Urgent cares in the area are indicated by red dots, while primary care doctors (ONLY) on the Plateau are indicated by green dots. Blue markers represent the top ten most visited ERs by residents from the Plateau.
+The other map is interactive and shows the top three hospitals visited by residents from a specifuc zip code.
 
-A detailed outline of goals for the final product for our client. The goals are separated into two sections: Bare Minimum and Aspirational, which are the goals we wish to achieve once we determine that ERs are being overused. Additionally, each goal is described with what criteria we will use for evaluating their completion.
+**Demographics:** This tab explores trends in ER use based on demographics of Sex, Race, and Age group. The user can choose to investigate trends in ER use based on these demographics by zip code, county, and insurance type.
 
-[Goal-setting.pdf](https://github.com/sewaneedata/ER/files/8950678/Goal-setting.pdf)
+**Types of Conditions:** This tab explores the rate at which residents of the SCP visit the ER for certain types of conditions. Types of conditions include:
 
-### Pre-mortem
+- ACS, 
+- non-emergent, 
+- mental health, 
+- dental, and
+- substance abuse conditions.
 
-The Pre-Mortem is a list of issues that could go wrong based on what every member of the group assumes that the project will be a failure. These assumptions are highly specific to the project based on our data set, skills, tools, and knowledge. Here, it is also described what we can do to prevent these issues.
+**Top Diagnoses:** This tab explores the top 5 diagnoses seen at the ER in instances of overuse in different zip codes, counties, and by insurance type.
 
-[Pre-mortem.pdf](https://github.com/sewaneedata/ER/files/8950679/Pre-mortem.pdf)
+# About tab
 
-### Literature Review
+This tab introduces the user to DataLab, the Fellows, and our partner, the South Cumberland Health Network (SCHN).
 
-A literature review is carried out with the purpose of understanding what is already known about ER overuse. We explore the definition of ER Overuse, Overuse across the US, and Overuse in the Grundy County and sorrounding areas. This is used as a location of external research to show backrgound on the issue and a refference for people to understand the topic and the scope of the issue we are addressing. 
+#
+# How to run the dashboard
 
-[Literature Review.pdf](https://github.com/sewaneedata/ER/files/8979025/Literature.Review.pdf)
 
-### Data Description
-The Data Description is a summary of the datasets available for analysis. It is a description of what is contained in each data set, their use, and necessary information to orient someone who has never looked at the data before. Additionally, there is a data dictionary describing every column in the main dataset (SCP_Data) and a vocabulary list explaining main vocabulary used regularly regarding our project. 
 
-[Data Description.pdf](https://github.com/sewaneedata/ER/files/8995240/Data.Description.pdf)
