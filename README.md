@@ -23,7 +23,8 @@ All static graphs are accompanied by summaries of what they show.
 
 **All instructions for how to operate the tools in these tabs are in the dashboard.**
 
-This tab is a dropdown tab where the user can play around in the data. 
+This tab is a dropdown tab where the user can play around in the data.
+
 The tabs included in here are as follows:
 
 **Map:** Outlines the South Cumberland Plateau and expresses severity of ER overuse by zip code. Urgent cares in the area are indicated by red dots, while primary care doctors (ONLY) on the Plateau are indicated by green dots. Blue markers represent the top ten most visited ERs by residents from the Plateau.
@@ -32,6 +33,7 @@ The other map is interactive and shows the top three hospitals visited by reside
 **Demographics:** This tab explores trends in ER use based on demographics of Sex, Race, and Age group. The user can choose to investigate trends in ER use based on these demographics by zip code, county, and insurance type.
 
 **Types of Conditions:** This tab explores the rate at which residents of the SCP visit the ER for certain types of conditions. Types of conditions include:
+
 - ACS, 
 - non-emergent, 
 - mental health, 
@@ -43,3 +45,9 @@ The other map is interactive and shows the top three hospitals visited by reside
 # About tab
 
 This tab introduces the user to DataLab, the Fellows, and our partner, the South Cumberland Health Network (SCHN).
+
+#
+# How to run the dashboard
+
+
+
