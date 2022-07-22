@@ -10,6 +10,13 @@
 # prepare it for data analysis. 
 ################################################################################
 
+####################################
+# PACKAGE INSTALL ------
+#Install all packages needed to use dashboard for all scripts
+# NOTE: Only need to run once
+install.packages(c("shinyjs", "leaflet", "DT", "ggplot2","dplyr","readr","shinydashboard","markdown","bslib","shiny","RSQLite","tidyverse", "SF","leaflet","raster","gsheet"))
+####################################
+
 # Library
 library(RSQLite)
 
