@@ -73,7 +73,7 @@ c. Go to the unzipped GitHub file on your computer
 d. Select ```data_scrub.R``` file  
 7. Add data file path into ```data_scrub.R``` where it says “discharges_phi”   
 a. Lines to change in “Filter Zipcodes” section   
-8. Run ```data_scrub.R``` 
+8. Run ```data_scrub.R```  
 a. Will result in ```SCP_data2.csv``` file  
 9. Locate ```scp_data2.csv``` on computer  
 a. Open file explorer  
@@ -96,7 +96,7 @@ b. Select “Copy File Path” option
 15. Open ```prep_data.R``` file in RStudio  
 a. Search “INSERT FILE LOCATION HERE”  
 b. Paste file path into line: ```tn_diags <- readr::read_csv("INSERT FILE LOCATION HERE")```
-16. Download [Zip Code file](https://www2.census.gov/geo/tiger/TIGER2019/ZCTA5/). 
+16. Download [Zip Code file](https://www2.census.gov/geo/tiger/TIGER2019/ZCTA5/)  
 a. Click the .zip file to download  
 b. Find zipped file in file explorer  
 c. Right click and select unzip file  
